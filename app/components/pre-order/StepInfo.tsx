@@ -37,13 +37,11 @@ const COLORS = [
 ];
 
 export function StepInfo({
-  formData,
-  onChange,
   onNext,
   onBack,
 }: {
-  formData: { firstName: string; lastName: string; phone: string; email: string };
-  onChange: (data: { firstName?: string; lastName?: string; phone?: string; email?: string }) => void;
+  formData?: { firstName: string; lastName: string; phone: string; email: string };
+  onChange?: (data: { firstName?: string; lastName?: string; phone?: string; email?: string }) => void;
   onNext: (data: { firstName: string; lastName: string; phone: string; email: string; model: string; color: string; storage: string }) => void;
   onBack?: () => void;
 }) {

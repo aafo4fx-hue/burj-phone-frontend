@@ -1,9 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { FaWhatsapp, FaMobileAlt, FaEnvelope } from "react-icons/fa";
-import { HiOutlineShieldCheck } from "react-icons/hi";
-import { BsTruck } from "react-icons/bs";
-import { RiCustomerService2Line } from "react-icons/ri";
+
 
 const API = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
