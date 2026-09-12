@@ -63,12 +63,6 @@ export default function ProductCard({ product, priority = false }: { product: Pr
     setPreOrderModalOpen(true);
   };
 
-  const handleViewDetails = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    router.push(`/product/${product._id}`);
-  };
-
   return (
     <>
       {toast && (
