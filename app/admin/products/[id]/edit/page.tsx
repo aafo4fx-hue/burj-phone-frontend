@@ -146,6 +146,7 @@ export default function EditProductPage() {
   }
 
   const displayImage = imageMode === "upload" ? (imagePreview || currentImage) : imageUrl;
+  void displayImage;
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg mx-auto space-y-4 py-4">
