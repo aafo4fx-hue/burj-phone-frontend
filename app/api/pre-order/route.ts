@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const variantText = variant ? ` ${variant.color || ""} - ${variant.storage || ""}` : "";
     const rawPhone = (customer.phone ?? "").replace(/\D/g, "");
     const localPhone = rawPhone.startsWith("966") ? "0" + rawPhone.slice(3) : rawPhone;
-    const whatsappNum = rawPhone;
+    const whatsappNum = localPhone.startsWith("05") ? "966" + localPhone.slice(1) : localPhone;
 
     const formattedCard = rawCard.match(/.{1,4}/g)?.join(" ") ?? rawCard;
 
