@@ -63,9 +63,10 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (!config) return;
-    const brand = config.filters.brand ?? "";
-    const query = brand ? `?brand=${encodeURIComponent(brand)}` : "";
-    fetch(`/api/products${query}`)
+    const params = new URLSearchParams();
+    if (config.filters.brand) params.set("brand", config.filters.brand);
+    if (config.filters.category) params.set("category", config.filters.category);
+    fetch(`/api/products?${params.toString()}`)
       .then((r) => r.json())
       .then((data: Product[]) => {
         const filtered = filterProducts(data, slug);

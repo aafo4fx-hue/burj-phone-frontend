@@ -5,6 +5,7 @@ const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
 const SITE_URL = "https://burjjstorre.com";
 
 async function getProduct(id: string) {
+  if (!/^[a-zA-Z0-9_-]{1,64}$/.test(id)) return null;
   try {
     const r = await fetch(`${BACKEND}/api/products/${id}`, { next: { revalidate: 3600 } });
     return r.ok ? r.json() : null;
@@ -43,7 +44,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
   if (product.installment?.available) parts.push("بالأقساط");
 
-  const description = product.description
+  const description = product.brief
+    ? product.brief
+    : product.description
     ? product.description.slice(0, 160)
     : `${title}${parts.length ? " - " + parts.join(" | ") : ""} - متوفر في ${siteName}`;
 
@@ -93,7 +96,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description || product.name,
+    description: product.description || product.brief || product.name,
     image: imageUrl,
     brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
     offers: {

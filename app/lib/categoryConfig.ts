@@ -7,11 +7,13 @@ export interface SlugConfig {
     brand?: string;
     category?: string;
     nameIncludes?: string[];
+    nameExcludes?: string[];
   };
 }
 
 export const categoryHeroImages: Record<string, string> = {
   // Smartphones
+  "iphone-18": "https://res.cloudinary.com/dyqkhcuxe/image/upload/v1789143815/34ab662e-de1b-4359-9d99-43e2ba54678f_1_zd9s2s.webp",
   "iphone-13-pro-max": "/i17p.webp",
   "iphone-14-pro-max": "/i17.webp",
   "iphone-14-pro": "/i15pl.webp",
@@ -160,6 +162,15 @@ export const slugConfigs: Record<string, SlugConfig> = {
     parentLabel: "الهواتف الذكية",
     parentHref: "/smartphones",
     filters: { category: "أبل آيفون 17 اير" },
+  },
+  "iphone-18": {
+    label: "آيفون 18",
+    parentLabel: "الهواتف الذكية",
+    parentHref: "/smartphones",
+    filters: {
+      category: "ابل ايفون 18",
+      nameIncludes: ["iphone 18", "iPhone 18", "ايفون 18", "آيفون 18"],
+    },
   },
   "apple-only": {
     label: "فقط آبل",

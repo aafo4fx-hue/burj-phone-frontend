@@ -9,6 +9,8 @@ import { TbTruckDelivery } from "react-icons/tb";
 import { GoShieldCheck } from "react-icons/go";
 import type { Product } from "./types";
 import { useCartStore } from "../../store/cartStore";
+import { usePreOrderAvailability } from "@/app/lib/usePreOrderAvailability";
+import PreOrderModal from "../pre-order/PreOrderModal";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
@@ -28,6 +30,17 @@ export default function ProductCard({ product, priority = false }: { product: Pr
   const router = useRouter();
   const [added, setAdded] = useState(false);
   const [toast, setToast] = useState(false);
+  const [preOrderModalOpen, setPreOrderModalOpen] = useState(false);
+  const reservationStatus = usePreOrderAvailability();
+
+  // Detect if this is iPhone 18 pre-order product
+  const isIPhone18PreOrder = reservationStatus === "open" && 
+    (name.toLowerCase().includes("iphone 18") || 
+     name.toLowerCase().includes("ايفون 18") ||
+     name.toLowerCase().includes("آيفون 18") ||
+     name.toLowerCase().includes("18 برو") ||
+     name.toLowerCase().includes("18 دو") ||
+     name.toLowerCase().includes("18 duo"));
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,6 +55,18 @@ export default function ProductCard({ product, priority = false }: { product: Pr
       window.scrollTo(0, 0);
       router.push("/cart");
     }, 1000);
+  };
+
+  const handlePreOrder = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPreOrderModalOpen(true);
+  };
+
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/product/${product._id}`);
   };
 
   return (
@@ -66,11 +91,10 @@ export default function ProductCard({ product, priority = false }: { product: Pr
                 src={resolvedImage}
                 alt={name}
                 fill
-                className="object-contain p-3 sm:p-5 group-hover:scale-105 transition-transform duration-500 ease-out"
+                className="object-contain scale-125"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 priority={priority}
                 loading={priority ? "eager" : "lazy"}
-                unoptimized
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">📱</div>
@@ -147,21 +171,39 @@ export default function ProductCard({ product, priority = false }: { product: Pr
           </div>
         </div>
 
-        {/* Cart Button */}
+        {/* Cart Button / Pre-Order Buttons */}
         <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-1">
-          <button
-            onClick={handleAddToCart}
-            disabled={!inStock}
-            className={`product-cart-btn ${added ? "added" : ""} ${!inStock ? "!bg-gray-200 !shadow-none !from-gray-200 !to-gray-300 cursor-not-allowed" : ""}`}
-          >
-            {added ? (
-              <><IoCheckmarkCircleOutline size={16} />تمت الإضافة</>
-            ) : (
-              <><IoCartOutline size={16} />{inStock ? "أضف للسلة" : "غير متوفر"}</>
-            )}
-          </button>
+          {isIPhone18PreOrder ? (
+            <button
+              onClick={handlePreOrder}
+              className="w-full bg-gradient-to-l from-[#A842E4] to-[#7A2FCC] text-white text-xs sm:text-sm font-black py-2.5 sm:py-3 rounded-xl shadow-lg shadow-purple-200/50 hover:shadow-xl hover:shadow-purple-300/60 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-1.5"
+            >
+              ⚡ احجز الآن
+            </button>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              disabled={!inStock}
+              className={`product-cart-btn ${added ? "added" : ""} ${!inStock ? "!bg-gray-200 !shadow-none !from-gray-200 !to-gray-300 cursor-not-allowed" : ""}`}
+            >
+              {added ? (
+                <><IoCheckmarkCircleOutline size={16} />تمت الإضافة</>
+              ) : (
+                <><IoCartOutline size={16} />{inStock ? "أضف للسلة" : "غير متوفر"}</>
+              )}
+            </button>
+          )}
         </div>
       </Link>
+
+      {/* Pre-Order Modal */}
+      {isIPhone18PreOrder && (
+        <PreOrderModal
+          isOpen={preOrderModalOpen}
+          onClose={() => setPreOrderModalOpen(false)}
+          product={product}
+        />
+      )}
     </>
   );
 }

@@ -1,218 +1,231 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  IoCartOutline,
-  IoCheckmarkCircle,
-  IoShieldCheckmark,
-  IoCarOutline,
-  IoCheckmarkDoneCircle,
-  IoFlashOutline,
-  IoStorefrontOutline,
+  IoCartOutline, IoShieldCheckmark, IoCarOutline,
+  IoCheckmarkDoneCircle, IoFlash, IoBagCheckOutline, IoCheckmarkCircle,
 } from "react-icons/io5";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "../../../components/products/types";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 interface ProductInfoProps {
   product: Product;
+  selectedColor: string;
+  selectedStorage: string;
   addedToCart: boolean;
+  onColorChange: (c: string) => void;
+  onStorageChange: (s: string) => void;
   onAddToCart: () => void;
 }
 
-export default function ProductInfo({ product, addedToCart, onAddToCart }: ProductInfoProps) {
+export default function ProductInfo({
+  product, selectedColor, selectedStorage, addedToCart,
+  onColorChange, onStorageChange, onAddToCart,
+}: ProductInfoProps) {
   const router = useRouter();
-  const { name, brand, color, storage, network, salePrice, taxIncluded, installment, freeDelivery, deliveryTime, inStock } = product;
-  const originalPrice = product.originalPrice ?? 0;
-  const hasDiscount = salePrice != null && salePrice !== originalPrice;
-  const savedAmount = hasDiscount ? originalPrice - (salePrice ?? 0) : 0;
-  const discountPercent = hasDiscount ? Math.round((savedAmount / originalPrice) * 100) : 0;
+  const { name, brand, freeDelivery, deliveryTime, inStock, taxIncluded, installment } = product;
 
-  const features = [
-    { icon: <IoCarOutline size={18} />, label: freeDelivery ? "توصيل مجاني" : "توصيل", value: deliveryTime, color: "#0F4C6E" },
-    { icon: <IoShieldCheckmark size={18} />, label: "ضمان سنتين", value: "حاسبات العرب", color: "#7CC043" },
-    { icon: inStock ? <IoCheckmarkCircle size={18} /> : <IoStorefrontOutline size={18} />, label: inStock ? "متوفر" : "غير متوفر", value: inStock ? "جاهز للشحن" : "نفذت الكمية", color: inStock ? "#34d399" : "#ef4444" },
-    { icon: <IoFlashOutline size={18} />, label: "شحن سريع", value: "توصيل فوري", color: "#f59e0b" },
-  ];
+  const hasVariants = product.variants && product.variants.length > 0;
+  const activeVariant = product.variants?.find((v) => v.color === selectedColor);
+  const storageOpts = activeVariant?.storageOptions ?? product.variants?.[0]?.storageOptions ?? [];
+  const toKey = (o: { storage: string; ram?: string; size?: string }) => `${o.storage}|${o.ram ?? ""}|${o.size ?? ""}`;
+  const activeStorageOpt = storageOpts.find((o) => toKey(o) === selectedStorage) ?? storageOpts[0];
+
+  const originalPrice = activeStorageOpt?.originalPrice ?? product.originalPrice ?? 0;
+  const salePrice = activeStorageOpt?.salePrice ?? product.salePrice;
+  const hasDiscount = salePrice != null && salePrice > 0 && salePrice < originalPrice;
+  const savingsPercent = hasDiscount ? Math.round(((originalPrice - (salePrice ?? 0)) / originalPrice) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-3 sm:gap-4 lg:sticky lg:top-20">
+    <div className="lg:sticky lg:top-[72px]">
+      <div className="rounded-3xl overflow-hidden" style={{ border: "1px solid #EBE6E2", background: "#fff" }}>
 
-      {/* ── Name & Specs ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl sm:rounded-3xl product-card-shadow overflow-hidden"
-      >
-        <div className="p-4 sm:p-5">
-          {brand && (
-            <div className="flex items-center gap-2 mb-2.5">
-              <span className="text-[11px] sm:text-xs font-bold text-[#0F4C6E] bg-[#0F4C6E]/6 px-3 py-1 rounded-full">
+        {/* ── Name + Brand + Stock ── */}
+        <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4" style={{ borderBottom: "1px solid #f0ebe4" }}>
+          <div className="flex items-center gap-2 mb-2">
+            {brand && (
+              <span className="text-[10px] sm:text-[11px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full" style={{ backgroundColor: "rgba(133,67,192,0.1)", color: "#8543C0" }}>
                 {brand}
               </span>
-              {inStock && (
-                <span className="flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  متوفر
-                </span>
-              )}
-            </div>
-          )}
-          <h2 className="text-[15px] sm:text-lg lg:text-xl font-extrabold text-gray-900 leading-[1.6]">{name}</h2>
-        </div>
-
-        {/* Specs chips */}
-        {(color || storage || network) && (
-          <div className="flex gap-0 border-t border-gray-100">
-            {[
-              { label: "اللون", val: color },
-              { label: "التخزين", val: storage },
-              { label: "الشبكة", val: network },
-            ].filter(s => s.val).map((s, i, arr) => (
-              <div
-                key={i}
-                className={`flex-1 text-center py-2.5 sm:py-3 ${i < arr.length - 1 ? "border-l border-gray-100" : ""}`}
-              >
-                <p className="text-[9px] sm:text-[10px] text-gray-400 font-medium">{s.label}</p>
-                <p className="text-[11px] sm:text-xs font-bold text-[#0F4C6E] mt-0.5">{s.val}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </motion.div>
-
-      {/* ── Premium Price Card ── */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl product-card-shadow">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a3550] via-[#0F4C6E] to-[#1a5c3a]" />
-        <div className="absolute top-0 left-0 w-32 h-32 bg-[#7CC043]/15 rounded-full blur-[60px]" />
-        <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-[40px]" />
-
-        <div className="relative p-3 sm:p-6">
-          {hasDiscount && (
-            <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-              <span className="inline-flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-bold bg-red-500 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-lg shadow-red-500/30">
-                🔥 خصم {discountPercent}%
-              </span>
-              <span className="text-[10px] sm:text-xs text-white/50 line-through">{fmt(originalPrice)} ر.س</span>
-            </div>
-          )}
-
-          <div className="flex items-baseline gap-1.5 sm:gap-2">
-            <span className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-              {fmt(hasDiscount ? salePrice! : originalPrice)}
+            )}
+            <span className={`inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full ${inStock ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${inStock ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
+              {inStock ? "متوفر" : "غير متوفر"}
             </span>
-            <span className="text-xs sm:text-base font-bold text-white/70">ر.س</span>
           </div>
+          <h2 className="lg:hidden text-sm sm:text-lg font-black leading-snug" style={{ color: "#1F2C3E" }}>{name}</h2>
+        </div>
 
-          {hasDiscount && (
-            <div className="mt-2 sm:mt-4">
-              <div className="flex items-center justify-between mb-1 sm:mb-1.5">
-                <span className="text-[10px] sm:text-xs text-[#b8e986] font-semibold">
-                  وفّرت {fmt(savedAmount)} ر.س
-                </span>
-                <span className="text-[9px] sm:text-[10px] text-white/40">{discountPercent}% توفير</span>
+        {/* ── Color Selector ── */}
+        {hasVariants && (
+          <div className="px-4 sm:px-5 py-3 sm:py-4" style={{ borderBottom: "1px solid #f0ebe4" }}>
+            <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest mb-2.5" style={{ color: "#611FA0" }}>
+              اللون — {selectedColor}
+            </p>
+            <div className="flex gap-2.5 sm:gap-3 flex-wrap">
+              {product.variants!.map((v, i) => (
+                <motion.button
+                  key={`${i}-${v.color}`}
+                  title={v.color}
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => onColorChange(v.color)}
+                  className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-full cursor-pointer"
+                  style={{
+                    backgroundColor: v.colorCode,
+                    boxShadow: selectedColor === v.color
+                      ? "0 0 0 2px #fff, 0 0 0 4px #8543C0"
+                      : "0 2px 8px rgba(0,0,0,0.15)",
+                  }}
+                >
+                  {selectedColor === v.color && (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <IoCheckmarkCircle size={13} className="text-white drop-shadow" />
+                    </span>
+                  )}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Storage Selector ── */}
+        {storageOpts.length > 1 && (
+          <div className="px-4 sm:px-5 py-3 sm:py-4" style={{ borderBottom: "1px solid #f0ebe4" }}>
+            <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest mb-2.5" style={{ color: "#611FA0" }}>السعة</p>
+            <div className="flex gap-2 flex-wrap">
+              {storageOpts.map((opt) => {
+                const key = toKey(opt);
+                const isActive = selectedStorage === key;
+                return (
+                  <motion.button
+                    key={key}
+                    whileTap={{ scale: 0.93 }}
+                    onClick={() => onStorageChange(key)}
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-black border cursor-pointer transition-all duration-200"
+                    style={{
+                      backgroundColor: isActive ? "#8543C0" : "#faf7f2",
+                      color: isActive ? "#fff" : "#1F2C3E",
+                      borderColor: isActive ? "#8543C0" : "#EBE6E2",
+                      boxShadow: isActive ? "0 4px 14px rgba(133,67,192,0.3)" : "none",
+                    }}
+                  >
+                    {opt.storage}
+                    {opt.ram && <span className="block text-[9px] mt-0.5 opacity-70">{opt.ram}</span>}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Price ── */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${selectedStorage}-${selectedColor}`}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="px-4 sm:px-5 py-4 sm:py-5"
+            style={{ borderBottom: "1px solid #f0ebe4", background: "linear-gradient(135deg, rgba(133,67,192,0.04), rgba(255,255,255,0))" }}
+          >
+            {hasDiscount ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(salePrice!)}</span>
+                    <span className="text-sm sm:text-base font-bold" style={{ color: "#611FA0" }}>ر.س</span>
+                  </div>
+                  {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
+                </div>
+                <div className="flex flex-col items-end gap-1.5">
+                  <span className="text-[11px] sm:text-xs font-black px-2.5 py-1 rounded-lg text-white" style={{ background: "linear-gradient(135deg, #e74c3c, #c0392b)" }}>
+                    وفّر {savingsPercent}%
+                  </span>
+                  <span className="text-xs sm:text-sm line-through opacity-40 flex items-center gap-1" style={{ color: "#1F2C3E" }}>
+                    {fmt(originalPrice)} ر.س
+                  </span>
+                </div>
               </div>
-              <div className="h-1 sm:h-2 rounded-full bg-white/10 overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-[#7CC043] to-[#b8e986]"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${discountPercent}%` }}
-                  transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-                />
+            ) : (
+              <div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(originalPrice)}</span>
+                  <span className="text-sm sm:text-base font-bold" style={{ color: "#611FA0" }}>ر.س</span>
+                </div>
+                {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* ── Installment ── */}
+        {installment?.available && (
+          <div className="px-4 sm:px-5 py-3 flex items-center gap-3" style={{ borderBottom: "1px solid #f0ebe4", background: "rgba(133,67,192,0.04)" }}>
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(133,67,192,0.12)" }}>
+              <IoFlash size={14} style={{ color: "#8543C0" }} />
+            </div>
+            <div>
+              <p className="text-[11px] sm:text-xs font-bold" style={{ color: "#1F2C3E" }}>
+                تقسيط متاح {installment.downPayment ? `• مقدم ${fmt(installment.downPayment)} ر.س` : ""}
+              </p>
+              {installment.note && <p className="text-[10px] mt-0.5" style={{ color: "#611FA0" }}>{installment.note}</p>}
+            </div>
+          </div>
+        )}
+
+        {/* ── Trust badges (توصيل + ضمان فقط) ── */}
+        <div className="grid grid-cols-2 gap-px" style={{ background: "#f0ebe4" }}>
+          {[
+            { icon: IoCarOutline, label: freeDelivery ? "توصيل مجاني" : "توصيل مدفوع", sub: deliveryTime },
+            { icon: IoShieldCheckmark, label: "ضمان سنتين", sub: null },
+          ].map((f, i) => (
+            <div key={i} className="flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-3" style={{ background: "#fff" }}>
+              <f.icon size={15} style={{ color: "#8543C0", flexShrink: 0 }} />
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-[11px] font-bold truncate" style={{ color: "#1F2C3E" }}>{f.label}</p>
+                {f.sub && <p className="text-[9px] sm:text-[10px] truncate" style={{ color: "#611FA0" }}>{f.sub}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── CTA ── */}
+        <div className="p-3 sm:p-4">
+          {!addedToCart ? (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={onAddToCart}
+              className="group w-full relative overflow-hidden font-black text-sm sm:text-base py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2.5 text-white"
+              style={{ background: "linear-gradient(135deg, #8543C0, #611FA0)", boxShadow: "0 6px 24px rgba(133,67,192,0.35)" }}
+            >
+              <span className="absolute inset-0 bg-gradient-to-l from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
+              <IoCartOutline size={18} className="relative" />
+              <span className="relative">أضف للسلة</span>
+            </motion.button>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-center gap-2 py-2.5 rounded-2xl" style={{ backgroundColor: "rgba(16,185,129,0.08)", color: "#059669" }}>
+                <IoCheckmarkDoneCircle size={17} />
+                <span className="text-xs sm:text-sm font-bold">تمت الإضافة للسلة</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => router.back()} className="font-bold text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl" style={{ backgroundColor: "#faf7f2", color: "#1F2C3E", border: "1px solid #EBE6E2" }}>
+                  متابعة التسوق
+                </button>
+                <button onClick={() => router.push("/cart")} className="text-white font-bold text-xs sm:text-sm py-2.5 sm:py-3 rounded-xl flex items-center justify-center gap-2" style={{ background: "linear-gradient(135deg, #8543C0, #611FA0)" }}>
+                  <IoBagCheckOutline size={14} />
+                  عرض السلة
+                </button>
               </div>
             </div>
           )}
-
-          <div className="flex items-center gap-2 sm:gap-3 mt-2 sm:mt-3">
-            {taxIncluded && (
-              <span className="text-[9px] sm:text-[11px] text-white/40 bg-white/5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-white/10">
-                شامل الضريبة
-              </span>
-            )}
-            {installment?.available && (
-              <span className="text-[9px] sm:text-[11px] text-[#b8e986] bg-[#7CC043]/10 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-[#7CC043]/20">
-                💳 تقسيط متاح
-              </span>
-            )}
-          </div>
         </div>
+
       </div>
-
-      {/* ── Features List ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white rounded-2xl sm:rounded-3xl product-card-shadow p-1 sm:p-1.5"
-      >
-        {features.map((f, i) => (
-          <div
-            key={i}
-            className={`flex items-center gap-3 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl transition-colors hover:bg-gray-50/80 ${
-              i < features.length - 1 ? "" : ""
-            }`}
-          >
-            <div
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ backgroundColor: `${f.color}10`, color: f.color }}
-            >
-              {f.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-[13px] font-bold text-gray-800">{f.label}</p>
-              <p className="text-[10px] sm:text-[11px] text-gray-400">{f.value}</p>
-            </div>
-            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: f.color, opacity: 0.5 }} />
-          </div>
-        ))}
-      </motion.div>
-
-      {/* ── Add to Cart ── */}
-      <AnimatePresence mode="wait">
-        {!addedToCart ? (
-          <motion.button
-            key="add"
-            onClick={onAddToCart}
-            className="w-full bg-gradient-to-r from-[#0F4C6E] to-[#1F6F8B] hover:from-[#0a3550] hover:to-[#0F4C6E] text-white font-bold text-sm sm:text-base py-3.5 sm:py-4 rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 shadow-lg shadow-[#0F4C6E]/20 cursor-pointer"
-            whileHover={{ scale: 1.01, y: -1 }}
-            whileTap={{ scale: 0.97 }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-          >
-            <IoCartOutline size={22} />
-            أضف للسلة
-          </motion.button>
-        ) : (
-          <motion.div
-            key="added"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col gap-2.5"
-          >
-            <div className="flex items-center justify-center gap-2 text-[#5a9030] bg-gradient-to-r from-[#eaf5d8] to-[#f0f9e8] py-3 rounded-2xl">
-              <IoCheckmarkDoneCircle size={20} />
-              <span className="text-sm font-bold">تمت الإضافة للسلة بنجاح ✓</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                onClick={() => router.back()}
-                className="bg-[#0F4C6E]/5 hover:bg-[#0F4C6E]/10 text-[#0F4C6E] font-bold text-xs sm:text-sm py-3 rounded-xl transition-colors cursor-pointer"
-              >
-                متابعة التسوق
-              </button>
-              <button
-                onClick={() => router.push("/cart")}
-                className="bg-gradient-to-r from-[#0F4C6E] to-[#1F6F8B] text-white font-bold text-xs sm:text-sm py-3 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md shadow-[#0F4C6E]/15 cursor-pointer"
-              >
-                <IoCartOutline size={16} />
-                السلة
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

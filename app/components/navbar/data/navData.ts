@@ -23,6 +23,7 @@ export const navItems: NavItem[] = [
       {
         groupLabel: "آيفون",
         items: [
+          { label: "آيفون 18 ✦ قريباً", href: "/smartphones/iphone-18" },
           { label: "آيفون 17 برو ماكس", href: "/smartphones/iphone-17-pro-max" },
           { label: "آيفون 17 برو", href: "/smartphones/iphone-17-pro" },
           { label: "آيفون 17 Air", href: "/smartphones/iphone-17-air" },

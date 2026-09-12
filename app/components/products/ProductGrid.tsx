@@ -136,9 +136,17 @@ export default function ProductGrid() {
       fetch("/api/sub-categories-home").then((r) => r.json()).catch(() => ({ settings: [], max: 4 })),
     ])
       .then(([prods, config]) => {
-        setProducts(prods);
+        // Unwrap if the API returns { products: [...] } or similar envelope
+        const prodArray: Product[] = Array.isArray(prods)
+          ? prods
+          : Array.isArray(prods?.products)
+          ? prods.products
+          : Array.isArray(prods?.data)
+          ? prods.data
+          : [];
+        setProducts(prodArray);
         setHomeConfig(Array.isArray(config) ? { settings: config, max: 4 } : config);
-        const cats = [...new Set((prods as Product[]).map((p) => p.category).filter(Boolean))];
+        const cats = [...new Set(prodArray.map((p) => p.category).filter(Boolean))];
         if (cats.length) {
           fetch(`/api/admin/category-banners-bulk?categories=${encodeURIComponent(cats.join(","))}`)
             .then((r) => r.json())

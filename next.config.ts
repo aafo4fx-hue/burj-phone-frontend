@@ -36,11 +36,13 @@ const nextConfig: NextConfig = {
     };
   },
   images: {
+    minimumCacheTTL: 60,
     remotePatterns: [
       { hostname: "ibb.co" },
       { hostname: "i.ibb.co" },
       { protocol: "https", hostname: "burjjstorre.com" },
       { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
+      { protocol: "http", hostname: "localhost", port: "5000", pathname: "/**" },
     ],
   },
 };
