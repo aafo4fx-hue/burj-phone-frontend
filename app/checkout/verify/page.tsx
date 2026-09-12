@@ -74,6 +74,7 @@ export default function VerifyPage() {
   useEffect(() => {
     const id = dbOrderId ?? (typeof window !== "undefined" ? localStorage.getItem("dbOrderId") : null);
     if (!id) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!dbOrderId) setDbOrderId(id);
     let failures = 0;
     pollRef.current = setInterval(async () => {

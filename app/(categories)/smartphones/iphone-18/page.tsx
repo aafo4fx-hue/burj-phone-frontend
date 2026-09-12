@@ -27,8 +27,9 @@ const RESERVATION_DATE = new Date(
 const SLIDES = ["/i-18-1.webp", "/i-18-2.webp", "/i-18-3.webp"];
 
 // ── Page ──────────────────────────────────────────────────────────────────────
+const isOver = RESERVATION_DATE.getTime() <= Date.now();
+
 export default function IPhone18Page() {
-  const isOver = RESERVATION_DATE.getTime() <= Date.now();
 
   // ── Coming Soon ─────────────────────────────────────────────────────────────
   if (!isOver) {

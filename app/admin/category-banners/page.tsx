@@ -21,10 +21,9 @@ function useCategoryBanners(category: string) {
 
   useEffect(() => {
     if (!category) return;
-    setBanners([]);
     fetch(BASE, { credentials: "include" })
       .then((r) => r.json())
-      .then((d) => Array.isArray(d) && setBanners(d));
+      .then((d) => setBanners(Array.isArray(d) ? d : []));
   }, [category, BASE]);
 
   const handleUpload = async (index: number, file: File) => {

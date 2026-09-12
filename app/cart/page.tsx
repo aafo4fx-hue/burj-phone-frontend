@@ -22,7 +22,11 @@ export default function CartPage() {
   const { items, removeItem, updateQty, totalPrice, totalItems, setCustomer, customer } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    // hydration guard — intentional
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   const total = mounted ? totalPrice() : 0;
   const count = mounted ? totalItems() : 0;

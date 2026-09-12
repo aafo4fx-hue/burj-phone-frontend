@@ -77,7 +77,10 @@ export default function ReceiptPage() {
   return (
     <div style={{ fontFamily: "Arial, sans-serif", padding: "12px", maxWidth: 700, width: "100%", margin: "0 auto" }} dir="rtl">
       <style>{style}</style>
-      {company.header && <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 16 }} />}
+      {company.header && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 16 }} />
+      )}
 
       <div style={{ border: "2px solid #808080", borderRadius: 8, marginBottom: 16, position: "relative" }}>
         <div className="receipt-header-row">
@@ -134,7 +137,10 @@ export default function ReceiptPage() {
             <div style={{ textAlign: "center", padding: "12px 8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontWeight: "bold" }}>الختم</div>
               {company.stamp
-                ? <img src={company.stamp} alt="ختم" style={{ maxWidth: 90, maxHeight: 70, objectFit: "contain" }} />
+                ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={company.stamp} alt="ختم" style={{ maxWidth: 90, maxHeight: 70, objectFit: "contain" }} />
+                )
                 : <div style={{ borderBottom: "1px solid #aaa", width: "80%" }}></div>
               }
             </div>
@@ -142,7 +148,10 @@ export default function ReceiptPage() {
         </div>
       </div>
 
-      {company.footer && <img src={company.footer} alt="footer" style={{ width: "100%" }} />}
+      {company.footer && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={company.footer} alt="footer" style={{ width: "100%" }} />
+      )}
     </div>
   );
 }
