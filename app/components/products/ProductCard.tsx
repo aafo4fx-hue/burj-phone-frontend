@@ -78,14 +78,14 @@ export default function ProductCard({ product, priority = false }: { product: Pr
         dir="rtl"
       >
         {/* Image Section */}
-        <div className="relative w-full bg-gradient-to-b from-gray-50/80 to-white" style={{ paddingBottom: "100%" }}>
+        <div className="relative w-full bg-gradient-to-b from-gray-50/80 to-white overflow-hidden" style={{ paddingBottom: "100%" }}>
           <div className="absolute inset-0 p-3 sm:p-5">
             {resolvedImage ? (
               <Image
                 src={resolvedImage}
                 alt={name}
                 fill
-                className="object-contain scale-125"
+                className="object-contain"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 priority={priority}
                 loading={priority ? "eager" : "lazy"}
