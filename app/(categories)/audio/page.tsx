@@ -4,7 +4,7 @@ import AudioClient from "./AudioClient";
 export const dynamic = "force-dynamic";
 
 const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
-const SITE_URL = "https://burj-almubdia.com";
+const SITE_URL = "https://burjjstorre.com";
 
 async function getCompany() {
   try {

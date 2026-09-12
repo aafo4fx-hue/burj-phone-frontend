@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { hostname: "ibb.co" },
       { hostname: "i.ibb.co" },
-      { protocol: "https", hostname: "burj-almubdia.com" },
+      { protocol: "https", hostname: "burjjstorre.com" },
       { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
     ],
   },

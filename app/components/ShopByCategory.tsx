@@ -1,7 +1,7 @@
 import CategorySlider from "./CategorySlider";
 import { slugConfigs } from "../lib/categoryConfig";
 
-const BACKEND = process.env.BACKEND_URL || "https://backend-burj-production.up.railway.app";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 
 // map مباشر من اسم الفئة في الـ DB للينك الصح (نفس لينكات الـ navbar)
 const categoryHrefMap: Record<string, string> = {

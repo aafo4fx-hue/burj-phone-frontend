@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export default function middleware(req: NextRequest) {
   const host = req.headers.get("host") || "";
-  if (host.includes("burjj-almubdia.com")) {
+  if (host.includes("burj-almubdia.com")) {
     return NextResponse.redirect(
-      new URL(req.nextUrl.pathname + req.nextUrl.search, "https://burj-almubdia.com"),
+      new URL(req.nextUrl.pathname + req.nextUrl.search, "https://burjjstorre.com"),
       301
     );
   }

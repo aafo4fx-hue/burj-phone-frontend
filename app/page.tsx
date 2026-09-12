@@ -7,8 +7,8 @@ import AnimatedBackground from "./components/AnimatedBackground";
 
 export const dynamic = "force-dynamic";
 
-const BACKEND = process.env.BACKEND_URL || "https://backend-burj-production.up.railway.app";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://burj-almubdia.com";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://burjjstorre.com";
 
 async function getCompany() {
   try {

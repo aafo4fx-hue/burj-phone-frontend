@@ -1,4 +1,4 @@
-const ALLOWED_HOSTS = ["localhost", "burj-almubdia.com", "backend-burj-production.up.railway.app"];
+const ALLOWED_HOSTS = ["localhost", "burjjstorre.com", "burj-phone-backend.vercel.app"];
 const ALLOWED_PREFIXES = [
   "/api/admin",
   "/api/products",
@@ -9,7 +9,7 @@ function getApiBase(): string {
   if (typeof window !== "undefined") {
     return "";
   }
-  const raw = (process.env.NEXT_PUBLIC_API_URL || "https://backend-burj-production.up.railway.app").replace(/\/$/, "");
+  const raw = (process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app").replace(/\/$/, "");
   try {
     const { hostname } = new URL(raw);
     if (!ALLOWED_HOSTS.includes(hostname)) throw new Error(`Blocked host: ${hostname}`);
