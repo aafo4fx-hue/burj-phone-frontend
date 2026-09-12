@@ -18,7 +18,6 @@ export default function BannerSlider({ images }: { images: string[] }) {
     (i: number, dir?: number) => {
       const next = (i + images.length) % images.length;
       setDirection(dir ?? (next > current ? 1 : -1));
-      setProgress(0);
       setCurrent(next);
     },
     [images.length, current]
@@ -30,10 +29,12 @@ export default function BannerSlider({ images }: { images: string[] }) {
   }, [current, goTo]);
 
   useEffect(() => {
-    setProgress(0);
     const step = 30;
     const inc = (step / AUTO_PLAY_MS) * 100;
-    progressRef.current = setInterval(() => setProgress((p) => Math.min(p + inc, 100)), step);
+    progressRef.current = setInterval(() => setProgress((p) => {
+      if (p === 0) return inc;
+      return Math.min(p + inc, 100);
+    }), step);
     return () => { if (progressRef.current) clearInterval(progressRef.current); };
   }, [current]);
 
