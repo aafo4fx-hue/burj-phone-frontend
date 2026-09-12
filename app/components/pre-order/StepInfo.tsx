@@ -16,16 +16,16 @@ const MODELS = [
 
 const STORAGE_PRICES: Record<string, { storage: string; price: number }[]> = {
   "iphone-18-pro-max": [
-    { storage: "256GB", price: 6299 },
-    { storage: "512GB", price: 7299 },
-    { storage: "1TB", price: 8299 },
-    { storage: "2TB", price: 9500 },
+    { storage: "256GB", price: 6099 },
+    { storage: "512GB", price: 7099 },
+    { storage: "1TB", price: 9099 },
+    { storage: "2TB", price: 12099 },
   ],
   "iphone-18-pro": [
-    { storage: "256GB", price: 5999 },
-    { storage: "512GB", price: 6999 },
-    { storage: "1TB", price: 7999 },
-    { storage: "2TB", price: 8500 },
+    { storage: "256GB", price: 5699 },
+    { storage: "512GB", price: 6699 },
+    { storage: "1TB", price: 8699 },
+    { storage: "2TB", price: 11699 },
   ],
 };
 
