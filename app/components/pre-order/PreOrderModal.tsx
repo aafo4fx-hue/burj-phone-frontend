@@ -156,10 +156,7 @@ export default function PreOrderModal({ isOpen, onClose, product }: Props) {
 
           {step === "paying" && (
             <StepPaying
-              variant={formData.selectedVariant}
-              depositMethod={formData.depositMethod}
               onNext={handlePayingNext}
-              onBack={() => setStep("deposit")}
             />
           )}
 
