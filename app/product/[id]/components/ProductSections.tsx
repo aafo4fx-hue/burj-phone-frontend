@@ -10,7 +10,7 @@ interface ProductSection {
   title: string;
   subtitle?: string;
   description?: string;
-  content?: Record<string, any>;
+  content?: Record<string, unknown>;
   media?: { type: string; url: string; alt?: string }[];
   sortOrder: number;
   isActive: boolean;
@@ -127,8 +127,6 @@ function DesignSection({ section }: { section: ProductSection }) {
 function CameraSection({ section }: { section: ProductSection }) {
   const content = section.content as Record<string, unknown>;
   const hero = content?.hero as { stats: { value: string; label: string }[]; description: string } | undefined;
-  const [activeZoom, setActiveZoom] = useState(0);
-
   return (
     <section className="mt-16" dir="rtl">
       <SectionHeader label="الكاميرا" title={section.title} subtitle={section.subtitle} />

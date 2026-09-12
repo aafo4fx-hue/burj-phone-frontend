@@ -38,8 +38,11 @@ export default function ProductPageClient({ id, initialProduct }: { id: string; 
   useEffect(() => {
     if (initialProduct || product) return;
     const safeId = /^[a-zA-Z0-9_-]{1,64}$/.test(id) ? id : null;
-    if (!safeId) { setFetchFailed(true); return; }
-    setLoading(true);
+    if (!safeId) {
+      Promise.resolve().then(() => setFetchFailed(true));
+      return;
+    }
+    Promise.resolve().then(() => setLoading(true));
     fetch(`${API}/api/products/${safeId}`)
       .then((r) => { if (!r.ok) throw new Error("not found"); return r.json(); })
       .then(setProduct)

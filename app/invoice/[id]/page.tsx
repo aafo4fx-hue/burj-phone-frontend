@@ -64,6 +64,7 @@ export default function PrintOrderPage() {
   return (
     <div style={{ fontFamily: "Arial, sans-serif", padding: 24, maxWidth: 900, margin: "0 auto", position: "relative", backgroundColor: "white", minHeight: "100vh", background: "white" }}>
       {company.stamp && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={company.stamp}
           alt="stamp"
@@ -71,7 +72,10 @@ export default function PrintOrderPage() {
         />
       )}
       <style>{style}</style>
-      {company.header && <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 24 }} />}
+      {company.header && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 24 }} />
+      )}
 
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, fontSize: 13, fontWeight: 600 }}>
         <span>{date}</span>
@@ -216,7 +220,10 @@ export default function PrintOrderPage() {
         );
       })()}
 
-      {company.footer && <img src={company.footer} alt="footer" style={{ width: "100%", marginTop: 24 }} />}
+      {company.footer && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={company.footer} alt="footer" style={{ width: "100%", marginTop: 24 }} />
+      )}
     </div>
   );
 }

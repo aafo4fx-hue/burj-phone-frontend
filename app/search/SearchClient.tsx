@@ -13,7 +13,7 @@ export default function SearchClient() {
 
   useEffect(() => {
     if (!q) return;
-    setLoading(true);
+    Promise.resolve().then(() => setLoading(true));
     fetch(`/api/products?q=${encodeURIComponent(q)}`)
       .then((r) => r.json())
       .then((data) => setProducts(Array.isArray(data) ? data : []))
