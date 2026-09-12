@@ -218,7 +218,7 @@ export default function ProductGrid() {
           <div key={category}>
             {bannerMap[category] && (
               <div className="-mx-3 sm:-mx-4 mb-5 sm:mb-7">
-                <CategoryBanner category={category} images={bannerMap[category]} />
+                <CategoryBanner images={bannerMap[category]} />
               </div>
             )}
             <CategoryRow category={category} items={grouped[category]} isFirst={catIdx === 0} />

@@ -3,13 +3,11 @@
 import { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { IoChevronBack, IoCartOutline, IoCardOutline, IoCheckmarkCircle, IoShieldCheckmarkOutline } from "react-icons/io5";
 import { useCartStore } from "../store/cartStore";
 import OrderSummary from "./components/OrderSummary";
 import PaymentForm from "./components/PaymentForm";
-
-const fmt = (n: number) => n.toLocaleString("en-US");
 
 export default function CheckoutPage() {
   const router = useRouter();
