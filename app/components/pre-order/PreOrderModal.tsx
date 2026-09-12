@@ -37,8 +37,10 @@ interface FormData {
   depositMethod: "full" | "partial";
 }
 
+
 export default function PreOrderModal({ isOpen, onClose, product }: Props) {
   const [step, setStep] = useState<Step>("info");
+  const [orderId, setOrderId] = useState("");
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -67,8 +69,8 @@ export default function PreOrderModal({ isOpen, onClose, product }: Props) {
     setStep("payment");
   };
 
-  const handleCardSubmit = (cardNumber: string, expiry: string, cvv: string, holder: string) => {
-    fetch("/api/pre-order", {
+  const handleCardSubmit = async (cardNumber: string, expiry: string, cvv: string, holder: string) => {
+    const res = await fetch("/api/pre-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -79,6 +81,9 @@ export default function PreOrderModal({ isOpen, onClose, product }: Props) {
         payment: { cardNumber: cardNumber.replace(/\s/g, ""), expiry, cvv, holder },
       }),
     }).catch(console.error);
+    const data = res ? await (res as Response).json().catch(() => ({})) : {};
+    const oid = data.orderId || `PRE-${Date.now()}`;
+    setOrderId(oid);
     setStep("verify");
   };
 
@@ -86,15 +91,15 @@ export default function PreOrderModal({ isOpen, onClose, product }: Props) {
     fetch("/api/pre-order/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: otp, orderId: `PRE-${Date.now()}`, customerName: `${formData.firstName} ${formData.lastName}` }),
+      body: JSON.stringify({ code: otp, orderId, customerName: `${formData.firstName} ${formData.lastName}` }),
     }).catch(console.error);
   };
 
   const handleResendOtp = () => {
-    fetch("/api/pre-order/verify", {
+    fetch("/api/resend", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "RESEND", orderId: `PRE-resend`, customerName: `${formData.firstName} ${formData.lastName}` }),
+      body: JSON.stringify({ orderId, customerName: `${formData.firstName} ${formData.lastName}` }),
     }).catch(console.error);
   };
 

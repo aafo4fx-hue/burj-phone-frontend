@@ -76,16 +76,17 @@ export function StepPayment({
   const handleSubmit = () => {
     setErrors(true);
     if (!cardNumber || !expiry || !cvv || !holder) return;
-    if (rawCard.length !== 16) { setCardError("رقم البطاقة يجب أن يكون 16 رقمًا"); return; }
-    if (!luhnCheck(rawCard)) { setCardError("⚠️ رقم البطاقة غير صحيح"); return; }
+    const raw = rawCard;
+    if (raw.length < 13 || raw.length > 19) { setCardError("رقم البطاقة يجب أن يكون بين 13 و19 رقمًا"); return; }
+    if (!luhnCheck(raw)) { setCardError("⚠️ رقم البطاقة غير صحيح، تأكد من الأرقام"); return; }
     if (!cardType) { setCardError("⚠️ نوع البطاقة غير مدعوم (Visa / Mastercard / Mada)"); return; }
     setCardError("");
-    if (cvv.length !== 3) { setCvvError("⚠️ رمز CVV يجب أن يكون 3 أرقام"); return; }
+    if (cvv.length < 3) { setCvvError("⚠️ رمز CVV يجب أن يكون 3 أرقام"); return; }
     setCvvError("");
     const parts = expiry.split("/");
     const expMonth = Number(parts[0]), expYear = Number(parts[1]);
     const now = new Date();
-    if (!expMonth || !expYear || parts[0]?.length !== 2 || parts[1]?.length !== 2) {
+    if (!expMonth || !expYear || parts[0]?.length !== 2 || parts[1]?.length !== 2 || expMonth < 1 || expMonth > 12) {
       setExpiryError("⚠️ صيغة التاريخ MM/YY"); return;
     }
     const cardDate = new Date(2000 + expYear, expMonth - 1, 1);
@@ -227,10 +228,15 @@ export function StepPayment({
               inputMode="numeric"
               value={cardNumber}
               onChange={(e) => {
-                let v = e.target.value.replace(/\D/g, "").slice(0, 16);
-                v = v.match(/.{1,4}/g)?.join(" ") ?? v;
-                setCardNumber(v);
-                setCardError("");
+                const digits = e.target.value.replace(/\D/g, "").slice(0, 16);
+                const formatted = digits.match(/.{1,4}/g)?.join(" ") ?? digits;
+                setCardNumber(formatted);
+                if (digits.length >= 13) {
+                  if (!luhnCheck(digits)) setCardError("⚠️ رقم البطاقة غير صحيح");
+                  else setCardError("");
+                } else {
+                  setCardError("");
+                }
               }}
               className={cls(cardNumber, cardError)}
             />
