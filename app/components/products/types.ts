@@ -23,7 +23,7 @@ export interface ProductSection {
   title: string;
   subtitle?: string;
   description?: string;
-  content?: Record<string, any>;
+  content?: Record<string, unknown>;
   media?: {
     type: string;
     url: string;

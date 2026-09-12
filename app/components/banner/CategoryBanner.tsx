@@ -190,7 +190,7 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
   );
 }
 
-export default function CategoryBanner({ category, images: propImages }: { category: string; images?: string[] }) {
+export default function CategoryBanner({ images: propImages }: { images?: string[] }) {
   const images = propImages ?? [];
   if (!images.length) return null;
   return <CategoryBannerSlider images={images} />;

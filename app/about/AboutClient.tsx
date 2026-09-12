@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Shield, Headphones, Percent, Truck, Building2, Target, Star, ChevronLeft } from "lucide-react";
+import { Shield, Headphones, Percent, Truck, Building2, Target, Star } from "lucide-react";
 import ContactSection from "../components/ContactSection";
 
 function useInView(threshold = 0.1) {

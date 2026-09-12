@@ -1,4 +1,3 @@
-import CategorySlider from "./CategorySlider";
 import ShopByCategoryClient from "./ShopByCategoryClient";
 import { slugConfigs } from "../lib/categoryConfig";
 
