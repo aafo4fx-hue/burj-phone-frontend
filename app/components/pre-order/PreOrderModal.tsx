@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { IoCloseOutline } from "react-icons/io5";
-import type { ProductVariant } from "@/app/types/types";
+import type { ProductVariant } from "@/app/components/products/types";
 import { StepInfo } from "./StepInfo";
 import { StepDeposit } from "./StepDeposit";
 import { StepPaying } from "./StepPaying";
