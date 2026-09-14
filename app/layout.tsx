@@ -109,11 +109,21 @@ export default function RootLayout({
         <ClientLayout footer={<Footer />}>{children}</ClientLayout>
         
         {/* Saudi Business Certificate Verification Seal */}
-        <div 
-          className="sbc-verify-seal" 
-          data-token="WVNXMXYvcFZqS0JScUNPdmswWDQ3UT09" 
-          style={{ position: "fixed", bottom: "16px", left: "16px", zIndex: 9999 }}
-        />
+        <a
+          href={`https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/verify?token=WVNXMXYvcFZqS0JScUNPdmswWDQ3UT09`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ position: "fixed", bottom: "16px", left: "16px", zIndex: 9999, display: "block" }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal-image?token=WVNXMXYvcFZqS0JScUNPdmswWDQ3UT09"
+            alt="شهادة التحقق - سجل تجاري"
+            width={80}
+            height={80}
+            style={{ display: "block" }}
+          />
+        </a>
         <Script 
           src="https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal.js"
           strategy="lazyOnload"
