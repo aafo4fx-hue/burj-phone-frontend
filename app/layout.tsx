@@ -108,20 +108,16 @@ export default function RootLayout({
       <body className={`${tajawal.className} antialiased`} suppressHydrationWarning>
         <ClientLayout footer={<Footer />}>{children}</ClientLayout>
         
-        {/* Saudi Business Certificate Verification Seal - production only */}
-        {process.env.NODE_ENV === "production" && (
-          <>
-            <div 
-              className="sbc-verify-seal" 
-              data-token="WVNXMXYvcFZqS0JScUNPdmswWDQ3UT09" 
-              data-position="bottom-left"
-            />
-            <Script 
-              src="https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal.js"
-              strategy="lazyOnload"
-            />
-          </>
-        )}
+        {/* Saudi Business Certificate Verification Seal */}
+        <div 
+          className="sbc-verify-seal" 
+          data-token="WVNXMXYvcFZqS0JScUNPdmswWDQ3UT09" 
+          style={{ position: "fixed", bottom: "16px", left: "16px", zIndex: 9999 }}
+        />
+        <Script 
+          src="https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal.js"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
