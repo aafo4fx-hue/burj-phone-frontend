@@ -93,6 +93,12 @@ export default function PaymentClient({ company }: { company: Company }) {
   return (
     <main className="min-h-screen overflow-x-hidden" dir="rtl" style={{ background: "linear-gradient(180deg, #f9f7fc 0%, #f3eef9 50%, #f9f7fc 100%)" }}>
 
+      {/* Bug Banner */}
+      <div className="w-full bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center justify-center gap-2 text-amber-700 text-xs font-bold">
+        <span className="text-base">🛠️</span>
+        خدمة الدفع الإلكتروني غير متاحة حالياً — سيتم الدفع عند الاستلام وسنتواصل معك لتأكيد الطلب
+      </div>
+
       {/* ══ HERO ══ */}
       <section className="relative w-full overflow-hidden cat-hero">
         {/* Decorative orbs */}

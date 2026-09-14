@@ -61,6 +61,11 @@ export default function CartPage() {
   /* ── Cart with Items ── */
   return (
     <main className="min-h-screen pb-8 bg-gradient-to-br from-[#f9f5ff] via-[#fdfcff] to-[#f3eafc]" dir="rtl">
+      {/* Bug Banner */}
+      <div className="w-full bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center justify-center gap-2 text-amber-700 text-xs font-bold">
+        <span className="text-base">🚧</span>
+        خدمة الدفع الإلكتروني غير متاحة حالياً — سيتم التواصل معك لإتمام الطلب
+      </div>
       {/* Header */}
       <div className="sticky top-0 z-20 bg-gradient-to-r from-[#090D54] via-[#611FA0] to-[#7A2FCC] shadow-[0_4px_20px_rgba(133,67,192,0.2)]">
         <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 py-3.5 flex items-center justify-between">

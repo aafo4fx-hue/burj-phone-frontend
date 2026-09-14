@@ -1,5 +1,9 @@
 "use client";
 
+// ── HIDDEN – إخفاء مؤقت، الكود محفوظ ──
+export default function CheckoutPage() { return null; }
+
+/*
 import { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -62,7 +66,6 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen pb-10 bg-gradient-to-br from-[#f9f5ff] via-[#fdfcff] to-[#f3eafc]" dir="rtl">
-      {/* Header */}
       <div className="sticky top-0 z-20 bg-gradient-to-r from-[#090D54] via-[#611FA0] to-[#7A2FCC] shadow-[0_4px_20px_rgba(133,67,192,0.2)]">
         <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -78,7 +81,6 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {/* Steps Indicator */}
       <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 pt-5 pb-2">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -107,7 +109,6 @@ export default function CheckoutPage() {
         </motion.div>
       </div>
 
-      {/* Content */}
       <div className="w-full mx-auto px-4 sm:px-8 lg:px-12">
         <div className="max-w-2xl mx-auto space-y-5">
           <OrderSummary total={total} downPayment={downPayment} />
@@ -117,3 +118,4 @@ export default function CheckoutPage() {
     </main>
   );
 }
+*/
