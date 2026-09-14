@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Tajawal } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import ClientLayout from "./components/ClientLayout";
 import Footer from "./components/Footer";
+import SaudiBusinessSeal from "./components/SaudiBusinessSeal";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -106,6 +108,22 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <body className={`${tajawal.className} antialiased`} suppressHydrationWarning>
         <ClientLayout footer={<Footer />}>{children}</ClientLayout>
+        
+        {/* Saudi Business Certificate Verification Seal - production only */}
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <div 
+              className="sbc-verify-seal" 
+              data-token="WVNXMXYvcFZqS0JScUNPdmswWDQ3UT09" 
+              data-position="bottom-left"
+            />
+            <Script 
+              src="https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal.js"
+              strategy="lazyOnload"
+              onError={() => {}}
+            />
+          </>
+        )}
       </body>
     </html>
   );
