@@ -119,7 +119,6 @@ export default function RootLayout({
             <Script 
               src="https://eauthenticate.saudibusiness.gov.sa/EAuthSealApi/seal.js"
               strategy="lazyOnload"
-              onError={() => {}}
             />
           </>
         )}
