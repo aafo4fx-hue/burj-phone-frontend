@@ -4,7 +4,6 @@ import Script from "next/script";
 import "./globals.css";
 import ClientLayout from "./components/ClientLayout";
 import Footer from "./components/Footer";
-import SaudiBusinessSeal from "./components/SaudiBusinessSeal";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
