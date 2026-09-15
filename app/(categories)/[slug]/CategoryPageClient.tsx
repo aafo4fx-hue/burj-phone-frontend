@@ -17,12 +17,14 @@ const normalizeAr = (s: string) =>
 function filterProducts(products: Product[], slug: string): Product[] {
   const config = slugConfigs[slug];
   if (!config) return products;
-  const { brand, category, nameIncludes } = config.filters;
+  const { brand, category, nameIncludes, nameExcludes } = config.filters;
   return products.filter((p) => {
+    const normalizedName = normalizeAr(p.name ?? "");
+    if (nameExcludes?.length && nameExcludes.some((kw) => normalizedName.includes(normalizeAr(kw)))) return false;
     const matchBrand = brand ? p.brand?.toLowerCase() === brand.toLowerCase() : true;
     const matchCategory = category ? normalizeAr(p.category ?? "") === normalizeAr(category) : false;
     const matchName = nameIncludes?.length
-      ? nameIncludes.some((kw) => normalizeAr(p.name ?? "").includes(normalizeAr(kw)))
+      ? nameIncludes.some((kw) => normalizedName.includes(normalizeAr(kw)))
       : false;
     if (nameIncludes?.length && category) return (matchBrand && matchName) || matchCategory;
     if (nameIncludes?.length) return matchBrand && matchName;
@@ -59,7 +61,8 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
   const [selectedStorage, setSelectedStorage] = useState<string>("");
   const [showFilters, setShowFilters] = useState(true);
   const gridRef = useRef<HTMLDivElement>(null);
-  const ITEMS_PER_PAGE = 12;
+  const PRICE_SORTED_SLUGS = ["iphone-18-pro-max", "iphone-18-pro", "iphone-18-duo"];
+  const ITEMS_PER_PAGE = PRICE_SORTED_SLUGS.includes(slug) ? 10 : 12;
 
   useEffect(() => {
     if (!config) return;
@@ -83,7 +86,11 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
           if (c.includes("ازرق") || c.includes("أزرق") || c.toLowerCase().includes("blue")) return 2;
           return 3;
         };
+        const priceSortedSlugs = ["iphone-18-pro-max", "iphone-18-pro", "iphone-18-duo"];
         const sorted = [...filtered].sort((a, b) => {
+          if (priceSortedSlugs.includes(slug)) {
+            return (a.salePrice ?? a.originalPrice ?? 0) - (b.salePrice ?? b.originalPrice ?? 0);
+          }
           const storageDiff = parseStorage(a.storage) - parseStorage(b.storage);
           if (storageDiff !== 0) return storageDiff;
           return colorOrder(a.color) - colorOrder(b.color);

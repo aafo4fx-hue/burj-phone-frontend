@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { IoCheckmarkCircle, IoDocumentTextOutline, IoListOutline, IoCardOutline, IoSparkles, IoDiamondOutline } from "react-icons/io5";
+import { IoCheckmarkCircle, IoListOutline, IoCardOutline } from "react-icons/io5";
 import type { Product } from "../../../components/products/types";
 
 const fmt = (n: number) => n.toLocaleString("ar-SA");
@@ -27,11 +27,10 @@ interface ProductDetailsProps {
   specGroups?: { group: string; items: { key: string; value: string }[] }[];
 }
 
-type Tab = "specs" | "installment" | "description";
+type Tab = "specs" | "installment";
 
 const tabMeta: Record<Tab, { icon: typeof IoListOutline; label: string }> = {
   specs: { icon: IoListOutline, label: "المواصفات" },
-  description: { icon: IoDocumentTextOutline, label: "الوصف" },
   installment: { icon: IoCardOutline, label: "التقسيط" },
 };
 
@@ -40,7 +39,6 @@ export default function ProductDetails({ installment, description, specs, specGr
   const [activeGroup, setActiveGroup] = useState(0);
   const tabs: { key: Tab; show: boolean }[] = [
     { key: "specs", show: !!hasSpecs },
-    { key: "description", show: !!description },
     { key: "installment", show: !!installment?.available },
   ];
   const visibleTabs = tabs.filter((t) => t.show);
@@ -139,69 +137,6 @@ export default function ProductDetails({ installment, description, specs, specGr
             )}
           </div>
         )}
-
-        {/* Description */}
-        {active === "description" && description && (() => {
-          const lines = description.split("\n").map((l) => l.trim()).filter(Boolean);
-          const title = lines[0];
-          const items = lines.slice(1);
-          return (
-            <div className="relative rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden p-4 sm:p-6 md:p-9 lg:p-10" style={{ background: "linear-gradient(160deg, rgba(255,255,255,0.93) 0%, rgba(245,240,232,0.9) 50%, rgba(255,255,255,0.87) 100%)" }}>
-              {/* Title */}
-              {title && (
-                <div className="flex items-center gap-2.5 sm:gap-3.5 md:gap-4 mb-4 sm:mb-6 md:mb-8">
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #8543C0, #611FA0)", boxShadow: "0 4px 16px rgba(133,67,192,0.25)" }}>
-                    <IoDiamondOutline size={16} className="text-white sm:hidden" />
-                    <IoDiamondOutline size={20} className="text-white hidden sm:block md:hidden" />
-                    <IoDiamondOutline size={26} className="text-white hidden md:block" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-[13px] sm:text-base md:text-lg lg:text-xl font-black leading-snug truncate" style={{ color: "#1F2C3E" }}>{title}</h3>
-                    <p className="text-[9px] sm:text-[10px] md:text-[11px] font-medium mt-0.5" style={{ color: "#611FA0" }}>ما يميّز هذا المنتج عن غيره</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Feature Items */}
-              {items.length > 0 && (
-                <div className="relative pr-4 sm:pr-5 md:pr-6">
-                  <div className="absolute top-1 right-[7px] sm:right-[9px] md:right-[11px] bottom-1 w-[1.5px] sm:w-[2px] rounded-full" style={{ background: "linear-gradient(to bottom, #8543C0, #A77FD8, transparent)" }} />
-                  <div className="flex flex-col gap-2 sm:gap-3 md:gap-3.5">
-                    {items.map((line, i) => {
-                      const cleanLine = line.replace(/^[•\-\*]\s*/, "");
-                      return (
-                        <div key={i} className="relative flex items-start group">
-                          <div className="absolute right-[-16px] sm:right-[-20px] md:right-[-24px] top-2.5 sm:top-3 md:top-3.5 w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full border-[2px] sm:border-[2.5px] group-hover:scale-150 transition-transform duration-300" style={{ borderColor: "#8543C0", backgroundColor: "#fff" }} />
-                          <div className="flex-1 rounded-lg sm:rounded-xl md:rounded-2xl px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 md:py-4 transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-0.5" style={{ backgroundColor: "rgba(255,255,255,0.7)", border: "1px solid rgba(133,67,192,0.1)" }}>
-                            <div className="flex items-center gap-2 sm:gap-2.5">
-                              <span className="text-[9px] sm:text-[10px] md:text-[11px] font-black px-1.5 sm:px-2 py-0.5 rounded-md shrink-0" style={{ backgroundColor: "rgba(133,67,192,0.1)", color: "#8543C0" }}>
-                                {String(i + 1).padStart(2, "0")}
-                              </span>
-                              <p className="text-[10px] sm:text-[11px] md:text-xs lg:text-sm font-semibold leading-relaxed" style={{ color: "#1F2C3E" }}>
-                                {cleanLine}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Bottom badge */}
-              {items.length > 0 && (
-                <div className="mt-4 sm:mt-6 md:mt-8 flex justify-center">
-                  <span className="inline-flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] md:text-[11px] font-bold px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 rounded-full shadow-sm text-white" style={{ background: "linear-gradient(135deg, #8543C0, #611FA0)" }}>
-                    <IoSparkles size={11} className="sm:hidden" />
-                    <IoSparkles size={13} className="hidden sm:block" />
-                    {items.length} ميزة مضمونة
-                  </span>
-                </div>
-              )}
-            </div>
-          );
-        })()}
 
         {/* Installment */}
         {active === "installment" && installment?.available && (

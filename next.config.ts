@@ -37,6 +37,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     minimumCacheTTL: 60,
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { hostname: "ibb.co" },
       { hostname: "i.ibb.co" },

@@ -7,7 +7,7 @@ import Footer from "./components/Footer";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
-  weight: ["200", "300", "400", "500", "700", "800", "900"],
+  weight: ["400", "700", "800"],
   display: "swap",
 });
 

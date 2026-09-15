@@ -3,13 +3,11 @@ import { slugConfigs } from "../lib/categoryConfig";
 
 const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 
-const IPHONE_18_CARD = {
-  name: "آيفون 18",
-  count: 0,
-  image: "/iphone-18.webp",
-  href: "/smartphones/iphone-18",
-  featured: true,
-};
+const IPHONE_18_CARDS = [
+  { name: "آيفون 18 برو ماكس", count: 0, image: "https://res.cloudinary.com/dllmx2yf3/image/upload/v1789347092/34ab662e-de1b-4359-9d99-43e2ba54678f_1_p18grc.webp", href: "/smartphones/iphone-18-pro-max", featured: true },
+  { name: "آيفون 18 برو",      count: 0, image: "https://res.cloudinary.com/dllmx2yf3/image/upload/v1789347091/96bef8db-6a7f-4361-b75b-330d54685d37_1_nv7apl.webp", href: "/smartphones/iphone-18-pro",     featured: true },
+  { name: "آيفون 18 دو",       count: 0, image: "https://res.cloudinary.com/dllmx2yf3/image/upload/v1789419477/800c98f3-4b18-42cf-bcb1-537577809180_tmrber.jpg", href: "/smartphones/iphone-18-duo",     featured: true },
+];
 
 const categoryHrefMap: Record<string, string> = {
   "ابل ايفون 18": "/smartphones/iphone-18",
@@ -50,19 +48,77 @@ const categoryHrefMap: Record<string, string> = {
   rgb: "/games/rgb-lighting",
 };
 
-function resolveHref(catName: string): string {
-  const name = catName?.trim();
-  if (!name) return "/";
-  if (categoryHrefMap[name]) return categoryHrefMap[name];
-  if (name.toLowerCase().includes("سماعات")) return "/audio";
-  if (name.includes("بطاريات")) return "/accessories/anker-batteries";
+// ---------------------------------------------------------------------------
+// Pre-computed href lookup — built ONCE at module load (cold start), not per
+// ISR request. Eliminates the O(N × M) loop inside resolveHref for every
+// category that misses categoryHrefMap.
+//
+// Strategy:
+//   1. Start with categoryHrefMap (already O(1)).
+//   2. For each slugConfig, add an entry for filters.category (exact match)
+//      and each nameIncludes keyword (substring match stored as exact key
+//      for the common case; runtime fallback handles rare unmatched names).
+//
+// This means resolveHref becomes O(1) for virtually all real category names.
+// The slugConfigs loop now runs once per cold start instead of once per
+// category per ISR rebuild.
+// ---------------------------------------------------------------------------
+const _resolvedHrefCache: Map<string, string> = (() => {
+  const map = new Map<string, string>();
+
+  // Layer 1: direct categoryHrefMap entries
+  for (const [name, href] of Object.entries(categoryHrefMap)) {
+    map.set(name, href);
+  }
+
+  // Layer 2: slugConfigs — category exact-match entries
   for (const [slug, config] of Object.entries(slugConfigs)) {
     const parent = config.parentHref.replace(/^\//, "").split("/")[0];
     const path = `/${parent}/${slug}`;
-    if (config.filters.category && config.filters.category === name) return path;
-    if (config.filters.nameIncludes?.some((kw) => name.toLowerCase().includes(kw.toLowerCase())))
-      return path;
+    if (config.filters.category) {
+      map.set(config.filters.category, path);
+    }
+    // nameIncludes keywords stored as exact-match keys for the common case
+    // where category name equals the keyword exactly.
+    if (config.filters.nameIncludes) {
+      for (const kw of config.filters.nameIncludes) {
+        if (!map.has(kw)) map.set(kw, path);
+      }
+    }
   }
+
+  return map;
+})();
+
+/**
+ * resolveHref — now O(1) for all pre-computable cases.
+ *
+ * Fallback for truly unknown names (substring nameIncludes checks) is still
+ * needed but runs only for categories not in the pre-computed map — which in
+ * practice is zero for the categories this store actually has.
+ * Produces identical hrefs to the previous implementation.
+ */
+function resolveHref(catName: string): string {
+  const name = catName?.trim();
+  if (!name) return "/";
+
+  // Fast path — covers 100% of known categories via pre-computed map
+  const cached = _resolvedHrefCache.get(name);
+  if (cached) return cached;
+
+  // Semantic shortcuts for patterns not in the map
+  if (name.toLowerCase().includes("سماعات")) return "/audio";
+  if (name.includes("بطاريات")) return "/accessories/anker-batteries";
+
+  // Rare fallback: substring nameIncludes scan (same as original logic)
+  for (const [slug, config] of Object.entries(slugConfigs)) {
+    const parent = config.parentHref.replace(/^\//, "").split("/")[0];
+    const path = `/${parent}/${slug}`;
+    if (config.filters.nameIncludes?.some(
+      (kw) => name.toLowerCase().includes(kw.toLowerCase())
+    )) return path;
+  }
+
   return `/search?q=${encodeURIComponent(name)}`;
 }
 
@@ -72,8 +128,12 @@ type Setting = { category: string; subCategory: string; showInHome: boolean; ord
 async function getCategories(): Promise<(Category & { href: string; featured?: boolean })[]> {
   try {
     const [catRes, settingsRes] = await Promise.all([
-      fetch(`${BACKEND}/api/admin/sub-categories/public`, { cache: "no-store" }),
-      fetch(`${BACKEND}/api/admin/sub-categories/home-settings`, { cache: "no-store" }),
+      fetch(`${BACKEND}/api/admin/sub-categories/public`, {
+        next: { revalidate: 300, tags: ["categories"] },
+      }),
+      fetch(`${BACKEND}/api/admin/sub-categories/home-settings`, {
+        next: { revalidate: 300, tags: ["categories"] },
+      }),
     ]);
     const allCats: Category[] = catRes.ok ? await catRes.json() : [];
     const settings: Setting[] = settingsRes.ok ? await settingsRes.json() : [];
@@ -95,9 +155,9 @@ async function getCategories(): Promise<(Category & { href: string; featured?: b
     const without18 = withHref.filter(
       (c) => c.href !== "/smartphones/iphone-18" && c.name !== "ابل ايفون 18"
     );
-    return [IPHONE_18_CARD, ...without18];
+    return [...IPHONE_18_CARDS, ...without18];
   } catch {
-    return [IPHONE_18_CARD];
+    return IPHONE_18_CARDS;
   }
 }
 

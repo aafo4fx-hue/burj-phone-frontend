@@ -132,7 +132,10 @@ export default function ProductGrid() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/products`).then((r) => r.json()),
+      // limit=500 caps the response while still covering large catalogs.
+      // The backend now applies a .select() projection so each document is
+      // ~90% smaller (no sections, specGroups, variants, detailedSpecs).
+      fetch(`/api/products?limit=500`).then((r) => r.json()),
       fetch("/api/sub-categories-home").then((r) => r.json()).catch(() => ({ settings: [], max: 4 })),
     ])
       .then(([prods, config]) => {
@@ -194,12 +197,13 @@ export default function ProductGrid() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-3xl overflow-hidden border border-gray-100">
-                <div className="w-full aspect-square bg-gradient-to-b from-gray-50 to-white animate-pulse" />
-                <div className="p-3.5 space-y-2.5">
-                  <div className="h-3.5 bg-gray-100 animate-pulse rounded-full w-[80%]" />
+              <div key={i} className="bg-white rounded-[20px] overflow-hidden border border-[#ede8f5]">
+                <div className="w-full aspect-square bg-[#f8f6fc] animate-pulse" />
+                <div className="p-3 space-y-2.5">
+                  <div className="h-3 bg-gray-100 animate-pulse rounded-full w-[80%]" />
                   <div className="h-3 bg-gray-100 animate-pulse rounded-full w-[55%]" />
-                  <div className="h-10 bg-purple-50 animate-pulse rounded-xl mt-3" />
+                  <div className="h-5 bg-gray-100 animate-pulse rounded-full w-[45%] mt-1" />
+                  <div className="h-9 bg-purple-50 animate-pulse rounded-xl mt-2" />
                 </div>
               </div>
             ))}

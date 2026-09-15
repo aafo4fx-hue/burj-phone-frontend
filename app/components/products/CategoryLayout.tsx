@@ -88,11 +88,12 @@ export default function CategoryLayout({ title, parentLabel, parentHref = "/", p
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="cat-skeleton-card rounded-2xl overflow-hidden">
+              <div key={i} className="cat-skeleton-card rounded-[20px] overflow-hidden">
                 <div className="aspect-square cat-shimmer" />
-                <div className="p-3.5 space-y-3">
-                  <div className="h-3.5 rounded-full w-[80%] cat-shimmer" />
+                <div className="p-3 space-y-2.5">
+                  <div className="h-3 rounded-full w-[80%] cat-shimmer" />
                   <div className="h-3 rounded-full w-[55%] cat-shimmer" />
+                  <div className="h-5 rounded-full w-[40%] cat-shimmer mt-1" />
                   <div className="h-9 rounded-xl cat-shimmer mt-2" />
                 </div>
               </div>

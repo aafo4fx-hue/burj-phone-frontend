@@ -9,34 +9,26 @@ const SWIPE_THRESHOLD = 50;
 export default function BannerSlider({ images }: { images: string[] }) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [progress, setProgress] = useState(0);
+  // progressKey increments on each slide change — CSS animation restarts via key prop.
+  const [progressKey, setProgressKey] = useState(0);
   const touchStart = useRef(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const progressRef = useRef<NodeJS.Timeout | null>(null);
 
   const goTo = useCallback(
     (i: number, dir?: number) => {
       const next = (i + images.length) % images.length;
       setDirection(dir ?? (next > current ? 1 : -1));
       setCurrent(next);
+      setProgressKey((k) => k + 1);
     },
     [images.length, current]
   );
 
+  // Single interval — auto-play only. Progress is CSS-driven.
   useEffect(() => {
     intervalRef.current = setInterval(() => goTo(current + 1, 1), AUTO_PLAY_MS);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [current, goTo]);
-
-  useEffect(() => {
-    const step = 30;
-    const inc = (step / AUTO_PLAY_MS) * 100;
-    progressRef.current = setInterval(() => setProgress((p) => {
-      if (p === 0) return inc;
-      return Math.min(p + inc, 100);
-    }), step);
-    return () => { if (progressRef.current) clearInterval(progressRef.current); };
-  }, [current]);
 
   const onTouchStart = (e: React.TouchEvent) => { touchStart.current = e.touches[0].clientX; };
   const onTouchEnd = (e: React.TouchEvent) => {
@@ -79,20 +71,19 @@ export default function BannerSlider({ images }: { images: string[] }) {
                   fill
                   className="object-cover"
                   priority={current === 0}
-                  unoptimized
                   sizes="100vw"
                 />
               </motion.div>
             </AnimatePresence>
 
-
-            {/* Progress bar */}
+            {/* Progress bar — pure CSS animation, zero JS per-frame cost */}
             {images.length > 1 && (
               <div className="absolute bottom-0 left-0 right-0 z-20 h-[3px] bg-black/10">
-                <motion.div
-                  className="h-full"
+                <div
+                  key={progressKey}
+                  className="h-full banner-progress"
                   style={{
-                    width: `${progress}%`,
+                    animationDuration: `${AUTO_PLAY_MS}ms`,
                     background: "linear-gradient(90deg, #A842E4, #7A2FCC)",
                   }}
                 />
@@ -101,7 +92,7 @@ export default function BannerSlider({ images }: { images: string[] }) {
           </div>
         </div>
 
-        {/* Simple dots - no images */}
+        {/* Dots */}
         {images.length > 1 && (
           <div className="flex items-center justify-center gap-2 mt-3 sm:mt-4">
             {images.map((_, i) => (

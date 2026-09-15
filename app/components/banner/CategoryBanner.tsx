@@ -9,37 +9,28 @@ const SWIPE_THRESHOLD = 50;
 function CategoryBannerSlider({ images }: { images: string[] }) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [progress, setProgress] = useState(0);
+  // progressKey restarts the CSS progress animation without any JS timer.
+  const [progressKey, setProgressKey] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const touchStart = useRef(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const progressRef = useRef<NodeJS.Timeout | null>(null);
 
   const goTo = useCallback(
     (i: number, dir?: number) => {
       const next = (i + images.length) % images.length;
       setDirection(dir ?? (next > current ? 1 : -1));
       setCurrent(next);
+      setProgressKey((k) => k + 1);
     },
     [images.length, current]
   );
 
+  // Single interval for auto-play. Progress bar is pure CSS.
   useEffect(() => {
     if (isHovered) return;
     intervalRef.current = setInterval(() => goTo(current + 1, 1), AUTO_PLAY_MS);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [current, goTo, isHovered]);
-
-  useEffect(() => {
-    if (isHovered) return;
-    const step = 30;
-    const inc = (step / AUTO_PLAY_MS) * 100;
-    progressRef.current = setInterval(() => setProgress((p) => {
-      if (p === 0) return inc;
-      return Math.min(p + inc, 100);
-    }), step);
-    return () => { if (progressRef.current) clearInterval(progressRef.current); };
-  }, [current, isHovered]);
 
   const variants = {
     enter: (d: number) => ({ x: `${d * 100}%`, opacity: 0 }),
@@ -51,18 +42,15 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
     <div className="w-full px-3 sm:px-4 py-2">
       <motion.div
         className="relative w-full max-w-5xl mx-auto overflow-hidden rounded-2xl sm:rounded-3xl"
-        style={{
-          boxShadow: "0 4px 24px rgba(15,76,110,0.10), 0 1.5px 6px rgba(0,0,0,0.06)",
-        }}
-        whileHover={{
-          boxShadow: "0 8px 32px rgba(15,76,110,0.18), 0 2px 10px rgba(0,0,0,0.08)",
-        }}
+        style={{ boxShadow: "0 4px 24px rgba(15,76,110,0.10), 0 1.5px 6px rgba(0,0,0,0.06)" }}
+        whileHover={{ boxShadow: "0 8px 32px rgba(15,76,110,0.18), 0 2px 10px rgba(0,0,0,0.08)" }}
         transition={{ duration: 0.3 }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Gradient border accent */}
-        <div className="absolute inset-0 rounded-2xl sm:rounded-3xl z-30 pointer-events-none"
+        <div
+          className="absolute inset-0 rounded-2xl sm:rounded-3xl z-30 pointer-events-none"
           style={{ border: "1.5px solid rgba(124,192,67,0.25)" }}
         />
 
@@ -89,21 +77,16 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
               transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
               className="absolute inset-0"
             >
-              <motion.div
-                className="w-full h-full"
-                animate={{ scale: [1, 1.03] }}
-                transition={{ duration: AUTO_PLAY_MS / 1000, ease: "linear" }}
-              >
-                <Image
-                  src={images[current]}
-                  alt={`banner ${current + 1}`}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                  sizes="(max-width: 640px) 100vw, 960px"
-                  loading={current === 0 ? "eager" : "lazy"}
-                />
-              </motion.div>
+              {/* Ken Burns removed — was running a continuous compositor animation.
+                  Simple static fill is used instead. */}
+              <Image
+                src={images[current]}
+                alt={`banner ${current + 1}`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 100vw, 960px"
+                loading={current === 0 ? "eager" : "lazy"}
+              />
             </motion.div>
           </AnimatePresence>
 
@@ -151,13 +134,15 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
             </>
           )}
 
-          {/* Progress bar */}
+          {/* Progress bar — CSS-driven, zero JS per-frame cost */}
           {images.length > 1 && (
             <div className="absolute bottom-0 left-0 right-0 z-20 h-[3px] bg-white/10">
-              <motion.div
-                className="h-full rounded-full"
+              <div
+                key={progressKey}
+                className="h-full rounded-full banner-progress"
                 style={{
-                  width: `${progress}%`,
+                  animationDuration: `${AUTO_PLAY_MS}ms`,
+                  animationPlayState: isHovered ? "paused" : "running",
                   background: "linear-gradient(90deg, #7CC043, #5FA32E)",
                 }}
               />

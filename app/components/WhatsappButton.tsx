@@ -1,15 +1,15 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useCompanyStore } from "../store/companyStore";
 
 export default function WhatsappButton() {
-  const [whatsapp, setWhatsapp] = useState("");
+  const { whatsapp, fetchCompany } = useCompanyStore();
 
+  // fetchCompany is idempotent — if Navbar already called it this session,
+  // the persisted store returns immediately without a network request.
   useEffect(() => {
-    fetch(`/api/company`)
-      .then((r) => r.json())
-      .then((d) => setWhatsapp(d.whatsapp || ""))
-      .catch(() => {});
-  }, []);
+    fetchCompany();
+  }, [fetchCompany]);
 
   if (!whatsapp) return null;
 

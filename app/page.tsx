@@ -2,17 +2,21 @@ import { Banner } from "./components/banner";
 import { ProductGrid } from "./components/products";
 import CustomerReviews from "./components/CustomerReviews";
 import ShopByCategory from "./components/ShopByCategory";
-import AnimatedBackground from "./components/AnimatedBackground";
-// import MarqueeBanner from "./components/MarqueeBanner";
 
-export const dynamic = "force-dynamic";
+// Revalidate every 5 minutes — company data + banners + categories change infrequently.
+// Individual child fetches (banners: 60s, company: 3600s) still apply their own TTLs.
+export const revalidate = 300;
 
-const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://burjjstorre.com";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 
+// Shared cached fetch — deduplicated with layout.tsx's generateMetadata call
+// because both use the same URL + revalidate value within the same render.
 async function getCompany() {
   try {
-    const r = await fetch(`${BACKEND}/api/admin/company`, { next: { revalidate: 3600 } });
+    const r = await fetch(`${BACKEND}/api/admin/company`, {
+      next: { revalidate: 3600, tags: ["company"] },
+    });
     return r.ok ? r.json() : {};
   } catch {
     return {};
@@ -49,11 +53,9 @@ export default async function Home() {
         availableLanguage: "Arabic",
       },
     ].filter(Boolean),
-    address: c.addressAr ? {
-      "@type": "PostalAddress",
-      addressLocality: c.addressAr,
-      addressCountry: "SA",
-    } : undefined,
+    address: c.addressAr
+      ? { "@type": "PostalAddress", addressLocality: c.addressAr, addressCountry: "SA" }
+      : undefined,
     email: c.email || undefined,
     sameAs: c.website ? [c.website] : [],
   };
@@ -65,10 +67,7 @@ export default async function Home() {
     url: SITE_URL,
     potentialAction: {
       "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
-      },
+      target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/search?q={search_term_string}` },
       "query-input": "required name=search_term_string",
     },
   };
@@ -84,8 +83,6 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
       />
       <main className="min-h-screen home-gradient">
-        <AnimatedBackground />
-        {/* <MarqueeBanner /> */}
         <Banner />
         <ShopByCategory />
         <ProductGrid />

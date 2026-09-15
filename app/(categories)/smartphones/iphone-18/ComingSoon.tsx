@@ -48,7 +48,6 @@ interface ComingSoonProps {
   modelName: string;
   slides?: string[];
   reservationDate: string;
-  /** تاريخ توفر المنتج للعرض في البطاقة */
   availabilityDate?: string;
 }
 
@@ -76,7 +75,6 @@ export default function ComingSoon({
   // When timer expires let the parent server component re-render via router refresh
   useEffect(() => {
     if (expired) {
-      // Soft-refresh so the server component re-evaluates isOver
       window.location.reload();
     }
   }, [expired]);
@@ -92,7 +90,6 @@ export default function ComingSoon({
     { v: countdown.s, l: "ثانية" },
   ];
 
-  // Reservation date card label — derive from the ISO string if possible
   const reservationLabel = (() => {
     try {
       return new Date(reservationDate).toLocaleDateString("ar-SA", {
@@ -110,29 +107,31 @@ export default function ComingSoon({
     <>
       <style>{`
         @keyframes cs-fadeUp {
-          from { opacity: 0; transform: translateY(18px); }
+          from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes cs-pulseGlow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(168,66,228,0); }
-          50%       { box-shadow: 0 0 20px 6px rgba(168,66,228,0.18); }
+        @keyframes cs-tick {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.4; }
         }
-        .cs-fu   { animation: cs-fadeUp 0.65s ease both; }
-        .cs-fu-1 { animation-delay: 0.05s; }
-        .cs-fu-2 { animation-delay: 0.15s; }
-        .cs-fu-3 { animation-delay: 0.25s; }
-        .cs-fu-4 { animation-delay: 0.35s; }
-        .cs-fu-5 { animation-delay: 0.45s; }
-        .cs-countdown-card { animation: cs-pulseGlow 3s ease-in-out infinite; }
+        .cs-fu      { animation: cs-fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+        .cs-fu-1    { animation-delay: 0.05s; }
+        .cs-fu-2    { animation-delay: 0.15s; }
+        .cs-fu-3    { animation-delay: 0.25s; }
+        .cs-fu-4    { animation-delay: 0.35s; }
+        .cs-fu-5    { animation-delay: 0.45s; }
+        .cs-fu-6    { animation-delay: 0.55s; }
+        .cs-sep     { animation: cs-tick 2s ease-in-out infinite; }
       `}</style>
 
-      <div className="relative w-full overflow-hidden flex flex-col" dir="rtl">
-        {/* ── Background slides ─────────────────────────────────────────────── */}
+      <div className="relative w-full overflow-hidden" dir="rtl" style={{ minHeight: "100svh" }}>
+
+        {/* ── Background Slides ──────────────────────────────────────────── */}
         {images.map((src, i) => (
           <div
             key={i}
             className="absolute inset-0 transition-opacity"
-            style={{ opacity: i === active ? 1 : 0, transitionDuration: "1.5s" }}
+            style={{ opacity: i === active ? 1 : 0, transitionDuration: "1.8s" }}
           >
             <Image
               src={src}
@@ -145,50 +144,45 @@ export default function ComingSoon({
           </div>
         ))}
 
-        {/* ── Overlay ──────────────────────────────────────────────────────── */}
+        {/* ── Dark Overlay — gradient weighted to bottom ─────────────────── */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.75) 100%)",
+              "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.1) 35%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.82) 100%)",
           }}
         />
 
-        {/* ── Main content ─────────────────────────────────────────────────── */}
+        {/* ── Content ───────────────────────────────────────────────────── */}
         <div
-          className="relative z-10 flex flex-col items-center justify-end text-center px-4 sm:px-6 py-10 sm:py-14 gap-4 sm:gap-5 w-full max-w-md mx-auto"
-          style={{ minHeight: "100svh" }}
+          className="relative z-10 flex flex-col items-center justify-end text-center px-5 sm:px-8 pb-14 sm:pb-20 gap-5 sm:gap-6 w-full"
+          style={{ minHeight: "100svh", maxWidth: 480, margin: "0 auto" }}
         >
+
           {/* Badge */}
           <div className="cs-fu cs-fu-1">
             <span
-              className="inline-flex items-center gap-1.5 font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded-full"
+              className="inline-flex items-center gap-2 font-bold tracking-widest uppercase px-4 py-1.5 rounded-full text-[0.6rem]"
               style={{
-                fontSize: "clamp(0.52rem, 2vw, 0.62rem)",
-                background: "rgba(168,66,228,0.15)",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-                border: "1px solid rgba(168,66,228,0.4)",
-                color: "#d8a8ff",
+                background: "rgba(122,47,204,0.18)",
+                border: "1px solid rgba(192,132,252,0.35)",
+                color: "#e4c6ff",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
               }}
             >
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full"
-                style={{ backgroundColor: "#c084fc" }}
-              />
-              قريباً
+              <span className="w-1.5 h-1.5 rounded-full bg-[#c084fc] inline-block" />
+              حجز مسبق
             </span>
           </div>
 
-          {/* Model name */}
+          {/* Model Name */}
           <h1
-            className="cs-fu cs-fu-2 font-black leading-[1.0] tracking-tight"
+            className="cs-fu cs-fu-2 font-black leading-none tracking-tight"
             style={{
-              fontSize: "clamp(2.2rem, 10vw, 4.2rem)",
-              background: "linear-gradient(135deg, #ffffff 30%, #d8b4fe 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              fontSize: "clamp(2.6rem, 11vw, 4.8rem)",
+              color: "#ffffff",
+              textShadow: "0 2px 24px rgba(0,0,0,0.4)",
             }}
           >
             {modelName}
@@ -196,121 +190,131 @@ export default function ComingSoon({
 
           {/* Tagline */}
           <p
-            className="cs-fu cs-fu-3 font-medium -mt-1"
+            className="cs-fu cs-fu-3 font-medium -mt-2"
             style={{
-              fontSize: "clamp(0.72rem, 2.8vw, 0.9rem)",
-              color: "rgba(255,255,255,0.55)",
+              fontSize: "clamp(0.78rem, 2.5vw, 0.95rem)",
+              color: "rgba(255,255,255,0.5)",
+              letterSpacing: "0.02em",
             }}
           >
             التجربة القادمة تستحق الانتظار
           </p>
 
-          {/* Divider */}
+          {/* Thin Divider */}
           <div
-            className="cs-fu cs-fu-3 w-16 rounded-full mx-auto"
+            className="cs-fu cs-fu-3 w-12 rounded-full mx-auto -mt-1"
             style={{
-              height: 1.5,
-              background:
-                "linear-gradient(90deg, transparent, rgba(192,132,252,0.55), transparent)",
+              height: 1,
+              background: "linear-gradient(90deg, transparent, rgba(192,132,252,0.5), transparent)",
             }}
           />
 
           {/* Countdown */}
-          <div
-            className="cs-fu cs-fu-4 flex gap-2 sm:gap-3 justify-center w-full"
-            dir="ltr"
-          >
-            {units.map(({ v, l }) => (
-              <div
-                key={l}
-                className="cs-countdown-card flex flex-col items-center justify-center rounded-2xl flex-1"
-                style={{
-                  padding: "clamp(10px, 3vw, 18px) 4px",
-                  background: "rgba(255,255,255,0.07)",
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  border: "1px solid rgba(168,66,228,0.25)",
-                  minWidth: 0,
-                }}
-              >
-                <span
-                  className="font-black text-white tabular-nums leading-none"
-                  style={{ fontSize: "clamp(1.2rem, 5vw, 2.2rem)" }}
-                >
-                  {pad(v)}
-                </span>
-                <span
-                  className="font-medium mt-1"
-                  style={{
-                    fontSize: "clamp(0.48rem, 1.5vw, 0.6rem)",
-                    color: "rgba(216,180,254,0.65)",
-                  }}
-                >
-                  {l}
-                </span>
-              </div>
-            ))}
+          <div className="cs-fu cs-fu-4 w-full" dir="ltr">
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+              {units.map(({ v, l }, idx) => (
+                <div key={l} className="flex items-center gap-1.5 sm:gap-2">
+                  {/* Unit card */}
+                  <div
+                    className="flex flex-col items-center justify-center rounded-2xl"
+                    style={{
+                      width: "clamp(58px, 18vw, 80px)",
+                      paddingTop: "clamp(10px, 3vw, 16px)",
+                      paddingBottom: "clamp(10px, 3vw, 16px)",
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    <span
+                      className="font-black text-white tabular-nums leading-none"
+                      style={{ fontSize: "clamp(1.5rem, 6vw, 2.4rem)" }}
+                    >
+                      {pad(v)}
+                    </span>
+                    <span
+                      className="font-medium mt-1.5"
+                      style={{
+                        fontSize: "clamp(0.5rem, 1.4vw, 0.6rem)",
+                        color: "rgba(216,180,254,0.6)",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {l}
+                    </span>
+                  </div>
+                  {/* Separator — except after last */}
+                  {idx < units.length - 1 && (
+                    <span
+                      className="cs-sep font-black text-white/30 select-none"
+                      style={{ fontSize: "clamp(1rem, 4vw, 1.6rem)", marginBottom: 14 }}
+                    >
+                      :
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Info cards */}
-          <div className="cs-fu cs-fu-5 flex gap-2 sm:gap-3 w-full">
+          {/* Info Cards */}
+          <div className="cs-fu cs-fu-5 grid grid-cols-2 gap-2.5 sm:gap-3 w-full">
             {[
               { Icon: CalendarDays, label: "فتح باب الحجز", value: reservationLabel },
-              { Icon: PackageCheck, label: "موعد التوفير", value: availabilityDate },
+              { Icon: PackageCheck, label: "موعد التوفير",  value: availabilityDate  },
             ].map(({ Icon, label, value }) => (
               <div
                 key={label}
-                className="flex flex-col items-center gap-1.5 px-2 sm:px-3 py-3 sm:py-4 rounded-2xl flex-1"
+                className="flex flex-col items-center gap-2 px-3 py-4 rounded-2xl"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.09)",
                 }}
               >
                 <Icon
-                  size={16}
+                  size={15}
                   strokeWidth={1.8}
-                  style={{ color: "rgba(216,180,254,0.75)" }}
+                  style={{ color: "rgba(216,180,254,0.7)" }}
                 />
                 <span
                   className="font-medium text-center leading-tight"
                   style={{
-                    fontSize: "clamp(0.48rem, 1.6vw, 0.58rem)",
-                    color: "rgba(255,255,255,0.4)",
+                    fontSize: "clamp(0.5rem, 1.6vw, 0.6rem)",
+                    color: "rgba(255,255,255,0.38)",
+                    letterSpacing: "0.03em",
                   }}
                 >
                   {label}
                 </span>
                 <span
-                  className="font-bold text-white text-center leading-tight"
-                  style={{ fontSize: "clamp(0.58rem, 2.2vw, 0.75rem)" }}
+                  className="font-bold text-white text-center leading-snug"
+                  style={{ fontSize: "clamp(0.65rem, 2.2vw, 0.78rem)" }}
                 >
                   {value}
                 </span>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* ── Slide dots ───────────────────────────────────────────────────── */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 items-center">
-          {images.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setActive(i)}
-              aria-label={`الشريحة ${i + 1}`}
-              className="rounded-full transition-all duration-500"
-              style={{
-                width: i === active ? 24 : 6,
-                height: 6,
-                background:
-                  i === active
-                    ? "linear-gradient(90deg, #A842E4, #7A2FCC)"
-                    : "rgba(255,255,255,0.28)",
-              }}
-            />
-          ))}
+          {/* Slide Dots */}
+          <div className="cs-fu cs-fu-6 flex gap-1.5 items-center justify-center">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActive(i)}
+                aria-label={`الشريحة ${i + 1}`}
+                className="rounded-full transition-all duration-500"
+                style={{
+                  width:  i === active ? 22 : 6,
+                  height: 6,
+                  background:
+                    i === active
+                      ? "linear-gradient(90deg, #A842E4, #7A2FCC)"
+                      : "rgba(255,255,255,0.22)",
+                }}
+              />
+            ))}
+          </div>
+
         </div>
       </div>
     </>

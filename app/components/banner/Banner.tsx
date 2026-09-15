@@ -6,7 +6,13 @@ export default async function Banner() {
   let images: string[] = [];
 
   try {
-    const res = await fetch(`${API}/api/admin/banners`, { next: { revalidate: 60 } });
+    // Increased from 60s to 3600s (1 hour).
+    // No on-demand revalidation is wired from the admin panel, so revalidate:60
+    // was causing ~1,440 ISR background executions per day for data that changes
+    // at most a few times per week.
+    // ISR invocation reduction: 1,440/day → 24/day (Calculated).
+    // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
+    const res = await fetch(`${API}/api/admin/banners`, { next: { revalidate: 3600 } });
     const data: { url: string; active: boolean }[] = await res.json();
     if (Array.isArray(data))
       images = data.filter((b) => b.url && b.active).map((b) => b.url.startsWith("http") ? b.url : `${API}${b.url}`);

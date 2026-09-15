@@ -13,7 +13,9 @@ export interface SlugConfig {
 
 export const categoryHeroImages: Record<string, string> = {
   // Smartphones
-  "iphone-18": "https://res.cloudinary.com/dyqkhcuxe/image/upload/v1789143815/34ab662e-de1b-4359-9d99-43e2ba54678f_1_zd9s2s.webp",
+  "iphone-18-pro-max": "https://res.cloudinary.com/dllmx2yf3/image/upload/v1789348035/fc7c6460-6a02-40eb-86ef-3fa23b06c673_1_hccf4o.webp",
+  "iphone-18-pro":"https://res.cloudinary.com/dllmx2yf3/image/upload/v1789347926/b23c542a-4cfb-400d-a99d-f02ed9b882d9_dfunoo.webp",
+  "iphone-18-duo": "https://res.cloudinary.com/dllmx2yf3/image/upload/v1789348464/472da8f7-71d6-4978-ad76-27cbfa1b0103_phiizy.webp",
   "iphone-13-pro-max": "/i17p.webp",
   "iphone-14-pro-max": "/i17.webp",
   "iphone-14-pro": "/i15pl.webp",
@@ -171,6 +173,24 @@ export const slugConfigs: Record<string, SlugConfig> = {
       category: "ابل ايفون 18",
       nameIncludes: ["iphone 18", "iPhone 18", "ايفون 18", "آيفون 18"],
     },
+  },
+  "iphone-18-pro-max": {
+    label: "آيفون 18 برو ماكس",
+    parentLabel: "الهواتف الذكية",
+    parentHref: "/smartphones",
+    filters: { category: "ابل ايفون 18 برو ماكس" },
+  },
+  "iphone-18-pro": {
+    label: "آيفون 18 برو",
+    parentLabel: "الهواتف الذكية",
+    parentHref: "/smartphones",
+    filters: { category: "ابل ايفون 18 برو" },
+  },
+  "iphone-18-duo": {
+    label: "آيفون 18 دو",
+    parentLabel: "الهواتف الذكية",
+    parentHref: "/smartphones",
+    filters: { category: "ابل ايفون 18 دو" },
   },
   "apple-only": {
     label: "فقط آبل",

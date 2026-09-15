@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   IoCartOutline, IoShieldCheckmark, IoCarOutline,
   IoCheckmarkDoneCircle, IoFlash, IoBagCheckOutline, IoCheckmarkCircle,
@@ -46,9 +47,18 @@ export default function ProductInfo({
         <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4" style={{ borderBottom: "1px solid #f0ebe4" }}>
           <div className="flex items-center gap-2 mb-2">
             {brand && (
-              <span className="text-[10px] sm:text-[11px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full" style={{ backgroundColor: "rgba(133,67,192,0.1)", color: "#8543C0" }}>
-                {brand}
-              </span>
+              brand.toLowerCase() === "apple" ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ backgroundColor: "rgba(133,67,192,0.1)" }}>
+                  <svg viewBox="0 0 814 1000" width="12" height="12" fill="#8543C0" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 70.1 0 128.4 46.4 172.5 46.4 42.8 0 109.6-49 192.5-49 30.9 0 111.9 2.6 168.3 80.1zm-234-181.5c31.1-36.9 53.1-88.1 53.1-139.3 0-7.1-.6-14.3-1.9-20.1-50.6 1.9-110.8 33.7-147.1 75.8-28.5 32.4-55.1 83.6-55.1 135.5 0 7.8 1.3 15.6 1.9 18.1 3.2.6 8.4 1.3 13.6 1.3 45.4 0 102.5-30.4 135.5-71.3z"/>
+                  </svg>
+                  <span className="text-[10px] sm:text-[11px] font-black tracking-widest uppercase" style={{ color: "#8543C0" }}>Apple</span>
+                </span>
+              ) : (
+                <span className="text-[10px] sm:text-[11px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full" style={{ backgroundColor: "rgba(133,67,192,0.1)", color: "#8543C0" }}>
+                  {brand}
+                </span>
+              )
             )}
             <span className={`inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full ${inStock ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${inStock ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`} />
@@ -136,7 +146,7 @@ export default function ProductInfo({
                 <div>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(salePrice!)}</span>
-                    <span className="text-sm sm:text-base font-bold" style={{ color: "#611FA0" }}>ر.س</span>
+                    <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} className="inline-block opacity-90" />
                   </div>
                   {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
                 </div>
@@ -145,7 +155,7 @@ export default function ProductInfo({
                     وفّر {savingsPercent}%
                   </span>
                   <span className="text-xs sm:text-sm line-through opacity-40 flex items-center gap-1" style={{ color: "#1F2C3E" }}>
-                    {fmt(originalPrice)} ر.س
+                    {fmt(originalPrice)} <Image src="/money-icon.webp" alt="ر.س" width={16} height={16} className="inline-block opacity-60" />
                   </span>
                 </div>
               </div>
@@ -153,7 +163,7 @@ export default function ProductInfo({
               <div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(originalPrice)}</span>
-                  <span className="text-sm sm:text-base font-bold" style={{ color: "#611FA0" }}>ر.س</span>
+                  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} className="inline-block opacity-90" />
                 </div>
                 {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
               </div>
@@ -168,8 +178,8 @@ export default function ProductInfo({
               <IoFlash size={14} style={{ color: "#8543C0" }} />
             </div>
             <div>
-              <p className="text-[11px] sm:text-xs font-bold" style={{ color: "#1F2C3E" }}>
-                تقسيط متاح {installment.downPayment ? `• مقدم ${fmt(installment.downPayment)} ر.س` : ""}
+              <p className="text-[11px] sm:text-xs font-bold flex items-center gap-1 flex-wrap" style={{ color: "#1F2C3E" }}>
+                تقسيط متاح {installment.downPayment ? <><span>• مقدم {fmt(installment.downPayment)}</span><Image src="/money-icon.webp" alt="ر.س" width={14} height={14} className="inline-block" /></> : ""}
               </p>
               {installment.note && <p className="text-[10px] mt-0.5" style={{ color: "#611FA0" }}>{installment.note}</p>}
             </div>

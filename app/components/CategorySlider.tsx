@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 
 type Category = {
   name: string;
@@ -21,103 +20,69 @@ export default function CategorySlider({
   return (
     <div className="relative w-full" dir="rtl">
       {/* fade edges */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-16 z-10 bg-gradient-to-l from-[#f8f5ff] to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-16 z-10 bg-gradient-to-r from-[#f8f5ff] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-12 z-10 bg-gradient-to-l from-white to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-12 z-10 bg-gradient-to-r from-white to-transparent" />
 
       <div
         ref={trackRef}
-        className="flex gap-4 sm:gap-5 overflow-x-auto px-6 sm:px-10 pb-4 pt-1"
-        style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          WebkitOverflowScrolling: "touch",
-        }}
+        className="flex gap-3 sm:gap-4 overflow-x-auto px-4 sm:px-6 pb-3 pt-1"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
       >
         {categories.map((cat, i) => (
           <CategoryCard key={`${cat.name}-${i}`} cat={cat} />
         ))}
       </div>
-
-      <style jsx>{`
-        div::-webkit-scrollbar { display: none; }
-      `}</style>
     </div>
   );
 }
 
-// ── Card ─────────────────────────────────────────────────────────────────────
+// No useState — hover effects are pure CSS via Tailwind group-hover utilities.
+// Eliminates N React re-renders (one per card) on every mouse-enter/leave.
 function CategoryCard({ cat }: { cat: Category }) {
-  const [hovered, setHovered] = useState(false);
-
   return (
     <Link
       href={cat.href}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={`
-        relative shrink-0 flex flex-col justify-end overflow-hidden rounded-2xl
-        w-[155px] h-[200px] sm:w-[175px] sm:h-[220px]
-        transition-all duration-300 ease-out
-        ${hovered
-          ? "shadow-[0_16px_48px_rgba(124,58,237,0.22)] -translate-y-1.5 scale-[1.03]"
-          : "shadow-[0_4px_16px_rgba(0,0,0,0.10)]"
-        }
-        ${cat.featured ? "ring-2 ring-[#A842E4]/50" : ""}
-      `}
+      className={[
+        "group relative shrink-0 flex flex-col overflow-hidden rounded-2xl bg-white",
+        "border border-gray-100 w-[140px] sm:w-[160px] transition-all duration-300",
+        "shadow-[0_1px_4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_rgba(133,67,192,0.10)]",
+      ].join(" ")}
     >
-      {/* background image */}
-      {cat.image ? (
-        <Image
-          src={cat.image}
-          alt={cat.name}
-          fill
-          unoptimized
-          className={`object-cover transition-transform duration-500 ease-out ${
-            hovered ? "scale-110" : "scale-100"
-          }`}
-          sizes="(max-width:640px) 155px, 175px"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-4xl">
-          🛍️
-        </div>
-      )}
-
-      {/* overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-      {/* featured badge */}
-      {cat.featured && (
-        <span className="absolute top-3 right-3 z-10 text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#A842E4] text-white tracking-wide shadow">
-          جديد
-        </span>
-      )}
-
-      {/* text + button */}
-      <div className="relative z-10 p-3 sm:p-3.5 flex flex-col gap-2">
-        <span className="text-white font-black text-[13px] sm:text-sm leading-snug line-clamp-2 drop-shadow-md">
-          {cat.name}
-        </span>
-
-        {cat.count > 0 && (
-          <span className="text-white/60 text-[10px] font-medium">
-            {cat.count} منتج
-          </span>
+      {/* Image */}
+      <div className="relative w-full bg-gray-50 overflow-hidden" style={{ paddingBottom: "100%" }}>
+        {cat.image ? (
+          <Image
+            src={cat.image}
+            alt={cat.name}
+            fill
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+            sizes="(max-width:640px) 140px, 160px"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-3xl bg-purple-50">🛍️</div>
         )}
 
-        <div
-          className={`
-            w-full flex items-center justify-center gap-1.5
-            text-[11px] font-bold py-1.5 rounded-xl
-            transition-all duration-300
-            ${hovered ? "bg-white text-[#7C3AED] shadow-md" : "bg-white/20 text-white backdrop-blur-sm"}
-          `}
+        {cat.featured && (
+          <span className="absolute top-2 right-2 text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#A842E4] text-white">
+            جديد
+          </span>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="px-3 py-2.5 flex items-center justify-between gap-2">
+        <span className="text-[12px] sm:text-[13px] font-bold text-gray-800 leading-snug line-clamp-2 flex-1">
+          {cat.name}
+        </span>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="none"
+          className="shrink-0 text-[#A842E4] transition-transform duration-200 group-hover:-translate-x-[3px]"
         >
-          تسوق الآن
-          <svg width="11" height="11" viewBox="0 0 10 10" fill="none">
-            <path d="M7 5H3M5 3L3 5L5 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+          <path d="M9 3L5 7L9 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </div>
     </Link>
   );

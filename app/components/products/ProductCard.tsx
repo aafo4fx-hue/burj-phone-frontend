@@ -7,12 +7,23 @@ import Image from "next/image";
 import { IoCartOutline, IoCheckmarkCircleOutline } from "react-icons/io5";
 import { TbTruckDelivery } from "react-icons/tb";
 import { GoShieldCheck } from "react-icons/go";
+import { MdOutlinePayment } from "react-icons/md";
 import type { Product } from "./types";
 import { useCartStore } from "../../store/cartStore";
-import { usePreOrderAvailability } from "@/app/lib/usePreOrderAvailability";
-import PreOrderModal from "../pre-order/PreOrderModal";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
+
+const formatStorage = (storage: string): string => {
+  if (!storage) return storage;
+  return storage
+    .replace(/(\d+)\s*جيجابايت/gi, '$1 GB')
+    .replace(/(\d+)\s*جيجا\s*بايت/gi, '$1 GB')
+    .replace(/(\d+)\s*جيجا/gi, '$1 GB')
+    .replace(/(\d+)\s*تيرابايت/gi, '$1 TB')
+    .replace(/(\d+)\s*تيرا\s*بايت/gi, '$1 TB')
+    .replace(/(\d+)\s*تيرا/gi, '$1 TB')
+    .trim();
+};
 
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const resolveImg = (src: string) => {
@@ -21,26 +32,16 @@ const resolveImg = (src: string) => {
 };
 
 export default function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
-  const { name, salePrice, discountPercent = 0, freeDelivery, warrantyYears, inStock } = product;
+  const { name, salePrice, discountPercent = 0, inStock } = product;
   const image = product.images?.[0] || product.image;
   const resolvedImage = image ? resolveImg(image) : undefined;
   const originalPrice = product.originalPrice ?? product.price ?? 0;
   const hasDiscount = salePrice != null && salePrice !== originalPrice;
+  const displayPrice = hasDiscount ? salePrice! : originalPrice;
   const addItem = useCartStore((s) => s.addItem);
   const router = useRouter();
   const [added, setAdded] = useState(false);
   const [toast, setToast] = useState(false);
-  const [preOrderModalOpen, setPreOrderModalOpen] = useState(false);
-  const reservationStatus = usePreOrderAvailability();
-
-  // Detect if this is iPhone 18 pre-order product
-  const isIPhone18PreOrder = reservationStatus === "open" && 
-    (name.toLowerCase().includes("iphone 18") || 
-     name.toLowerCase().includes("ايفون 18") ||
-     name.toLowerCase().includes("آيفون 18") ||
-     name.toLowerCase().includes("18 برو") ||
-     name.toLowerCase().includes("18 دو") ||
-     name.toLowerCase().includes("18 duo"));
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -57,12 +58,6 @@ export default function ProductCard({ product, priority = false }: { product: Pr
     }, 1000);
   };
 
-  const handlePreOrder = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setPreOrderModalOpen(true);
-  };
-
   return (
     <>
       {toast && (
@@ -74,130 +69,83 @@ export default function ProductCard({ product, priority = false }: { product: Pr
 
       <Link
         href={`/product/${product._id}`}
-        className="group relative bg-white rounded-3xl overflow-hidden flex flex-col h-full border border-gray-100/80 shadow-[0_2px_12px_rgba(133,67,192,0.06)] hover:shadow-[0_12px_40px_rgba(133,67,192,0.12)] hover:-translate-y-1 transition-all duration-400"
+        className="pc-card group"
         dir="rtl"
       >
-        {/* Image Section */}
-        <div className="relative w-full bg-gradient-to-b from-gray-50/80 to-white overflow-hidden" style={{ paddingBottom: "100%" }}>
-          <div className="absolute inset-0 p-3 sm:p-5">
-            {resolvedImage ? (
-              <Image
-                src={resolvedImage}
-                alt={name}
-                fill
-                className="object-contain"
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                priority={priority}
-                loading={priority ? "eager" : "lazy"}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">📱</div>
-            )}
-          </div>
-
-          {/* Discount Badge */}
-          {discountPercent > 0 && (
-            <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3">
-              <span className="bg-gradient-to-br from-red-500 to-rose-600 text-white text-[10px] sm:text-[11px] font-extrabold px-2.5 py-1.5 rounded-xl leading-none shadow-lg shadow-red-200/50">
-                {discountPercent}%-
-              </span>
-            </div>
-          )}
-
-          {/* Stock Badge */}
-          <div className="absolute top-2.5 left-2.5 sm:top-3 sm:left-3">
-            {inStock ? (
-              <span className="inline-flex items-center gap-1 bg-emerald-50/90 backdrop-blur-sm text-emerald-600 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-lg border border-emerald-100">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                متوفر
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 bg-gray-50/90 backdrop-blur-sm text-gray-500 text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-lg border border-gray-200">
-                غير متوفر
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="px-3 sm:px-4 pt-3 pb-2 flex flex-col gap-2 flex-1">
-          <h3 className="text-[11px] sm:text-[13px] md:text-sm font-bold text-gray-800 leading-relaxed line-clamp-2 group-hover:text-[#7A2FCC] transition-colors duration-300">
-            {name}
-          </h3>
-
-          {(freeDelivery || warrantyYears > 0) && (
-            <div className="flex flex-wrap items-center gap-2">
-              {freeDelivery && (
-                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md font-semibold">
-                  <TbTruckDelivery size={11} />
-                  مجاني
-                </span>
-              )}
-              {warrantyYears > 0 && (
-                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md font-semibold">
-                  <GoShieldCheck size={10} />
-                  {warrantyYears}س
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Price */}
-          <div className="mt-auto pt-2">
-            {hasDiscount ? (
-              <div className="flex items-center gap-2">
-                <span className="text-base sm:text-lg md:text-xl font-black text-gray-900">
-                  {fmt(salePrice)}
-                </span>
-                <Image src="/money-icon.webp" alt="ر.س" width={27} height={27} className="inline-block" />
-                <span className="text-[11px] sm:text-xs text-red-400 line-through">
-                  {fmt(originalPrice)}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                <span className="text-base sm:text-lg md:text-xl font-black text-gray-900">
-                  {fmt(originalPrice)}
-                </span>
-                <Image src="/money-icon.webp" alt="ر.س" width={27} height={27} className="inline-block" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Cart Button / Pre-Order Buttons */}
-        <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-1">
-          {isIPhone18PreOrder ? (
-            <button
-              onClick={handlePreOrder}
-              className="w-full bg-gradient-to-l from-[#A842E4] to-[#7A2FCC] text-white text-xs sm:text-sm font-black py-2.5 sm:py-3 rounded-xl shadow-lg shadow-purple-200/50 hover:shadow-xl hover:shadow-purple-300/60 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-1.5"
-            >
-              ⚡ احجز الآن
-            </button>
+        {/* ── Image Zone ── */}
+        <div className="pc-img-zone">
+          {resolvedImage ? (
+            <Image
+              src={resolvedImage}
+              alt={name}
+              fill
+              className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              priority={priority}
+              loading={priority ? "eager" : "lazy"}
+            />
           ) : (
-            <button
-              onClick={handleAddToCart}
-              disabled={!inStock}
-              className={`product-cart-btn ${added ? "added" : ""} ${!inStock ? "!bg-gray-200 !shadow-none !from-gray-200 !to-gray-300 cursor-not-allowed" : ""}`}
-            >
-              {added ? (
-                <><IoCheckmarkCircleOutline size={16} />تمت الإضافة</>
-              ) : (
-                <><IoCartOutline size={16} />{inStock ? "أضف للسلة" : "غير متوفر"}</>
-              )}
-            </button>
+            <div className="w-full h-full flex items-center justify-center text-gray-200 text-5xl">📱</div>
           )}
+
+          {discountPercent > 0 && (
+            <span className="pc-discount-badge">
+              -{discountPercent}%
+            </span>
+          )}
+        </div>
+
+        {/* ── Content ── */}
+        <div className="pc-body">
+          <h3 className="pc-name">{name}</h3>
+
+          {(product.warrantyYears > 0 || product.storage || product.freeDelivery) && (
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {product.storage && (
+                <span className="pc-badge pc-badge-gray">{formatStorage(product.storage)}</span>
+              )}
+              {product.freeDelivery && (
+                <span className="pc-badge pc-badge-green">
+                  <TbTruckDelivery size={12} />
+                  توصيل مجاني
+                </span>
+              )}
+              {product.warrantyYears >= 2 && (
+                <>
+                  <span className="pc-badge pc-badge-blue">
+                    <GoShieldCheck size={12} />
+                    ضمان سنتين
+                  </span>
+                  <span className="pc-badge pc-badge-purple">
+                    <MdOutlinePayment size={12} />
+                    تقسيط بسعر الكاش
+                  </span>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="pc-price-row">
+            <span className="pc-price">{fmt(displayPrice)}</span>
+            <Image src="/money-icon.webp" alt="ر.س" width={32} height={32} className="inline-block opacity-90 shrink-0" loading="lazy" />
+            {hasDiscount && (
+              <span className="pc-old-price">{fmt(originalPrice)}</span>
+            )}
+          </div>
+
+          <button
+            onClick={handleAddToCart}
+            disabled={!inStock}
+            className={`pc-btn ${added ? "pc-btn-added" : inStock ? "pc-btn-cart" : "pc-btn-oos"}`}
+          >
+            {added ? (
+              <><IoCheckmarkCircleOutline size={15} />تمت الإضافة</>
+            ) : (
+              <><IoCartOutline size={15} />{inStock ? "أضف للسلة" : "غير متوفر"}</>
+            )}
+          </button>
         </div>
       </Link>
-
-      {/* Pre-Order Modal */}
-      {isIPhone18PreOrder && (
-        <PreOrderModal
-          isOpen={preOrderModalOpen}
-          onClose={() => setPreOrderModalOpen(false)}
-          product={product}
-        />
-      )}
     </>
   );
 }

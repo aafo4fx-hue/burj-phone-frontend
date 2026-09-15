@@ -90,14 +90,12 @@ export default function Navbar() {
               {logo && (
                 <Image
                   src={logo}
-                  unoptimized
                   alt="برج المبدع للتقنية"
-                  width={0}
-                  height={0}
-                  sizes="100vw"
+                  width={180}
+                  height={80}
                   className="h-14 sm:h-14 lg:h-20 w-auto"
                   priority
-                  loading="eager"
+                  sizes="(max-width:1024px) 140px, 180px"
                 />
               )}
             </Link>
