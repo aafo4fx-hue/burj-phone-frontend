@@ -1,6 +1,7 @@
 "use client";
+import { useRef } from "react";
 import Image from "next/image";
-import { API, LABELS } from "../constants";
+import { LABELS } from "../constants";
 import type { BannerItem } from "../types";
 
 interface BannerCardProps {
@@ -20,9 +21,9 @@ export default function BannerCard({
 }: BannerCardProps) {
   const hasImage = !!banner.url;
 
-  const triggerInput = () => {
-    if (!isLoading) (document.querySelector(`input[data-idx="${index}"]`) as HTMLInputElement)?.click();
-  };
+  // FIX #4: use a local ref instead of document.querySelector — zero DOM scan
+  const localRef = useRef<HTMLInputElement | null>(null);
+  const triggerInput = () => { if (!isLoading) localRef.current?.click(); };
 
   return (
     <div
@@ -60,11 +61,13 @@ export default function BannerCard({
         {hasImage ? (
           <>
             <Image
-              src={banner.url.startsWith("http") ? banner.url : `${API}${banner.url}`}
+              src={banner.url}
               alt={LABELS[index] || `بانر ${index + 1}`}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
-              quality={100}
+              // FIX #6: quality=75 is sufficient for admin preview — saves bandwidth
+              quality={75}
+              unoptimized={banner.url.includes("cloudinary") || banner.url.includes("res.cloudinary")}
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
               <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-gray-800 text-sm font-semibold px-4 py-2 rounded-xl shadow">
@@ -101,9 +104,9 @@ export default function BannerCard({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* FIX #4: ref merged — localRef for click trigger, inputRef forwarded to parent */}
           <input
-            ref={inputRef}
-            data-idx={index}
+            ref={(el) => { localRef.current = el; inputRef(el); }}
             type="file"
             accept="image/*"
             className="hidden"

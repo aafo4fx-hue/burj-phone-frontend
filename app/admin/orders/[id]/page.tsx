@@ -8,21 +8,38 @@ import { Section, InfoRow, FinField } from "./components";
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const [order, setOrder] = useState<Order | null>(null);
+  const router  = useRouter();
+  const [order, setOrder]   = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fin, setFin] = useState({ total: 0, downPayment: 0, months: 0, monthlyPayment: 0 });
-  const [saving, setSaving] = useState(false);
+  const [fin, setFin]         = useState({ total: 0, downPayment: 0, months: 0, monthlyPayment: 0 });
+  const [saving, setSaving]   = useState(false);
+  // CSRF token fetched once on mount — required by the backend CSRF middleware
+  // for all mutation endpoints (PUT, DELETE).
+  const [csrfToken, setCsrfToken] = useState("");
 
+  // FIX #11: merge both fetches into one useEffect with a single AbortController
   useEffect(() => {
-    fetch(`/api/admin/orders/${id}`)
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    // CSRF fetch — fire and forget (no await needed, non-blocking)
+    fetch("/api/admin/csrf", { signal })
+      .then((r) => r.json())
+      .then((d) => { if (!signal.aborted) setCsrfToken(d.csrfToken || ""); })
+      .catch(() => {});
+
+    // Order data fetch
+    fetch(`/api/admin/orders/${id}`, { signal })
       .then((r) => r.json())
       .then((d) => {
+        if (signal.aborted) return;
         setOrder(d);
-        setFin({ total: d.total, downPayment: d.downPayment, months: d.months, monthlyPayment: d.monthlyPayment });
+        setFin({ total: d.total ?? 0, downPayment: d.downPayment ?? 0, months: d.months ?? 0, monthlyPayment: d.monthlyPayment ?? 0 });
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => { if (!signal.aborted) setLoading(false); });
+
+    return () => controller.abort();
   }, [id]);
 
   function calcMonthly() {
@@ -35,7 +52,7 @@ export default function OrderDetailPage() {
     setSaving(true);
     const res = await fetch(`/api/admin/orders/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
       body: JSON.stringify({ financials: true, ...fin }),
     });
     if (res.ok) { setOrder(await res.json()); toast.success("تم حفظ الأرقام ✅"); }
@@ -46,7 +63,7 @@ export default function OrderDetailPage() {
   async function changeStatus(status: string) {
     const res = await fetch(`/api/admin/orders/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
       body: JSON.stringify({ status }),
     });
     if (res.ok) {

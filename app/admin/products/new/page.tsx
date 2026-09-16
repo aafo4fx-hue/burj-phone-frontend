@@ -107,9 +107,6 @@ export default function NewProductPage() {
     }
   }
 
-  const mainImageDisplay = imageMode === "upload" ? imagePreview : imageUrl;
-  void mainImageDisplay;
-
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg mx-auto space-y-4 py-4">
       <h1 className="text-xl font-bold text-gray-800">إضافة منتج جديد</h1>

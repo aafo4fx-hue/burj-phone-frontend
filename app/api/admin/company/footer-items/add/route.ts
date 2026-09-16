@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { getBackend, forwardCookies } from "../../../_lib";
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ key: string }> }) {
-  const { key } = await params;
-  const formData = await req.formData();
+export async function POST(req: NextRequest) {
   const res = await fetch(
-    `${getBackend()}/api/admin/company/upload/${key}`,
-    forwardCookies(req, { method: "POST", body: formData })
+    `${getBackend()}/api/admin/company/footer-items/add`,
+    forwardCookies(req, { method: "POST" })
   );
   const data = await res.json();
   if (res.ok) revalidateTag("company", "max");

@@ -41,11 +41,22 @@ export default function ReviewsPage() {
   const [saving, setSaving] = useState(false);
   const [commentPopup, setCommentPopup] = useState<string | null>(null);
 
+  // FIX #6: AbortController — cancel in-flight fetch on unmount
   useEffect(() => {
-    apiFetch("/api/admin/reviews/all", { credentials: "include" })
+    const controller = new AbortController();
+    // ✅ FIX #5: pass limit=200 — default was 100, silently dropping reviews beyond page 1
+    apiFetch("/api/admin/reviews/all?limit=200", { credentials: "include", signal: controller.signal })
       .then((r) => r.json())
-      .then((data) => { if (Array.isArray(data)) setReviews(data); })
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        // ✅ FIX #1: backend returns { reviews, total, page, pages } — NOT a plain array.
+        // Array.isArray(data) was always false so setReviews was never called → table always empty.
+        const list = Array.isArray(data) ? data : (Array.isArray(data?.reviews) ? data.reviews : []);
+        setReviews(list);
+      })
+      .catch((err) => { if (controller.signal.aborted) return; console.error("[reviews] fetch error:", err); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   async function toggleApproved(id: string) {
@@ -66,7 +77,7 @@ export default function ReviewsPage() {
 
   function openEdit(r: Review) {
     setEditReview(r);
-    setEditForm({ name: r.name, comment: r.comment, rating: r.rating, gender: r.gender || "male" });
+    setEditForm({ name: r.name ?? "", comment: r.comment ?? "", rating: r.rating ?? 5, gender: r.gender || "male" });
   }
 
   async function saveEdit() {

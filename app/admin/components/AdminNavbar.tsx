@@ -2,27 +2,38 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useCompanyStore } from "../../store/companyStore";
+
+// Polling interval in ms — 30 s is plenty for a notification badge.
+// The previous value was 15 s which doubled the request rate with no benefit.
+const POLL_INTERVAL_MS = 30_000;
 
 export default function AdminNavbar({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
-  const [logo, setLogo] = useState("");
+  // Re-use the same company store that Navbar.tsx uses — zero extra network
+  // request because the store caches the result for 1 hour in localStorage.
+  const { logo, fetchCompany } = useCompanyStore();
   const [orderCount, setOrderCount] = useState(0);
 
+  // Fetch company data once; store handles TTL so this is a no-op on re-mounts
+  // within the cache window.
   useEffect(() => {
-    fetch("/api/admin/company")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.logo) setLogo(d.logo.startsWith("http") ? d.logo : `http://localhost:5000${d.logo}`);
-      })
-      .catch(() => {});
+    fetchCompany();
+  }, [fetchCompany]);
 
-    const loadOrders = () =>
-      fetch("/api/admin/orders")
+  useEffect(() => {
+    // Fetches only the total count — not the full orders list.
+    // The /api/admin/orders/count endpoint returns { count: number } by asking
+    // the backend for limit=1 and reading the `total` field — zero document
+    // data is serialised compared to the previous approach of fetching all orders.
+    const loadCount = () =>
+      fetch("/api/admin/orders/count")
         .then((r) => r.json())
-        .then((d) => setOrderCount(Array.isArray(d) ? d.length : 0))
+        .then((d) => setOrderCount(typeof d.count === "number" ? d.count : 0))
         .catch(() => {});
-    loadOrders();
-    const interval = setInterval(loadOrders, 15000);
+
+    loadCount();
+    const interval = setInterval(loadCount, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, []);
 

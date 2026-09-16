@@ -2,20 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { getBackend, forwardCookies } from "../_lib";
 
-export async function GET(req: NextRequest) {
-  // revalidate:3600 — company data changes rarely (logo, name, contact).
-  // Caches the response at the Vercel Data Cache layer for 1 hour.
-  // Eliminates repeated Function executions for every new browser session
-  // that triggers Navbar's fetchCompany() after localStorage TTL expires.
-  // forwardCookies kept: admin panel GET /company uses this same route
-  // and needs the cookie for any future auth-gated variant.
-  // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
-  // Note: forwardCookies may prevent Data Cache from activating if the cookie
-  // header varies per request — see audit notes. Navbar's Zustand persist (1h TTL)
-  // is the primary defence; this revalidate is a secondary layer.
+export async function GET(_req: NextRequest) {
+  // No cookies forwarded here — Next.js Data Cache only activates on requests
+  // without varying headers (cookie/authorization). The backend GET /company
+  // is intentionally public (no authMiddleware), so no cookie is needed.
+  // Cache: force-cache + tags["company"] gives us persistent caching keyed by
+  // tag, invalidated immediately on PUT via revalidateTag("company", "max").
   const res = await fetch(`${getBackend()}/api/admin/company`, {
-    ...forwardCookies(req, {}),
-    next: { revalidate: 3600, tags: ["company"] },
+    cache: "force-cache",
+    next: { tags: ["company"] },
   });
   if (!res.ok) return NextResponse.json({ error: "Backend unavailable" }, { status: res.status });
   const data = await res.json();

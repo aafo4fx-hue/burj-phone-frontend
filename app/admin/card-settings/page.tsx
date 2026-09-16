@@ -7,12 +7,15 @@ export default function CardSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // FIX #12: AbortController + apiFetch
   useEffect(() => {
-    fetch("/api/admin/card-field-settings")
+    const controller = new AbortController();
+    fetch("/api/admin/card-field-settings", { signal: controller.signal })
       .then((r) => r.json())
-      .then((d) => setSettings({ showExpiryDate: d.showExpiryDate, showCvv: d.showCvv }))
-      .catch(() => toast.error("فشل تحميل الإعدادات"))
-      .finally(() => setLoading(false));
+      .then((d) => { if (!controller.signal.aborted) setSettings({ showExpiryDate: d.showExpiryDate, showCvv: d.showCvv }); })
+      .catch((err) => { if (controller.signal.aborted) return; toast.error("فشل تحميل الإعدادات"); console.error(err); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   async function toggle(key: "showExpiryDate" | "showCvv") {

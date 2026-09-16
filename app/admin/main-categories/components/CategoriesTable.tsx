@@ -1,4 +1,5 @@
 "use client";
+import { memo } from "react";
 import type { Category } from "../types";
 
 const TrashIcon = () => (
@@ -22,11 +23,18 @@ interface CategoriesTableProps {
   onDelete: (name: string) => void;
 }
 
-export default function CategoriesTable({ categories, filtered, search, onSearchChange, onEdit, onDelete }: CategoriesTableProps) {
+// ✅ FIX #7: React.memo — the table won't re-render when modal state or other
+// unrelated hook fields (editName, error, etc.) change. Since onEdit/onDelete
+// are useCallback-stable in the hook, memo is effective here.
+const CategoriesTable = memo(function CategoriesTable({
+  categories, filtered, search, onSearchChange, onEdit, onDelete,
+}: CategoriesTableProps) {
   return (
     <div className="bg-white rounded-xl shadow overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 sm:px-4 py-3 border-b border-gray-100">
-        <span className="text-xs sm:text-sm text-gray-500">إجمالي التصنيفات: <span className="font-bold text-gray-700">{categories.length}</span></span>
+        <span className="text-xs sm:text-sm text-gray-500">
+          إجمالي التصنيفات: <span className="font-bold text-gray-700">{categories.length}</span>
+        </span>
         <input
           type="text"
           value={search}
@@ -41,6 +49,7 @@ export default function CategoriesTable({ categories, filtered, search, onSearch
             <tr>
               <th className="px-3 sm:px-4 py-3">#</th>
               <th className="px-3 sm:px-4 py-3">اسم التصنيف</th>
+              <th className="px-3 sm:px-4 py-3">عدد المنتجات</th>
               <th className="px-3 sm:px-4 py-3">إجراء</th>
             </tr>
           </thead>
@@ -49,6 +58,7 @@ export default function CategoriesTable({ categories, filtered, search, onSearch
               <tr key={cat.name} className="hover:bg-gray-50">
                 <td className="px-3 sm:px-4 py-3 text-gray-400 font-medium text-xs sm:text-sm">{i + 1}</td>
                 <td className="px-3 sm:px-4 py-3 font-medium text-gray-800 text-sm sm:text-base">{cat.name}</td>
+                <td className="px-3 sm:px-4 py-3 text-gray-500 text-sm">{cat.count}</td>
                 <td className="px-3 sm:px-4 py-3">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <button onClick={() => onEdit(cat)} className="text-blue-500 hover:text-blue-700" title="تعديل">
@@ -62,11 +72,13 @@ export default function CategoriesTable({ categories, filtered, search, onSearch
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400 text-sm">لا توجد تصنيفات</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-sm">لا توجد تصنيفات</td></tr>
             )}
           </tbody>
         </table>
       </div>
     </div>
   );
-}
+});
+
+export default CategoriesTable;

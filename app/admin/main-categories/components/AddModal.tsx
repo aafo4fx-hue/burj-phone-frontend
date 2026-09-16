@@ -1,4 +1,5 @@
 "use client";
+import { memo } from "react";
 
 interface AddModalProps {
   name: string;
@@ -9,7 +10,9 @@ interface AddModalProps {
   onClose: () => void;
 }
 
-export default function AddModal({ name, error, loading, onNameChange, onSubmit, onClose }: AddModalProps) {
+// ✅ FIX #7: React.memo — only re-renders when its own props change, not on
+// every keystroke in an unrelated field (e.g. search, editName).
+const AddModal = memo(function AddModal({ name, error, loading, onNameChange, onSubmit, onClose }: AddModalProps) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-xl p-5 sm:p-6 w-full max-w-md shadow-xl">
@@ -24,6 +27,7 @@ export default function AddModal({ name, error, loading, onNameChange, onSubmit,
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="مثال: هواتف ذكية"
               required
+              autoFocus
             />
           </div>
           {error && <p className="text-red-500 text-xs sm:text-sm">{error}</p>}
@@ -41,4 +45,6 @@ export default function AddModal({ name, error, loading, onNameChange, onSubmit,
       </div>
     </div>
   );
-}
+});
+
+export default AddModal;

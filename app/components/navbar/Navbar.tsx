@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { navItems } from "./data";
@@ -10,6 +10,9 @@ import MobileMenu from "./MobileMenu";
 import { useCartStore } from "../../store/cartStore";
 import { useCompanyStore } from "../../store/companyStore";
 
+// Computed once at module load — stable for the lifetime of the app.
+const API_IMG = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -18,12 +21,24 @@ export default function Navbar() {
   const [searching, setSearching] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchWrapRef = useRef<HTMLDivElement>(null);
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  // WHY: useSyncExternalStore was used solely to detect client-side mount
+  // (to avoid a hydration mismatch on the cart badge). That API is designed
+  // for subscribing to external stores, not for a simple "am I mounted?" check.
+  // A plain useState(false) flipped to true in useEffect achieves the same
+  // result with less overhead and is the idiomatic React pattern.
+  const [clientReady, setClientReady] = useState(false);
   const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.qty, 0));
   const { logo, fetchCompany } = useCompanyStore();
 
-  const API_IMG = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-  const resolveImg = (src: string) => src.startsWith("http") ? src : `${API_IMG}${src.startsWith("/") ? src : "/" + src}`;
+  // API_IMG is constant for the lifetime of the app — compute it once at
+  // module level below rather than inside the render function.
+  const resolveImg = (src: string) =>
+    src.startsWith("http") ? src : `${API_IMG}${src.startsWith("/") ? src : "/" + src}`;
+
+  // Flip clientReady after first paint so the cart badge is only rendered
+  // on the client, preventing a hydration mismatch with the SSR snapshot
+  // (which has no localStorage cart data).
+  useEffect(() => { setClientReady(true); }, []);
 
   useEffect(() => {
     if (searchOpen) searchInputRef.current?.focus();
@@ -115,7 +130,7 @@ export default function Navbar() {
             </button>
             <Link href="/cart" aria-label="السلة" className="p-1.5 sm:p-2 text-[#7A2FCC] hover:text-[#A842E4] hover:bg-[#f3eafc] rounded-full transition-colors relative">
               <CartIcon />
-              {mounted && itemCount > 0 && (
+              {clientReady && itemCount > 0 && (
                 <span className="absolute -top-0.5 -left-0.5 bg-red-500 text-white text-[11px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-0.5">
                   {itemCount}
                 </span>

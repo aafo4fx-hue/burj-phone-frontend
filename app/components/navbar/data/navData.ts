@@ -67,7 +67,7 @@ export const navItems: NavItem[] = [
     href: "/playstation",
   },
   {
-    label: "لابتوبات ",
+    label: "لابتوبات",
     href: "/laptops",
     children: [
       { label: "ماك بوك اير", href: "/laptops/macbook-air" },
@@ -88,7 +88,7 @@ export const navItems: NavItem[] = [
     ],
   },
   {
-    label: "اكسسورات ",
+    label: "اكسسورات",
     href: "/games",
    
   },

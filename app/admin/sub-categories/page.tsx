@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { apiFetch } from "../../lib/api";
@@ -7,6 +7,7 @@ import { apiFetch } from "../../lib/api";
 type SubCat = { name: string; category: string; count: number };
 type Settings = { category: string; subCategory: string; showInHome: boolean; order: number };
 
+// Perf #6: defined outside the component so they are never re-created on re-render
 const TrashIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
@@ -28,12 +29,13 @@ const ImageIcon = () => (
 export default function SubCategoriesPage() {
   const [items, setItems] = useState<SubCat[]>([]);
   const [settings, setSettings] = useState<Settings[]>([]);
+  // Bug #3: track loading state so the table shows a skeleton instead of "no data"
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [editItem, setEditItem] = useState<SubCat | null>(null);
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editLoading, setEditLoading] = useState(false);
-  const allSubCategories = [...new Set(items.map((i) => i.name).filter(Boolean))];
   const [confirmDelete, setConfirmDelete] = useState<SubCat | null>(null);
   const [max, setMax] = useState(4);
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,24 +46,72 @@ export default function SubCategoriesPage() {
   const [imageUploadCat, setImageUploadCat] = useState<SubCat | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
 
+  // O(1) lookup Map — avoids O(n*m) .find() on every render row
+  const settingsMap = useMemo(() => {
+    const map = new Map<string, Settings>();
+    for (const s of settings) {
+      map.set(`${s.category}||${s.subCategory}`, s);
+    }
+    return map;
+  }, [settings]);
+
   function getSetting(cat: SubCat): Settings | undefined {
     const catKey = cat.category || cat.name;
-    return settings.find((s) => s.category === catKey && s.subCategory === cat.name);
+    return settingsMap.get(`${catKey}||${cat.name}`);
   }
 
-  const fetchData = async () => {
-    const [res1, res2, res3, res4] = await Promise.all([
-      apiFetch("/api/admin/sub-categories", { credentials: "include" }),
-      apiFetch("/api/admin/sub-categories/settings", { credentials: "include" }),
-      apiFetch("/api/admin/sub-categories/max", { credentials: "include" }),
-      apiFetch("/api/admin/sub-categories/extra", { credentials: "include" }),
-    ]);
-    const fromProducts: SubCat[] = res1.ok ? await res1.json() : [];
-    const extra: SubCat[] = res4.ok ? await res4.json() : [];
-    const names = new Set(fromProducts.map((c) => c.name));
-    setItems([...fromProducts, ...extra.filter((c) => !names.has(c.name))]);
-    if (res2.ok) setSettings(await res2.json());
-    if (res3.ok) { const d = await res3.json(); setMax(d?.max ?? 4); }
+  // Perf #5: memoize every derived value so they don't recompute on every render
+  const visibleCount = useMemo(
+    () => settings.filter((s) => s.showInHome && s.category !== "__config__").length,
+    [settings]
+  );
+
+  const filtered = useMemo(
+    () => items.filter((c) => c.name.includes(search) || c.category?.includes(search)),
+    [items, search]
+  );
+
+  const totalPages = useMemo(() => Math.ceil(filtered.length / PAGE_SIZE), [filtered]);
+
+  const paginated = useMemo(
+    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filtered, currentPage]
+  );
+
+  // Perf #7: memoize page-number array so Array.from isn't called on every render
+  const pageNumbers = useMemo(
+    () => Array.from({ length: totalPages }, (_, i) => i + 1),
+    [totalPages]
+  );
+
+  const fetchData = async (signal?: AbortSignal) => {
+    const opts = signal ? { credentials: "include" as const, signal } : { credentials: "include" as const };
+    // Bug #4: wrap in try/catch so network/server errors surface as toasts
+    try {
+      const [res1, res2, res3, res4] = await Promise.all([
+        apiFetch("/api/admin/sub-categories", opts),
+        apiFetch("/api/admin/sub-categories/settings", opts),
+        apiFetch("/api/admin/sub-categories/max", opts),
+        apiFetch("/api/admin/sub-categories/extra", opts),
+      ]);
+      if (signal?.aborted) return;
+      if (!res1.ok || !res2.ok) {
+        toast.error("حدث خطأ أثناء تحميل البيانات");
+        return;
+      }
+      const fromProducts: SubCat[] = await res1.json();
+      const extra: SubCat[] = res4.ok ? await res4.json() : [];
+      const names = new Set(fromProducts.map((c) => c.name));
+      setItems([...fromProducts, ...extra.filter((c) => !names.has(c.name))]);
+      setSettings(await res2.json());
+      if (res3.ok) { const d = await res3.json(); setMax(d?.max ?? 4); }
+    } catch (err) {
+      if (signal?.aborted) return; // AbortError is expected on unmount — ignore silently
+      toast.error("تعذّر الاتصال بالخادم");
+      console.error("[sub-categories fetch error]", err);
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
   };
 
   async function handleImageUpload(file: File) {
@@ -91,19 +141,23 @@ export default function SubCategoriesPage() {
     });
     setAddLoading(false);
     if (!res.ok) { const d = await res.json(); return toast.error(d.error); }
+    const created: SubCat = await res.json();
     toast.success(`تم إضافة "${addName}" بنجاح 🎉`);
     setShowAddModal(false);
     setAddName("");
-    fetchData();
+    setItems((prev) => {
+      if (prev.some((i) => i.name === created.name && i.category === created.category)) return prev;
+      return [...prev, { name: addName, category: created.category ?? "", count: 0 }];
+    });
   }
 
+  // AbortController — cancel fetch on unmount to avoid state updates on dead component
   useEffect(() => {
-    void (async () => {
-      await fetchData();
-    })();
+    const controller = new AbortController();
+    void fetchData(controller.signal);
+    return () => controller.abort();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const visibleCount = settings.filter((s) => s.showInHome && s.category !== "__config__").length;
 
   async function handleToggleHome(cat: SubCat) {
     const setting = getSetting(cat);
@@ -155,8 +209,21 @@ export default function SubCategoriesPage() {
     setEditLoading(false);
     if (!res.ok) return toast.error("حدث خطأ أثناء التعديل");
     toast.success("تم التعديل بنجاح ✅");
+    setItems((prev) =>
+      prev.map((i) =>
+        i.name === editItem.name && i.category === editItem.category
+          ? { ...i, name: editName, category: editCategory }
+          : i
+      )
+    );
+    setSettings((prev) =>
+      prev.map((s) =>
+        s.subCategory === editItem.name && s.category === (editItem.category || editItem.name)
+          ? { ...s, subCategory: editName, category: editCategory || s.category }
+          : s
+      )
+    );
     setEditItem(null);
-    fetchData();
   }
 
   async function handleDelete() {
@@ -169,13 +236,11 @@ export default function SubCategoriesPage() {
     });
     if (!res.ok) return toast.error("حدث خطأ أثناء الحذف");
     toast.success(`تم حذف "${confirmDelete.name}" بنجاح ✅`);
+    const deleted = confirmDelete;
+    setItems((prev) => prev.filter((i) => !(i.name === deleted.name && i.category === deleted.category)));
+    setSettings((prev) => prev.filter((s) => !(s.subCategory === deleted.name && s.category === (deleted.category || deleted.name))));
     setConfirmDelete(null);
-    fetchData();
   }
-
-  const filtered = items.filter((c) => c.name.includes(search) || c.category?.includes(search));
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div>
@@ -226,70 +291,85 @@ export default function SubCategoriesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {paginated.map((cat, i) => {
-                const setting = getSetting(cat);
-                return (
-                  <tr key={`${cat.category}-${cat.name}`} className="hover:bg-gray-50">
-                    <td className="px-2 sm:px-4 py-3 text-gray-400 font-medium text-xs sm:text-sm">{(currentPage - 1) * PAGE_SIZE + i + 1}</td>
-                    <td className="px-2 sm:px-4 py-3 font-medium text-gray-800 text-xs sm:text-sm md:text-base">{cat.category}</td>
-                    <td className="px-2 sm:px-4 py-3 font-medium text-gray-800 text-xs sm:text-sm md:text-base">{cat.name}</td>
-                    <td className="px-2 sm:px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${cat.count > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
-                        {cat.count} منتج
-                      </span>
-                    </td>
-                    <td className="px-2 sm:px-4 py-3 text-center">
-                      <input
-                        type="checkbox"
-                        checked={setting?.showInHome ?? false}
-                        onChange={() => handleToggleHome(cat)}
-                        disabled={!setting?.showInHome && visibleCount >= max}
-                        className="w-4 h-4 accent-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
-                      />
-                    </td>
-                    <td className="px-2 sm:px-4 py-3 text-center">
-                      <input
-                        type="number"
-                        min={0}
-                        defaultValue={setting?.order ?? 0}
-                        onBlur={(e) => handleOrderChange(cat, parseInt(e.target.value) || 0)}
-                        disabled={!setting?.showInHome}
-                        className="w-16 border border-gray-300 rounded px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
-                      />
-                    </td>
-                    <td className="px-2 sm:px-4 py-3">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <button
-                          onClick={() => { setEditItem(cat); setEditName(cat.name ?? ""); setEditCategory(cat.category ?? ""); }}
-                          className="text-blue-500 hover:text-blue-700" title="تعديل"
-                        >
-                          <EditIcon />
-                        </button>
-                        <button
-                          onClick={() => setImageUploadCat(cat)}
-                          className="text-green-500 hover:text-green-700" title="تغيير الصورة"
-                        >
-                          <ImageIcon />
-                        </button>
-                        <button
-                          onClick={() => setConfirmDelete(cat)}
-                          className="text-red-500 hover:text-red-700" title="حذف"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    </td>
+              {/* Bug #3: show skeleton rows while data is loading */}
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="px-2 sm:px-4 py-3"><div className="h-4 bg-gray-200 rounded w-6" /></td>
+                    <td className="px-2 sm:px-4 py-3"><div className="h-4 bg-gray-200 rounded w-24" /></td>
+                    <td className="px-2 sm:px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20" /></td>
+                    <td className="px-2 sm:px-4 py-3"><div className="h-4 bg-gray-200 rounded w-12" /></td>
+                    <td className="px-2 sm:px-4 py-3"><div className="h-4 bg-gray-200 rounded w-8 mx-auto" /></td>
+                    <td className="px-2 sm:px-4 py-3"><div className="h-4 bg-gray-200 rounded w-10 mx-auto" /></td>
+                    <td className="px-2 sm:px-4 py-3"><div className="h-4 bg-gray-200 rounded w-16" /></td>
                   </tr>
-                );
-              })}
-              {paginated.length === 0 && (
+                ))
+              ) : paginated.length === 0 ? (
                 <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">لا توجد تصنيفات فرعية</td></tr>
+              ) : (
+                paginated.map((cat, i) => {
+                  const setting = getSetting(cat);
+                  return (
+                    <tr key={`${cat.category}-${cat.name}`} className="hover:bg-gray-50">
+                      <td className="px-2 sm:px-4 py-3 text-gray-400 font-medium text-xs sm:text-sm">{(currentPage - 1) * PAGE_SIZE + i + 1}</td>
+                      <td className="px-2 sm:px-4 py-3 font-medium text-gray-800 text-xs sm:text-sm md:text-base">{cat.category}</td>
+                      <td className="px-2 sm:px-4 py-3 font-medium text-gray-800 text-xs sm:text-sm md:text-base">{cat.name}</td>
+                      <td className="px-2 sm:px-4 py-3">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${cat.count > 0 ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"}`}>
+                          {cat.count} منتج
+                        </span>
+                      </td>
+                      <td className="px-2 sm:px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={setting?.showInHome ?? false}
+                          onChange={() => handleToggleHome(cat)}
+                          disabled={!setting?.showInHome && visibleCount >= max}
+                          className="w-4 h-4 accent-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                        />
+                      </td>
+                      <td className="px-2 sm:px-4 py-3 text-center">
+                        <input
+                          type="number"
+                          min={0}
+                          defaultValue={setting?.order ?? 0}
+                          onBlur={(e) => handleOrderChange(cat, parseInt(e.target.value) || 0)}
+                          disabled={!setting?.showInHome}
+                          className="w-16 border border-gray-300 rounded px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                        />
+                      </td>
+                      <td className="px-2 sm:px-4 py-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <button
+                            onClick={() => { setEditItem(cat); setEditName(cat.name ?? ""); setEditCategory(cat.category ?? ""); }}
+                            className="text-blue-500 hover:text-blue-700" title="تعديل"
+                          >
+                            <EditIcon />
+                          </button>
+                          <button
+                            onClick={() => setImageUploadCat(cat)}
+                            className="text-green-500 hover:text-green-700" title="تغيير الصورة"
+                          >
+                            <ImageIcon />
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(cat)}
+                            className="text-red-500 hover:text-red-700" title="حذف"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
 
+      {/* Perf #7: pageNumbers is memoized — no Array.from on every render */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-1 mt-4 flex-wrap">
           <button
@@ -299,7 +379,7 @@ export default function SubCategoriesPage() {
           >
             ‹ السابق
           </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          {pageNumbers.map((page) => (
             <button
               key={page}
               onClick={() => setCurrentPage(page)}
@@ -354,7 +434,7 @@ export default function SubCategoriesPage() {
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* Edit Modal — Bug #1: النوع (subCategory) is now a free-text input, not a select */}
       {editItem && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-xl p-5 sm:p-6 w-full max-w-md shadow-xl">
@@ -377,14 +457,14 @@ export default function SubCategoriesPage() {
               </div>
               <div>
                 <label className="block text-xs sm:text-sm text-gray-600 mb-1">النوع (التصنيف الفرعي)</label>
-                <select
+                {/* Bug #1 fix: was <select> limited to existing names — now free-text to allow true rename */}
+                <input
+                  type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
-                >
-                  {allSubCategories.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                />
               </div>
               <div className="flex gap-2 pt-2">
                 <button type="submit" disabled={editLoading}

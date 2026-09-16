@@ -1,4 +1,5 @@
 "use client";
+import { memo } from "react";
 import type { Category } from "../types";
 
 interface EditModalProps {
@@ -11,7 +12,8 @@ interface EditModalProps {
   onClose: () => void;
 }
 
-export default function EditModal({ editCat, editName, editError, editLoading, onNameChange, onSubmit, onClose }: EditModalProps) {
+// ✅ FIX #7: React.memo
+const EditModal = memo(function EditModal({ editCat, editName, editError, editLoading, onNameChange, onSubmit, onClose }: EditModalProps) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-xl p-5 sm:p-6 w-full max-w-md shadow-xl">
@@ -30,6 +32,7 @@ export default function EditModal({ editCat, editName, editError, editLoading, o
               onChange={(e) => onNameChange(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              autoFocus
             />
           </div>
           {editError && <p className="text-red-500 text-xs sm:text-sm">{editError}</p>}
@@ -47,4 +50,6 @@ export default function EditModal({ editCat, editName, editError, editLoading, o
       </div>
     </div>
   );
-}
+});
+
+export default EditModal;

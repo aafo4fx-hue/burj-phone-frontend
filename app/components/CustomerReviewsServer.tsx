@@ -26,7 +26,8 @@ export default async function CustomerReviewsServer() {
 
   try {
     const res = await fetch(`${BACKEND}/api/admin/reviews`, {
-      next: { revalidate: 300 },
+      cache: "force-cache",
+      next: { revalidate: 300, tags: ["reviews"] }, // ✅ FIX #4: tag added — allows on-demand revalidation
     });
     if (res.ok) {
       const data = await res.json();

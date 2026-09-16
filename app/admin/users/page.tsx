@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { apiFetch } from "../../lib/api"; // FIX #8: apiFetch for path-allowlist security
 
 
 type Admin = { _id: string; name: string; email: string; phone: string; createdAt: string };
@@ -56,13 +57,14 @@ export default function UsersPage() {
 
   const ADMIN_USERS_URL = "/api/admin/users" as const;
 
-  async function fetchAdmins() {
-    const res = await fetch(ADMIN_USERS_URL);
-    if (res.ok) setAdmins(await res.json());
-  }
-
+  // FIX #8: AbortController on initial load
   useEffect(() => {
-    fetch(ADMIN_USERS_URL).then((res) => res.ok ? res.json() : null).then((data) => { if (data) setAdmins(data); });
+    const controller = new AbortController();
+    apiFetch(ADMIN_USERS_URL, { signal: controller.signal })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data && !controller.signal.aborted) setAdmins(data); })
+      .catch(() => {});
+    return () => controller.abort();
   }, []);
 
   async function handleAdd(e: React.FormEvent) {
@@ -73,7 +75,7 @@ export default function UsersPage() {
     if (emailErr || passErr) return;
     setError("");
     setLoading(true);
-    const res = await fetch("/api/admin/users", {
+    const res = await apiFetch("/api/admin/users", {  // FIX #8
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
@@ -84,7 +86,8 @@ export default function UsersPage() {
     setShowModal(false);
     setForm({ name: "", phone: "", email: "", password: "" });
     toast.success(`تم إضافة ${form.name} بنجاح 🎉`);
-    fetchAdmins();
+    // FIX #7: local state update — no re-fetch
+    setAdmins((prev) => [...prev, { name: "", phone: "", email: "", createdAt: "", ...data }]);
   }
 
   async function handleEdit(e: React.FormEvent) {
@@ -97,7 +100,7 @@ export default function UsersPage() {
     setEditLoading(true);
     const id = safeId(editAdmin!._id);
     if (!id) return setEditError("معرّف غير صالح");
-    const res = await fetch(`/api/admin/users/${id}`, {
+    const res = await apiFetch(`/api/admin/users/${id}`, {  // FIX #8
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(editForm),
@@ -107,7 +110,8 @@ export default function UsersPage() {
     if (!res.ok) return setEditError(data.error);
     setEditAdmin(null);
     toast.success("تم حفظ التعديلات بنجاح ✅");
-    fetchAdmins();
+    // FIX #7: local state update — no re-fetch
+    setAdmins((prev) => prev.map((a) => (a._id === id ? { ...a, name: "", phone: "", email: "", ...data } : a)));
   }
 
   async function handleDelete(id: string, name: string) {
@@ -120,11 +124,12 @@ export default function UsersPage() {
     setConfirmDelete(null);
     const safeDeleteId = safeId(id);
     if (!safeDeleteId) return toast.error("معرّف غير صالح");
-    const res = await fetch(`/api/admin/users/${safeDeleteId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/admin/users/${safeDeleteId}`, { method: "DELETE" });  // FIX #8
     const data = await res.json();
     if (!res.ok) return toast.error(data.error);
     toast.success(`تم حذف ${name} بنجاح ✅`);
-    fetchAdmins();
+    // FIX #7: local state update — no re-fetch
+    setAdmins((prev) => prev.filter((a) => a._id !== safeDeleteId));
   }
   return (
     <div>
@@ -162,7 +167,7 @@ export default function UsersPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => { setEditAdmin(a); setEditForm({ name: a.name, phone: a.phone, email: a.email, password: "" }); setEditError(""); setEditFormErrors({ email: "", password: "" }); }}
+                      onClick={() => { setEditAdmin(a); setEditForm({ name: a.name ?? "", phone: a.phone ?? "", email: a.email ?? "", password: "" }); setEditError(""); setEditFormErrors({ email: "", password: "" }); }}
                       className="text-blue-500 hover:text-blue-700" title="تعديل">
                       <EditIcon />
                     </button>
@@ -194,7 +199,7 @@ export default function UsersPage() {
                   <label className="block text-sm text-gray-600 mb-1">{label}</label>
                   <input
                     type={type}
-                    value={editForm[key as keyof typeof editForm]}
+                    value={editForm[key as keyof typeof editForm] ?? ""}
                     onChange={(e) => setEditForm({ ...editForm, [key]: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
@@ -307,7 +312,7 @@ export default function UsersPage() {
                   <label className="block text-sm text-gray-600 mb-1">{label}</label>
                   <input
                     type={type}
-                    value={form[key as keyof typeof form]}
+                    value={form[key as keyof typeof form] ?? ""}
                     onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required

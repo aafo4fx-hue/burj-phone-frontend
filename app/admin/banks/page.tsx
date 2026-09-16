@@ -23,11 +23,15 @@ export default function BanksPage() {
   const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // FIX #9: AbortController + no raw fetch leak on unmount
   useEffect(() => {
-    fetch("/api/admin/banks", { credentials: "include" })
+    const controller = new AbortController();
+    fetch("/api/admin/banks", { credentials: "include", signal: controller.signal })
       .then((r) => r.json())
-      .then((data) => { setBanks(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((data) => { if (!controller.signal.aborted) setBanks(Array.isArray(data) ? data : []); })
+      .catch(() => {})
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, []);
 
   const startEdit = (bank: Bank) => {

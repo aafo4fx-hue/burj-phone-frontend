@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getBackend, forwardCookies } from "../_lib";
 
 export async function GET(req: NextRequest) {
-  const res = await fetch(`${getBackend()}/api/admin/products`, forwardCookies(req, { method: "GET" }));
+  // Forward pagination/search query params (?page, ?limit, ?q, ?category)
+  // directly to the backend so filtering and slicing happen in the database,
+  // not in the browser.
+  const { searchParams } = req.nextUrl;
+  const qs = searchParams.toString();
+  const url = `${getBackend()}/api/admin/products${qs ? `?${qs}` : ""}`;
+  const res = await fetch(url, forwardCookies(req, { method: "GET" }));
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });
 }

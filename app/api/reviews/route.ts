@@ -3,16 +3,15 @@ import { getBackend } from "../admin/_lib";
 
 // Route Handler-level cache — 300s TTL.
 // Public endpoint, no cookies, no auth. Full Route Cache active.
-// Cache behavior: Expected from configuration, not verified by Vercel telemetry.
+// ✅ FIX #4: added next:{tags:["reviews"]} so revalidateTag("reviews","max") from
+// admin mutation proxies can flush this cache immediately (e.g. after approving/
+// deleting a review) instead of waiting the full 300s TTL.
 export const revalidate = 300;
 
 export async function GET() {
-  // Cache reviews for 5 minutes — new reviews require admin approval anyway,
-  // so a short TTL is safe and prevents a DB query on every homepage visit.
-  // Double-JSON eliminated: backend body is streamed directly to the client.
-  // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
   const res = await fetch(`${getBackend()}/api/admin/reviews`, {
-    next: { revalidate: 300 },
+    cache: "force-cache",
+    next: { revalidate: 300, tags: ["reviews"] }, // ✅ FIX #4: tag added
   });
   return new Response(res.body, {
     status: res.status,

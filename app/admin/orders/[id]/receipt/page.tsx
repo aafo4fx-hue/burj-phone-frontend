@@ -1,98 +1,98 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-
-function toArabicWords(n: number): string {
-  const ones = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة",
-    "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر",
-    "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
-  const tens = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
-  const hundreds = ["", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
-  if (n === 0) return "صفر";
-  if (n < 0) return "سالب " + toArabicWords(-n);
-  let result = "";
-  if (n >= 1000) {
-    const t = Math.floor(n / 1000);
-    result += (t === 1 ? "ألف" : t === 2 ? "ألفان" : t <= 10 ? toArabicWords(t) + " آلاف" : toArabicWords(t) + " ألف") + " ";
-    n %= 1000;
-    if (n > 0) result += "و";
-  }
-  if (n >= 100) { result += hundreds[Math.floor(n / 100)] + " "; n %= 100; if (n > 0) result += "و"; }
-  if (n >= 20) { result += tens[Math.floor(n / 10)] + " "; n %= 10; if (n > 0) result += "و"; }
-  if (n > 0) result += ones[n] + " ";
-  return result.trim();
-}
+// Single canonical implementation — previously duplicated in 3 files.
+// WHY: eliminates dead code and one source of truth for correctness.
+import { toArabicWords } from "../../utils";
 
 interface OrderItem { name: string; }
 interface ReceiptData {
-  order: { orderId: string; installmentType: string; downPayment: number; total: number; customer: string; whatsapp: string; address: string; items: OrderItem[]; };
+  order: {
+    orderId: string; installmentType: string; downPayment: number;
+    total: number; customer: string; whatsapp: string; address: string;
+    items: OrderItem[];
+  };
   company: { currencyAr?: string; header?: string; footer?: string; stamp?: string; };
 }
 
+// CSS defined at module level — not inside the component body.
+// WHY: the style string is identical on every render; defining it inside the
+// function allocates a new string on every re-render.
+const STYLES = `
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+body { font-family: Arial, sans-serif; background: #fff; direction: rtl; padding: 12px; }
+ul { list-style: disc; padding-right: 20px !important; margin-top: 4px !important; }
+li { list-style: disc; }
+.receipt-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.receipt-table td { border: 1px solid #aaa; padding: 6px 10px; word-break: break-word; }
+.receipt-label { text-align: center; background-color: #808080; color: #000; font-weight: bold; white-space: nowrap; width: 1%; }
+.receipt-value { text-align: center; }
+.receipt-header-row { display: flex; justify-content: center; margin-bottom: 4px; }
+.receipt-no { font-size: 14px; font-weight: bold; color: #990431; text-align: center; margin-top: 4px; }
+@media (max-width: 600px) {
+  .receipt-table { font-size: 13px; }
+  .receipt-table td { padding: 5px 7px; }
+  .receipt-no { font-size: 12px; }
+}
+@media print {
+  @page { size: A4; margin: 10mm; }
+  body { padding: 0; }
+  img[alt="header"], img[alt="footer"] { width: 100% !important; max-height: none !important; }
+}
+`;
+
 export default function ReceiptPrintPage() {
   const { id } = useParams<{ id: string }>();
-  const [data, setData] = useState<ReceiptData | null>(null);
+  const [data, setData]   = useState<ReceiptData | null>(null);
   const [ready, setReady] = useState(false);
 
+  // Uses the consolidated invoice endpoint — order + company in one request.
   useEffect(() => {
-    fetch(`/api/admin/orders/${id}/invoice`).then((r) => r.json()).then((d) => {
-      setData(d);
-      const imgs = [d.company?.header, d.company?.footer, d.company?.stamp].filter(Boolean);
-      if (imgs.length === 0) { setReady(true); return; }
-      Promise.all(imgs.map((src: string) => new Promise<void>((res) => {
-        const img = new Image();
-        img.onload = () => res();
-        img.onerror = () => res();
-        img.src = src;
-      }))).then(() => setReady(true));
-    });
+    fetch(`/api/admin/orders/${id}/invoice`)
+      .then((r) => r.json())
+      .then((d: ReceiptData) => {
+        setData(d);
+        const imgs = [d.company?.header, d.company?.footer, d.company?.stamp].filter(Boolean) as string[];
+        if (imgs.length === 0) { setReady(true); return; }
+        Promise.all(
+          imgs.map(
+            (src) =>
+              new Promise<void>((res) => {
+                const img = new Image();
+                img.onload = () => res();
+                img.onerror = () => res();
+                img.src = src;
+              })
+          )
+        ).then(() => setReady(true));
+      })
+      .catch(() => setReady(true));
   }, [id]);
 
   useEffect(() => {
     if (ready) setTimeout(() => window.print(), 500);
   }, [ready]);
 
-  if (!ready || !data) return <div style={{ textAlign: "center", padding: 40 }}>جاري التحميل...</div>;
+  if (!ready || !data) return (
+    <div style={{ textAlign: "center", padding: 40 }}>جاري التحميل...</div>
+  );
 
   const { order, company } = data;
-  const currency = company.currencyAr || "ريال";
-  const amount = order.installmentType === "installment" ? order.downPayment : order.total;
+  const currency    = company.currencyAr || "ريال";
+  const amount      = order.installmentType === "installment" ? order.downPayment : order.total;
+  // toArabicWords imported from shared utils — no local copy.
   const amountWords = toArabicWords(amount) + " فقط لا غير";
   const aboutPrefix = `قيمة ${order.installmentType === "installment" ? "دفعة من " : ""}ثمن جهاز/أجهزة:`;
-  const aboutItems = (order.items || []).map((i: OrderItem) => i.name);
-
-  const style = `
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body { font-family: Arial, sans-serif; background: #fff; direction: rtl; padding: 12px; }
-    ul { list-style: disc; padding-right: 20px !important; margin-top: 4px !important; }
-    li { list-style: disc; }
-    .receipt-table { width: 100%; border-collapse: collapse; font-size: 15px; }
-    .receipt-table td { border: 1px solid #aaa; padding: 6px 10px; word-break: break-word; }
-    .receipt-label { text-align: center; background-color: #808080; color: #000; font-weight: bold; white-space: nowrap; width: 1%; }
-    .receipt-value { text-align: center; }
-    .receipt-header-row { display: flex; justify-content: center; margin-bottom: 4px; }
-    .receipt-no { font-size: 14px; font-weight: bold; color: #990431; text-align: center; margin-top: 4px; }
-    @media (max-width: 600px) {
-      .receipt-table { font-size: 13px; }
-      .receipt-table td { padding: 5px 7px; }
-      .receipt-no { font-size: 12px; }
-    }
-    @media print {
-      @page { size: A4; margin: 10mm; }
-      body { padding: 0; }
-      img[alt="header"], img[alt="footer"] { width: 100% !important; max-height: none !important; }
-    }
-  `;
+  const aboutItems  = (order.items || []).map((i) => i.name);
 
   return (
     <div style={{ fontFamily: "Arial, sans-serif", padding: "12px", maxWidth: 700, width: "100%", margin: "0 auto" }} dir="rtl">
-      <style>{style}</style>
-{/* header image*/}
+      <style>{STYLES}</style>
+
       {company.header && (
         <img src={company.header} alt="header" style={{ width: "100%", marginBottom: 16 }} />
       )}
 
-      {/* receipt box */}
       <div style={{ border: "2px solid #808080", borderRadius: 8, marginBottom: 16, position: "relative" }}>
         <div className="receipt-header-row">
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -127,7 +127,7 @@ export default function ReceiptPrintPage() {
                 <td colSpan={2} className="receipt-value">
                   {aboutPrefix}
                   <ul style={{ margin: "4px 0 0 0", paddingRight: 20, textAlign: "right" }}>
-                    {aboutItems.map((name: string, idx: number) => (
+                    {aboutItems.map((name, idx) => (
                       <li key={idx}>{name}</li>
                     ))}
                   </ul>
@@ -143,20 +143,19 @@ export default function ReceiptPrintPage() {
           <div style={{ border: "1px solid #aaa", borderRadius: 6, marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr", minHeight: 100 }}>
             <div style={{ textAlign: "center", padding: "12px 8px", borderLeft: "1px solid #aaa", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontWeight: "bold" }}>توقيع المستلم</div>
-              <div style={{ borderBottom: "1px solid #aaa", width: "80%" }}></div>
+              <div style={{ borderBottom: "1px solid #aaa", width: "80%" }} />
             </div>
             <div style={{ textAlign: "center", padding: "12px 8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontWeight: "bold" }}>الختم</div>
               {company.stamp
                 ? <img src={company.stamp} alt="ختم" style={{ maxWidth: 90, maxHeight: 70, objectFit: "contain" }} />
-                : <div style={{ borderBottom: "1px solid #aaa", width: "80%" }}></div>
+                : <div style={{ borderBottom: "1px solid #aaa", width: "80%" }} />
               }
             </div>
           </div>
         </div>
       </div>
 
-      {/* footer image*/}
       {company.footer && (
         <img src={company.footer} alt="footer" style={{ width: "100%" }} />
       )}

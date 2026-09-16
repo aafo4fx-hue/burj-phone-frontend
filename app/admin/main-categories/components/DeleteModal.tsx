@@ -1,4 +1,5 @@
 "use client";
+import { memo } from "react";
 
 interface DeleteModalProps {
   name: string;
@@ -6,7 +7,8 @@ interface DeleteModalProps {
   onClose: () => void;
 }
 
-export default function DeleteModal({ name, onConfirm, onClose }: DeleteModalProps) {
+// ✅ FIX #7: React.memo
+const DeleteModal = memo(function DeleteModal({ name, onConfirm, onClose }: DeleteModalProps) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4" dir="rtl">
       <div className="bg-white rounded-xl shadow-xl p-5 sm:p-6 w-full max-w-sm text-center">
@@ -28,4 +30,6 @@ export default function DeleteModal({ name, onConfirm, onClose }: DeleteModalPro
       </div>
     </div>
   );
-}
+});
+
+export default DeleteModal;

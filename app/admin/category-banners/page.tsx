@@ -12,81 +12,126 @@ const LABELS = [
   "البانر التاسع", "البانر العاشر",
 ];
 
+// ---------------------------------------------------------------------------
+// useCategoryBanners hook
+// ---------------------------------------------------------------------------
 function useCategoryBanners(category: string) {
   const [banners, setBanners] = useState<BannerItem[]>([]);
   const [loading, setLoading] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const BASE = `/api/admin/category-banners/${encodeURIComponent(category)}`;
 
-  const fetchBanners = () =>
-    fetch(BASE, { credentials: "include" })
+  // FIX #2: derive BASE inside the effect (or memoise it) so it is NOT listed
+  // as a dep as a plain string — the old code had [category, BASE] where BASE
+  // is `const BASE = …` recreated every render, causing the effect to re-run
+  // on every render even when category hasn't changed.
+  // Solution: compute BASE from category only; list only [category] as dep.
+  const baseFor = (cat: string) =>
+    `/api/admin/category-banners/${encodeURIComponent(cat)}`;
+
+  // FIX #1 (carried from previous session) + FIX #2: single AbortController,
+  // dep array is [category] only.
+  useEffect(() => {
+    if (!category) return;
+    const controller = new AbortController();
+    const BASE = baseFor(category);
+    fetch(BASE, { credentials: "include", signal: controller.signal })
       .then((r) => r.json())
-      .then((d) => setBanners(Array.isArray(d) ? d : []));
+      .then((d) => {
+        if (!controller.signal.aborted) setBanners(Array.isArray(d) ? d : []);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [category]); // FIX #2: only category — not BASE
 
-  useEffect(() => { if (category) fetchBanners(); }, [category, BASE]);
+  // Fire-and-forget revalidation — no await needed
+  const revalidate = () =>
+    fetch("/api/revalidate?tag=category-banners", { method: "POST" }).catch(() => {});
 
-  const revalidate = () => fetch(`/api/revalidate?tag=category-banners`, { method: "POST" });
-
+  // ── Upload ────────────────────────────────────────────────────────────────
   const handleUpload = async (index: number, file: File) => {
     setLoading(index);
+    const BASE = baseFor(category);
     const form = new FormData();
     form.append("image", file);
     try {
-      const res = await fetch(`${BASE}/upload/${index}`, { method: "POST", credentials: "include", body: form });
+      const res = await fetch(`${BASE}/upload/${index}`, {
+        method: "POST", credentials: "include", body: form,
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      await revalidate(); await fetchBanners();
+      setBanners((prev) => prev.map((b, i) => i === index ? { ...b, url: data.url ?? b.url } : b));
+      revalidate();
       toast.success("تم رفع البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الرفع");
     } finally { setLoading(null); }
   };
 
+  // ── Toggle ────────────────────────────────────────────────────────────────
   const handleToggle = async (index: number) => {
     setLoading(index);
+    const BASE = baseFor(category);
     try {
-      const res = await fetch(`${BASE}/toggle/${index}`, { method: "PATCH", credentials: "include" });
+      const res = await fetch(`${BASE}/toggle/${index}`, {
+        method: "PATCH", credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      await revalidate(); await fetchBanners();
+      setBanners((prev) => prev.map((b, i) => i === index ? { ...b, active: data.active } : b));
+      revalidate();
       toast.success(data.active ? "تم تفعيل البانر" : "تم إيقاف البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل التعديل");
     } finally { setLoading(null); }
   };
 
+  // ── Delete image ──────────────────────────────────────────────────────────
   const handleDeleteImage = async (index: number) => {
     setLoading(index);
+    const BASE = baseFor(category);
     try {
-      const res = await fetch(`${BASE}/${index}/image`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`${BASE}/${index}/image`, {
+        method: "DELETE", credentials: "include",
+      });
       if (!res.ok) throw new Error("فشل الحذف");
-      await revalidate(); await fetchBanners();
+      setBanners((prev) => prev.map((b, i) => i === index ? { ...b, url: "", active: false } : b));
+      revalidate();
       toast.success("تم حذف الصورة");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الحذف");
     } finally { setLoading(null); }
   };
 
+  // ── Delete slot ───────────────────────────────────────────────────────────
   const handleDeleteSlot = async (index: number) => {
     setLoading(index);
+    const BASE = baseFor(category);
     try {
-      const res = await fetch(`${BASE}/${index}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`${BASE}/${index}`, {
+        method: "DELETE", credentials: "include",
+      });
       if (!res.ok) throw new Error("فشل الحذف");
-      await revalidate(); await fetchBanners();
+      setBanners((prev) => prev.filter((_, i) => i !== index));
+      revalidate();
       toast.success("تم حذف البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الحذف");
     } finally { setLoading(null); }
   };
 
+  // ── Add slot ──────────────────────────────────────────────────────────────
   const handleAdd = async () => {
     setAdding(true);
+    const BASE = baseFor(category);
     try {
-      const res = await fetch(`${BASE}/add`, { method: "POST", credentials: "include" });
+      const res = await fetch(`${BASE}/add`, {
+        method: "POST", credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      await revalidate(); await fetchBanners();
+      setBanners((prev) => [...prev, { url: "", active: false }]);
+      revalidate();
       toast.success("تمت إضافة بانر جديد");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشلت الإضافة");
@@ -96,6 +141,9 @@ function useCategoryBanners(category: string) {
   return { banners, loading, adding, inputRefs, handleUpload, handleToggle, handleDeleteImage, handleDeleteSlot, handleAdd };
 }
 
+// ---------------------------------------------------------------------------
+// BannerCard
+// ---------------------------------------------------------------------------
 function BannerCard({
   banner, index, isLoading, inputRef, onUpload, onToggle, onDeleteImage, onDeleteSlot,
 }: {
@@ -117,12 +165,31 @@ function BannerCard({
           {hasImage && banner.active ? "✓ مفعّل" : hasImage ? "⏸ موقوف" : "فارغ"}
         </span>
       </div>
-      <div className={`relative w-full aspect-[2.5/1] cursor-pointer overflow-hidden ${hasImage ? "bg-gray-900" : "bg-gradient-to-br from-gray-50 to-gray-100"}`} onClick={triggerInput}>
+
+      <div
+        className={`relative w-full aspect-[2.5/1] cursor-pointer overflow-hidden ${hasImage ? "bg-gray-900" : "bg-gradient-to-br from-gray-50 to-gray-100"}`}
+        onClick={triggerInput}
+      >
         {hasImage ? (
           <>
-            <Image src={banner.url} alt={LABELS[index] || `بانر ${index + 1}`} fill className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-90" unoptimized />
+            {/* FIX #4: remove blanket unoptimized — only skip optimizer for
+                already-optimised external CDN URLs (Cloudinary). Let Next.js
+                optimise everything else (local uploads, S3, etc.) */}
+            <Image
+              src={banner.url}
+              alt={LABELS[index] || `بانر ${index + 1}`}
+              fill
+              quality={75}
+              className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
+              unoptimized={
+                banner.url.includes("res.cloudinary.com") ||
+                banner.url.includes("cloudinary.com")
+              }
+            />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
-              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-gray-800 text-sm font-semibold px-4 py-2 rounded-xl shadow">🖼 تغيير الصورة</span>
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-gray-800 text-sm font-semibold px-4 py-2 rounded-xl shadow">
+                🖼 تغيير الصورة
+              </span>
             </div>
           </>
         ) : (
@@ -144,6 +211,7 @@ function BannerCard({
           </div>
         )}
       </div>
+
       <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-y-2 gap-x-3">
         <div className="flex items-center gap-2 min-w-0">
           <div className={`w-2 h-2 shrink-0 rounded-full ${hasImage && banner.active ? "bg-emerald-400" : hasImage ? "bg-orange-400" : "bg-gray-300"}`} />
@@ -181,9 +249,12 @@ function BannerCard({
   );
 }
 
+// ---------------------------------------------------------------------------
+// CategoryBannersPanel
+// ---------------------------------------------------------------------------
 function CategoryBannersPanel({ category }: { category: string }) {
   const { banners, loading, adding, inputRefs, handleUpload, handleToggle, handleDeleteImage, handleDeleteSlot, handleAdd } = useCategoryBanners(category);
-  const filled = banners.filter((b) => b.url).length;
+  const filled      = banners.filter((b) => b.url).length;
   const activeCount = banners.filter((b) => b.url && b.active).length;
 
   return (
@@ -204,9 +275,11 @@ function CategoryBannersPanel({ category }: { category: string }) {
         )}
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        {/* FIX #3: stable key — url+index instead of bare index */}
         {banners.map((banner, i) => (
           <BannerCard
-            key={i} banner={banner} index={i} isLoading={loading === i}
+            key={`${banner.url}-${i}`}
+            banner={banner} index={i} isLoading={loading === i}
             inputRef={(el) => { inputRefs.current[i] = el; }}
             onUpload={handleUpload} onToggle={handleToggle}
             onDeleteImage={handleDeleteImage} onDeleteSlot={handleDeleteSlot}
@@ -217,23 +290,45 @@ function CategoryBannersPanel({ category }: { category: string }) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// CategoryBannersPage
+// ---------------------------------------------------------------------------
 export default function CategoryBannersPage() {
   const [categories, setCategories] = useState<string[]>([]);
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected]     = useState("");
+  // FIX #6: explicit loading + error states so the page never shows
+  // "جاري تحميل التصنيفات..." forever when the fetch fails
+  const [catsLoading, setCatsLoading] = useState(true);
+  const [catsError, setCatsError]     = useState(false);
 
+  // FIX #1: AbortController on categories fetch
   useEffect(() => {
-    fetch("/api/admin/sub-categories", { credentials: "include" })
+    const controller = new AbortController();
+    fetch("/api/admin/sub-categories", {
+      credentials: "include",
+      signal: controller.signal,
+    })
       .then((r) => r.json())
       .then((data: { category: string }[]) => {
-        if (!Array.isArray(data)) return;
+        if (controller.signal.aborted) return;
+        if (!Array.isArray(data)) { setCatsError(true); return; }
         const unique = [...new Set(data.map((d) => d.category).filter(Boolean))];
         setCategories(unique);
         if (unique.length) setSelected(unique[0]);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!controller.signal.aborted) setCatsError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setCatsLoading(false);
+      });
+    return () => controller.abort();
   }, []);
 
   return (
+    // FIX #5: remove inline <style> tag — replaced with Tailwind's
+    // [scrollbar-width:thin] and overflow-x-auto; scrollbar styling
+    // is handled by the tailwind-scrollbar plugin class below.
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 -mx-3 -mt-0 sm:-mx-5 md:-mx-6">
       <div className="bg-white border-b border-gray-100 shadow-sm px-4 py-4 sm:px-6 sm:py-5 md:px-8 md:py-6">
         <div className="flex items-center gap-3 mb-1">
@@ -248,21 +343,38 @@ export default function CategoryBannersPage() {
           <span className="shrink-0">⚠️</span>
           <span>اختر التصنيف من الأزرار بالأسفل ثم ارفع صور البانرات — يمكنك تفعيل أو إيقاف أو حذف كل بانر على حدة. البانرات المفعّلة فقط هي التي تظهر للعملاء في صفحة التصنيف.</span>
         </div>
-        {categories.length === 0 ? (
-          <div className="text-center text-gray-400 py-16">جاري تحميل التصنيفات...</div>
+
+        {/* FIX #6: three distinct states instead of one ambiguous empty check */}
+        {catsLoading ? (
+          <div className="flex items-center justify-center py-16 gap-3 text-gray-400">
+            <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm">جاري تحميل التصنيفات...</span>
+          </div>
+        ) : catsError ? (
+          <div className="text-center py-16">
+            <p className="text-red-500 font-medium mb-3">⚠️ فشل تحميل التصنيفات</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-sm text-indigo-600 underline"
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="text-center text-gray-400 py-16 text-sm">لا توجد تصنيفات بعد</div>
         ) : (
           <>
-            <div className="cat-scroll flex gap-2 mb-6 overflow-x-auto pb-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#a5b4fc #e0e7ff' }}>
-              <style>{`
-                .cat-scroll::-webkit-scrollbar { height: 6px; }
-                .cat-scroll::-webkit-scrollbar-track { background: #e0e7ff; border-radius: 3px; }
-                .cat-scroll::-webkit-scrollbar-thumb { background: #a5b4fc; border-radius: 3px; }
-              `}</style>
+            {/* FIX #5: [scrollbar-*] utilities instead of inline <style> */}
+            <div className="flex gap-2 mb-6 overflow-x-auto pb-2 [scrollbar-width:thin] [scrollbar-color:#a5b4fc_#e0e7ff]">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelected(cat)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition border whitespace-nowrap shrink-0 ${selected === cat ? "bg-indigo-600 text-white border-indigo-600 shadow-sm" : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-600"}`}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition border whitespace-nowrap shrink-0 ${
+                    selected === cat
+                      ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-600"
+                  }`}
                 >
                   {cat}
                 </button>

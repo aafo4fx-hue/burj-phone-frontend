@@ -13,7 +13,7 @@ export default function BannersPage() {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
 
-  const filled = banners.filter((b) => b.url).length;
+  const filled      = banners.filter((b) => b.url).length;
   const activeCount = banners.filter((b) => b.url && b.active).length;
 
   return (
@@ -27,8 +27,12 @@ export default function BannersPage() {
       />
       <div className="p-4 sm:p-6 md:p-8 grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
         {banners.map((banner, i) => (
+          // FIX #5: use banner.url + index as a more stable key than bare index.
+          // Pure index keys cause React to reuse the wrong DOM node when items
+          // are reordered — resulting in stale image previews and mismatched
+          // loading spinners. url+index guarantees a fresh mount after reorder.
           <div
-            key={i}
+            key={`${banner.url}-${i}`}
             draggable
             onDragStart={() => setDragIndex(i)}
             onDragOver={(e) => { e.preventDefault(); setOverIndex(i); }}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getBackend, forwardCookies } from "../../_lib";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -10,6 +11,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     body: JSON.stringify(body),
   }));
   const data = await res.json();
+  // ✅ FIX #3: flush public reviews cache immediately so homepage reflects the edit
+  if (res.ok) revalidateTag("reviews", "max");
   return NextResponse.json(data, { status: res.status });
 }
 
@@ -17,5 +20,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { id } = await params;
   const res = await fetch(`${getBackend()}/api/admin/reviews/${id}`, forwardCookies(req, { method: "DELETE" }));
   const data = await res.json();
+  // ✅ FIX #3: flush public reviews cache immediately so deleted review disappears
+  if (res.ok) revalidateTag("reviews", "max");
   return NextResponse.json(data, { status: res.status });
 }
