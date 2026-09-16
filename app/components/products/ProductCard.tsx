@@ -8,10 +8,16 @@ import { IoCartOutline, IoCheckmarkCircleOutline } from "react-icons/io5";
 import { TbTruckDelivery } from "react-icons/tb";
 import { GoShieldCheck } from "react-icons/go";
 import { MdOutlinePayment } from "react-icons/md";
+import { BsCreditCard2Front } from "react-icons/bs";
 import type { Product } from "./types";
 import { useCartStore } from "../../store/cartStore";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
+
+const isInstallmentProduct = (name: string) =>
+  name.includes("آيفون 18 برو") || name.includes("آيفون Duo");
+
+const calcMonthly = (price: number) => Math.ceil((price - 1000) / 24);
 
 const formatStorage = (storage: string): string => {
   if (!storage) return storage;
@@ -134,6 +140,13 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
           {product.warrantyYears >= 2 && (
             <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold text-violet-700 bg-violet-50 border border-violet-200 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg w-fit">
               <MdOutlinePayment size={10} />تقسيط بسعر الكاش
+            </span>
+          )}
+
+          {isInstallmentProduct(name) && displayPrice > 1000 && (
+            <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg w-fit">
+              <BsCreditCard2Front size={10} />
+              قسّط: {fmt(1000)} مقدم ثم {fmt(calcMonthly(displayPrice))} ر.س × 24 شهر
             </span>
           )}
 
