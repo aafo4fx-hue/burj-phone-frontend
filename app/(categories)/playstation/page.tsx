@@ -21,8 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = `أجهزة بلاي ستيشن | ${siteName}`;
   const description = `تسوق أحدث أجهزة بلاي ستيشن وإكس بوكس وملحقاتها بأفضل الأسعار وبالأقساط في ${siteName}.`;
   const logoUrl = company.logo
-    ? (company.logo.startsWith("http") ? company.logo : `${BACKEND}${company.logo}`)
-    : "";
+    ? (company.logo.startsWith("http") ? company.logo : `${SITE_URL}${company.logo}`)
+    : `${SITE_URL}/web-app-manifest-512x512.png`;
   return {
     title,
     description,

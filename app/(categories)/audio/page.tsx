@@ -21,8 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = `أجهزة صوت وسماعات | ${siteName}`;
   const description = `تسوق سماعات أبل وأجهزة الصوت بأفضل الأسعار في ${siteName}. شحن سريع وضمان معتمد.`;
   const logoUrl = company.logo
-    ? (company.logo.startsWith("http") ? company.logo : `${BACKEND}${company.logo}`)
-    : "";
+    ? (company.logo.startsWith("http") ? company.logo : `${SITE_URL}${company.logo}`)
+    : `${SITE_URL}/web-app-manifest-512x512.png`;
   return {
     title,
     description,

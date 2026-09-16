@@ -14,10 +14,9 @@ import { useCartStore } from "../../store/cartStore";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-const isInstallmentProduct = (name: string) => {
-  const n = name.replace(/\u0622/g, "\u0627").replace(/\u0623/g, "\u0627").replace(/\u0625/g, "\u0627");
-  return n.includes("\u0627\u064a\u0641\u0648\u0646 18 \u0628\u0631\u0648") || n.includes("\u0627\u064a\u0641\u0648\u0646 Duo");
-};
+const isInstallmentProduct = (name: string) =>
+  name.includes("آيفون 18 برو") || name.includes("آيفون Duo") ||
+  name.includes("آيفون 17 برو") || name.includes("آيفون 17 اير") || name.includes("آيفون 17،");
 
 const calcMonthly = (price: number) => Math.ceil((price - 1000) / 24);
 
@@ -153,12 +152,12 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
           )}
 
           {/* Price */}
-          <div className="mt-auto pt-1 flex flex-col gap-0.5">
+          <div className="mt-auto pt-1 flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1">
               <span className="text-[15px] sm:text-[21px] font-black text-gray-900 leading-none tracking-tight">
                 {fmt(displayPrice)}
               </span>
-              <Image src="/money-icon.webp" alt="ر.س" width={18} height={18} quality={100} className="opacity-80 shrink-0 sm:w-[26px] sm:h-[26px]" loading="lazy" />
+              <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="opacity-80 shrink-0 sm:w-[30px] sm:h-[30px]" loading="lazy" />
             </div>
             {hasDiscount && (
               <span className="text-[9px] sm:text-[11px] text-gray-400 line-through font-medium">{fmt(originalPrice)} ر.س</span>

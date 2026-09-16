@@ -21,8 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = `الساعات الذكية | ${siteName}`;
   const description = `تسوق أحدث الساعات الذكية بأفضل الأسعار وبالأقساط في ${siteName}. Apple Watch وأكثر.`;
   const logoUrl = company.logo
-    ? (company.logo.startsWith("http") ? company.logo : `${BACKEND}${company.logo}`)
-    : "";
+    ? (company.logo.startsWith("http") ? company.logo : `${SITE_URL}${company.logo}`)
+    : `${SITE_URL}/web-app-manifest-512x512.png`;
   return {
     title,
     description,

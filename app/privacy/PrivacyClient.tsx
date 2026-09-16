@@ -31,7 +31,6 @@ function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   );
 }
 
-/* ── Icons ── */
 const IconShield = () => (
   <svg viewBox="0 0 24 24" fill="none" className="w-7 h-7" stroke="currentColor" strokeWidth={1.8}>
     <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" strokeLinecap="round" strokeLinejoin="round"/>
@@ -65,7 +64,6 @@ const IconDoc = () => (
   </svg>
 );
 
-/* ── Data ── */
 const sections = [
   {
     Icon: IconDoc,
@@ -91,7 +89,7 @@ const sections = [
 
 type Company = { nameAr?: string; addressAr?: string; phone?: string; whatsapp?: string; email?: string; taxNumber?: string };
 
-export default function PrivacyPage() {
+export default function PrivacyClient() {
   const [heroVisible, setHeroVisible] = useState(false);
   const [company, setCompany] = useState<Company | null>(null);
 
@@ -110,8 +108,6 @@ export default function PrivacyPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden" dir="rtl" style={{ background: "linear-gradient(180deg, #f9f7fc 0%, #f3eef9 50%, #f9f7fc 100%)" }}>
-
-      {/* ════════ HERO ════════ */}
       <section className="relative w-full overflow-hidden cat-hero">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-32 -right-32 w-72 h-72 sm:w-[550px] sm:h-[550px] rounded-full bg-[#A842E4]/10 blur-[80px]" />
@@ -119,7 +115,6 @@ export default function PrivacyPage() {
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-80 sm:w-[700px] h-28 sm:h-44 bg-[#090D54]/20 blur-[60px]" />
         </div>
         <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
-
         <div className="relative w-full px-5 sm:px-12 lg:px-20 py-16 sm:py-28 lg:py-36 text-center text-white">
           <div {...anim(80)} className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/15 rounded-full px-4 py-1.5 text-[11px] sm:text-sm font-medium text-purple-100 mb-5 sm:mb-7">
             <span className="w-2 h-2 rounded-full bg-[#A842E4] animate-pulse shadow-[0_0_8px_#A842E4]" />
@@ -135,7 +130,6 @@ export default function PrivacyPage() {
             الشروط العامة المنظمة لاستخدام موقع برج المبدع للتقنية
           </p>
         </div>
-
         <div className="absolute bottom-0 left-0 w-full">
           <svg viewBox="0 0 1440 80" className="w-full h-10 sm:h-16" preserveAspectRatio="none">
             <path d="M0,40 C360,80 720,0 1080,40 C1260,60 1380,50 1440,40 L1440,80 L0,80 Z" fill="#f9f7fc" />
@@ -143,15 +137,12 @@ export default function PrivacyPage() {
         </div>
       </section>
 
-      {/* ════════ SECTIONS ════════ */}
       <section className="w-full max-w-5xl mx-auto px-4 sm:px-8 lg:px-10 py-8 sm:py-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
           {sections.map((s, i) => (
             <FadeUp key={s.title} delay={i * 100}>
               <div className="group relative bg-white rounded-2xl sm:rounded-3xl border border-purple-50 overflow-hidden hover:shadow-[0_6px_32px_rgba(133,67,192,0.1)] transition-all duration-300 h-full">
-                {/* Side accent */}
                 <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-[#A842E4] via-[#8543C0] to-[#611FA0] rounded-l-full opacity-40 group-hover:opacity-100 transition-opacity" />
-
                 <div className="p-5 sm:p-7">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-[#8543C0] to-[#7A2FCC] flex items-center justify-center text-white shrink-0 shadow-[0_4px_16px_rgba(133,67,192,0.25)] group-hover:scale-105 transition-transform duration-300">
@@ -170,7 +161,6 @@ export default function PrivacyPage() {
           ))}
         </div>
 
-        {/* ════════ STORE INFO ════════ */}
         {company && (
           <FadeUp delay={sections.length * 100}>
             <div className="group relative bg-white rounded-2xl sm:rounded-3xl border border-purple-50 overflow-hidden hover:shadow-[0_6px_32px_rgba(133,67,192,0.1)] transition-all duration-300 mt-5">

@@ -50,8 +50,8 @@ export async function generateMetadata({
   const logoUrl = company.logo
     ? company.logo.startsWith("http")
       ? company.logo
-      : `${BACKEND}${company.logo}`
-    : "";
+      : `${SITE_URL}${company.logo}`
+    : `${SITE_URL}/web-app-manifest-512x512.png`;
 
   return {
     title,

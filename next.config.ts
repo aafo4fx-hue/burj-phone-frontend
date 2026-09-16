@@ -17,9 +17,9 @@ const cspHeader = [
   // Saudi Business seal script requires it. unsafe-eval removed in production.
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://eauthenticate.saudibusiness.gov.sa`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://res.cloudinary.com https://i.ibb.co https://ibb.co https://eauthenticate.saudibusiness.gov.sa",
+  "img-src 'self' data: https://res.cloudinary.com https://i.ibb.co https://ibb.co https://eauthenticate.saudibusiness.gov.sa https://burj-phone-backend.vercel.app",
   "font-src 'self'",
-  "connect-src 'self' https://res.cloudinary.com https://eauthenticate.saudibusiness.gov.sa",
+  "connect-src 'self' https://res.cloudinary.com https://eauthenticate.saudibusiness.gov.sa https://burj-phone-backend.vercel.app",
   "frame-ancestors 'self'",
   "object-src 'none'",
   "base-uri 'self'",

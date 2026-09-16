@@ -73,8 +73,6 @@ export async function generateMetadata({
     ? `${BACKEND}${rawImg}`
     : `${SITE_URL}/web-app-manifest-512x512.png`;
 
-  const price = product.salePrice || product.price;
-
   return {
     title,
     description,

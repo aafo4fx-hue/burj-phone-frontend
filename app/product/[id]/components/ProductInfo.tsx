@@ -13,7 +13,8 @@ import type { Product } from "../../../components/products/types";
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 const isInstallmentProduct = (name: string) =>
-  name.includes("آيفون 18 برو") || name.includes("آيفون Duo");
+  name.includes("آيفون 18 برو") || name.includes("آيفون Duo") ||
+  name.includes("آيفون 17 برو") || name.includes("آيفون 17 اير") || name.includes("آيفون 17،");
 
 const DOWN_OPTIONS = [1000, 1500, 2000];
 const MONTH_OPTIONS = [6, 12, 18, 24];

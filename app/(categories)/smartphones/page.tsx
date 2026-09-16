@@ -23,8 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = `الهواتف الذكية | ${siteName}`;
   const description = `تسوق أحدث الهواتف الذكية بأفضل الأسعار وبالأقساط في ${siteName}. آيفون، سامسونج، شاومي وأكثر.`;
   const logoUrl = company.logo
-    ? (company.logo.startsWith("http") ? company.logo : `${BACKEND}${company.logo}`)
-    : "";
+    ? (company.logo.startsWith("http") ? company.logo : `${SITE_URL}${company.logo}`)
+    : `${SITE_URL}/web-app-manifest-512x512.png`;
   return {
     title,
     description,
