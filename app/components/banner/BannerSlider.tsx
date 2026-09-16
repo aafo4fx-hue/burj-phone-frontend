@@ -44,10 +44,11 @@ export default function BannerSlider({ images }: { images: string[] }) {
 
   return (
     <section className="w-full flex justify-center pt-4 sm:pt-5 pb-1 sm:pb-2 px-2 sm:px-4 md:px-6">
-      <div className="relative w-full max-w-7xl">
+      <div className="relative w-full" style={{ maxWidth: 2048 }}>
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl">
           <div
-            className="relative w-full aspect-[1.9/1] sm:aspect-[2.2/1]"
+            className="relative w-full"
+            style={{ aspectRatio: "2048/700" }}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
           >
@@ -66,7 +67,7 @@ export default function BannerSlider({ images }: { images: string[] }) {
                   src={images[current]}
                   alt={`banner ${current + 1}`}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                   priority={current === 0}
                   sizes="100vw"
                   quality={100}

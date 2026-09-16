@@ -25,7 +25,7 @@ export default async function Banner() {
 
   if (!images.length) return (
     <section className="w-full flex justify-center py-6 px-4">
-      <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-gray-200" style={{ aspectRatio: "1.8/1" }} />
+      <div className="relative w-full overflow-hidden rounded-2xl bg-gray-200" style={{ maxWidth: 2048, aspectRatio: "2048/700" }} />
     </section>
   );
 
