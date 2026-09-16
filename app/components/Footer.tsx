@@ -8,7 +8,7 @@ const API = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http:
 async function getCompany() {
   try {
     const r = await fetch(`${API}/api/admin/company`, {
-      next: { revalidate: 3600, tags: ["company"] },
+      next: { revalidate: 0, tags: ["company"] },
     });
     return r.ok ? r.json() : {};
   } catch {

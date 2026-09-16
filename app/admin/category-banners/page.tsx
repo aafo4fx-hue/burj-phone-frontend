@@ -19,12 +19,14 @@ function useCategoryBanners(category: string) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const BASE = `/api/admin/category-banners/${encodeURIComponent(category)}`;
 
-  useEffect(() => {
-    if (!category) return;
+  const fetchBanners = () =>
     fetch(BASE, { credentials: "include" })
       .then((r) => r.json())
       .then((d) => setBanners(Array.isArray(d) ? d : []));
-  }, [category, BASE]);
+
+  useEffect(() => { if (category) fetchBanners(); }, [category, BASE]);
+
+  const revalidate = () => fetch(`/api/revalidate?tag=category-banners`, { method: "POST" });
 
   const handleUpload = async (index: number, file: File) => {
     setLoading(index);
@@ -34,7 +36,7 @@ function useCategoryBanners(category: string) {
       const res = await fetch(`${BASE}/upload/${index}`, { method: "POST", credentials: "include", body: form });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setBanners((prev) => prev.map((b, i) => i === index ? { ...b, url: data.url } : b));
+      await revalidate(); await fetchBanners();
       toast.success("تم رفع البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الرفع");
@@ -47,7 +49,7 @@ function useCategoryBanners(category: string) {
       const res = await fetch(`${BASE}/toggle/${index}`, { method: "PATCH", credentials: "include" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setBanners((prev) => prev.map((b, i) => i === index ? { ...b, active: data.active } : b));
+      await revalidate(); await fetchBanners();
       toast.success(data.active ? "تم تفعيل البانر" : "تم إيقاف البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل التعديل");
@@ -59,7 +61,7 @@ function useCategoryBanners(category: string) {
     try {
       const res = await fetch(`${BASE}/${index}/image`, { method: "DELETE", credentials: "include" });
       if (!res.ok) throw new Error("فشل الحذف");
-      setBanners((prev) => prev.map((b, i) => i === index ? { ...b, url: "" } : b));
+      await revalidate(); await fetchBanners();
       toast.success("تم حذف الصورة");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الحذف");
@@ -71,7 +73,7 @@ function useCategoryBanners(category: string) {
     try {
       const res = await fetch(`${BASE}/${index}`, { method: "DELETE", credentials: "include" });
       if (!res.ok) throw new Error("فشل الحذف");
-      setBanners((prev) => prev.filter((_, i) => i !== index));
+      await revalidate(); await fetchBanners();
       toast.success("تم حذف البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الحذف");
@@ -84,7 +86,7 @@ function useCategoryBanners(category: string) {
       const res = await fetch(`${BASE}/add`, { method: "POST", credentials: "include" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setBanners((prev) => [...prev, { url: "", active: true }]);
+      await revalidate(); await fetchBanners();
       toast.success("تمت إضافة بانر جديد");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشلت الإضافة");

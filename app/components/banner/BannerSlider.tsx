@@ -68,7 +68,7 @@ export default function BannerSlider({ images }: { images: string[] }) {
                   fill
                   className="object-cover"
                   priority={current === 0}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1280px"
+                  sizes="100vw"
                   quality={100}
                 />
               </motion.div>
