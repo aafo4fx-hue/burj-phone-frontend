@@ -12,7 +12,7 @@ export default async function Banner() {
     // at most a few times per week.
     // ISR invocation reduction: 1,440/day → 24/day (Calculated).
     // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
-    const res = await fetch(`${API}/api/admin/banners`, { next: { revalidate: 3600 } });
+    const res = await fetch(`${API}/api/admin/banners`, { next: { revalidate: 3600, tags: ["banners"] } });
     const data: { url: string; active: boolean }[] = await res.json();
     if (Array.isArray(data))
       images = data.filter((b) => b.url && b.active).map((b) => {

@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import type { BannerItem } from "../types";
 
 const BASE = "/api/admin/banners";
+const revalidateBanners = () => fetch("/api/revalidate?tag=banners", { method: "POST" });
 
 export function useBanners() {
   const [banners, setBanners] = useState<BannerItem[]>([]);
@@ -28,6 +29,7 @@ export function useBanners() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setBanners((prev) => prev.map((b, i) => i === index ? { ...b, url: data.url } : b));
+      revalidateBanners();
       toast.success("تم رفع البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الرفع");
@@ -44,6 +46,7 @@ export function useBanners() {
       });
       if (!res.ok) throw new Error("فشل الحذف");
       setBanners((prev) => prev.map((b, i) => i === index ? { ...b, url: "" } : b));
+      revalidateBanners();
       toast.success("تم حذف الصورة");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الحذف");
@@ -60,6 +63,7 @@ export function useBanners() {
       });
       if (!res.ok) throw new Error("فشل الحذف");
       setBanners((prev) => prev.filter((_, i) => i !== index));
+      revalidateBanners();
       toast.success("تم حذف البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الحذف");
@@ -77,6 +81,7 @@ export function useBanners() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setBanners((prev) => prev.map((b, i) => i === index ? { ...b, active: data.active } : b));
+      revalidateBanners();
       toast.success(data.active ? "تم تفعيل البانر" : "تم إيقاف البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل التعديل");
@@ -118,6 +123,7 @@ export function useBanners() {
         body: JSON.stringify({ order }),
       });
       if (!res.ok) throw new Error("فشل الترتيب");
+      revalidateBanners();
       toast.success("تم تغيير الترتيب");
     } catch (e: unknown) {
       setBanners(banners);
