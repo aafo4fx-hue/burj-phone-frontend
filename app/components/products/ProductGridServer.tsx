@@ -56,7 +56,7 @@ export default async function ProductGridServer() {
     };
 
     // Fetch category banners for all product categories.
-    const cats = [...new Set(products.map((p) => p.category).filter(Boolean))];
+    const cats = products ? [...new Set(products.map((p) => p.category).filter(Boolean))] : [];
     if (cats.length) {
       const bannersRes = await fetch(
         `${BACKEND}/api/admin/category-banners-bulk?categories=${encodeURIComponent(
