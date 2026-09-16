@@ -14,9 +14,13 @@ import { useCartStore } from "../../store/cartStore";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-const isInstallmentProduct = (name: string) =>
-  name.includes("آيفون 18 برو") || name.includes("آيفون Duo") ||
-  name.includes("آيفون 17 برو") || name.includes("آيفون 17 اير") || name.includes("آيفون 17،");
+const isInstallmentProduct = (name: string, category?: string) => {
+  const cats = ["ابل ايفون 18 برو", "ابل ايفون 18 برو ماكس", "ابل ايفون 18 دو",
+                "ابل ايفون 17 برو", "ابل ايفون 17 برو ماكس", "ابل ايفون 17 اير", "ابل ايفون 17"];
+  if (category) return cats.some((c) => category.includes(c));
+  return name.includes("آيفون 18 برو") || name.includes("آيفون Duo") ||
+         name.includes("آيفون 17");
+};
 
 const calcMonthly = (price: number) => Math.ceil((price - 1000) / 24);
 
@@ -144,7 +148,7 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
             </span>
           )}
 
-          {isInstallmentProduct(name) && displayPrice > 1000 && (
+          {isInstallmentProduct(name, product.category) && displayPrice > 1000 && (
             <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg w-fit">
               <BsCreditCard2Front size={10} />
               قسّط: {fmt(1000)} مقدم ثم {fmt(calcMonthly(displayPrice))} ر.س × 24 شهر
