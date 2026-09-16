@@ -79,7 +79,7 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
               src={resolvedImage}
               alt={name}
               fill
-              className={`object-contain p-1.5 sm:p-3 transition-transform duration-500 ${zoomOnHover ? "zoom-hover-125" : ""}`}
+              className={`object-contain p-1.5 sm:p-3 transition-transform duration-500${zoomOnHover ? " zoom-hover-125" : ""}`}
               sizes="(max-width: 640px) 42vw, (max-width: 1024px) 33vw, 25vw"
               quality={75}
               priority={priority}
