@@ -85,7 +85,7 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
                 fill
                 className="object-cover"
                 sizes="(max-width: 640px) 100vw, 960px"
-                quality={80}
+                quality={100}
                 loading={current === 0 ? "eager" : "lazy"}
               />
             </motion.div>
