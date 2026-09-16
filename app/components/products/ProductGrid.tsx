@@ -122,7 +122,7 @@ function CategoryRow({ category, items, isFirst }: { category: string; items: Pr
       <div className="flex gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-hide pb-1 sm:pb-0">
         {visible.map((p, i) => (
           <div key={p._id} className="w-[60vw] shrink-0 sm:w-auto">
-            <ProductCard product={p} priority={isFirst && i === 0} />
+            <ProductCard product={p} priority={isFirst && i === 0} zoomOnHover={isPriceSorted} />
           </div>
         ))}
       </div>

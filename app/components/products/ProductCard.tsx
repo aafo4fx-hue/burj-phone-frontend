@@ -31,7 +31,7 @@ const resolveImg = (src: string) => {
   return clean.startsWith("http") ? clean : `${API}${clean.startsWith("/") ? clean : "/" + clean}`;
 };
 
-export default function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
+export default function ProductCard({ product, priority = false, zoomOnHover = false }: { product: Product; priority?: boolean; zoomOnHover?: boolean }) {
   const { name, salePrice, discountPercent = 0, inStock } = product;
   const image = product.images?.[0] || product.image;
   const resolvedImage = image ? resolveImg(image) : undefined;
@@ -79,7 +79,7 @@ export default function ProductCard({ product, priority = false }: { product: Pr
               src={resolvedImage}
               alt={name}
               fill
-              className="object-contain p-1.5 sm:p-3 transition-transform duration-500 group-hover:scale-105"
+              className={`object-contain p-1.5 sm:p-3 transition-transform duration-500 ${zoomOnHover ? "zoom-hover-125" : "group-hover:scale-105"}`}
               sizes="(max-width: 640px) 42vw, (max-width: 1024px) 33vw, 25vw"
               quality={100}
               priority={priority}

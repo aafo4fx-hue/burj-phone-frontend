@@ -15,7 +15,7 @@ const getProduct = cache(async (id: string) => {
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(id)) return null;
   try {
     const r = await fetch(`${BACKEND}/api/products/${id}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 3600, tags: [`product-${id}`] },
     });
     return r.ok ? r.json() : null;
   } catch {
