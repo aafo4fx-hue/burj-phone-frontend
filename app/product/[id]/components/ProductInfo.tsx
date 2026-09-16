@@ -246,24 +246,7 @@ export default function ProductInfo({
                 <div>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(salePrice!)}</span>
-                    <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90 w-[20px] h-[20px] sm:w-[26px] sm:h-[26px]" />
-                  </div>
-                  {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
-                </div>
-                <div className="flex flex-col items-end gap-1.5">
-                  <span className="text-[11px] sm:text-xs font-black px-2.5 py-1 rounded-lg text-white" style={{ background: "linear-gradient(135deg, #e74c3c, #c0392b)" }}>
-                    وفّر {savingsPercent}%
-                  </span>
-                  <span className="text-xs sm:text-sm line-through opacity-40 flex items-center gap-1" style={{ color: "#1F2C3E" }}>
-                    {fmt(originalPrice)} <Image src="/money-icon.webp" alt="ر.س" width={16} height={16} quality={100} className="inline-block opacity-60 w-[14px] h-[14px] sm:w-[16px] sm:h-[16px]" />
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(originalPrice)}</span>
-                  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90 w-[20px] h-[20px] sm:w-[26px] sm:h-[26px]" />
+                    <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90 w-[26px] h-[26px] sm:w-[30px] sm:h-[30px]" />
                 </div>
                 {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
               </div>
@@ -272,7 +255,7 @@ export default function ProductInfo({
         </AnimatePresence>
 
         {/* ── Installment Calculator ── */}
-        {isInstallmentProduct(name) && (
+        {isInstallmentProduct(name, product.category) && (
           <InstallmentCalc price={salePrice ?? originalPrice} />
         )}
 

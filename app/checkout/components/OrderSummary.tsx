@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { IoReceiptOutline, IoRocketOutline, IoWalletOutline } from "react-icons/io5";
 
 const SAR = () => (
-  <Image src="/money-icon.webp" alt="ر.س" width={27} height={27} quality={100} className="inline-block w-[27px] h-[27px]" />
+  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block w-[26px] h-[26px] sm:w-[30px] sm:h-[30px]" />
 );
 
 const fmt = (n: number) => n.toLocaleString("en-US");
