@@ -10,6 +10,7 @@ import { getBackend } from "../admin/_lib";
 //   - Returns identical public data for every caller
 //   - No authentication or user-specific logic
 // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
+export const dynamic = "force-dynamic";
 export const revalidate = 300;
 
 export async function GET() {
