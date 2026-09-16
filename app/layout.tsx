@@ -29,7 +29,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteName = c.nameAr || "برج المبدع ";
   const description = c.details || "برج المبدع  - أجهزة إلكترونية بالأقساط داخل المملكة العربية السعودية. أفضل الأسعار على الجوالات، اللابتوبات، الأجهزة اللوحية والإكسسوارات.";
 
-  const logoUrl = c.logo
+  // الصورة اللي تظهر على واتساب وتيليجرام - لازم تكون URL كامل ومتاح للعموم
+  const ogImageUrl = c.logo
     ? (c.logo.startsWith("http") ? c.logo : `${SITE_URL}${c.logo}`)
     : `${SITE_URL}/web-app-manifest-512x512.png`;
 
@@ -77,11 +78,10 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       images: [
         {
-          url: logoUrl,
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: siteName,
-          type: "image/png",
         },
       ],
     },
@@ -89,7 +89,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title: siteName,
       description,
-      images: [{ url: logoUrl, alt: siteName }],
+      images: [ogImageUrl],
     },
     alternates: {
       canonical: SITE_URL,

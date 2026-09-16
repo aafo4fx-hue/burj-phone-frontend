@@ -153,7 +153,7 @@ async function getCategories(): Promise<(Category & { href: string; featured?: b
 
     const withHref = sorted.map((cat) => ({ ...cat, href: resolveHref(cat.name) }));
     const without18 = withHref.filter(
-      (c) => c.href !== "/smartphones/iphone-18" && c.name !== "ابل ايفون 18"
+      (c) => !c.name.includes("18") && c.href !== "/smartphones/iphone-18"
     );
     return [...IPHONE_18_CARDS, ...without18];
   } catch {

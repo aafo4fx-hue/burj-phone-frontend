@@ -44,20 +44,20 @@ function InstallmentCalc({ price }: { price: number }) {
   const monthly = Math.ceil(remaining / months);
 
   return (
-    <div className="px-4 sm:px-5 py-4" style={{ borderBottom: "1px solid #f0ebe4", background: "rgba(133,67,192,0.04)" }}>
-      <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest mb-3" style={{ color: "#611FA0" }}>
+    <div className="px-3 sm:px-5 py-3 sm:py-4" style={{ borderBottom: "1px solid #f0ebe4", background: "rgba(133,67,192,0.04)" }}>
+      <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest mb-2.5 sm:mb-3" style={{ color: "#611FA0" }}>
         حاسبة التقسيط
       </p>
 
       {/* Down payment */}
-      <div className="mb-3">
-        <p className="text-[10px] font-bold mb-1.5" style={{ color: "#1F2C3E" }}>الدفعة المقدمة</p>
-        <div className="flex gap-2">
+      <div className="mb-2.5 sm:mb-3">
+        <p className="text-[10px] sm:text-[11px] font-bold mb-1.5" style={{ color: "#1F2C3E" }}>الدفعة المقدمة</p>
+        <div className="flex gap-1.5 sm:gap-2">
           {DOWN_OPTIONS.map((d) => (
             <button
               key={d}
               onClick={() => setDown(d)}
-              className="flex-1 py-2 rounded-xl text-[11px] sm:text-xs font-black border transition-all duration-200"
+              className="flex-1 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black border transition-all duration-200"
               style={{
                 backgroundColor: down === d ? "#8543C0" : "#faf7f2",
                 color: down === d ? "#fff" : "#1F2C3E",
@@ -72,14 +72,14 @@ function InstallmentCalc({ price }: { price: number }) {
       </div>
 
       {/* Months */}
-      <div className="mb-4">
-        <p className="text-[10px] font-bold mb-1.5" style={{ color: "#1F2C3E" }}>عدد الأشهر</p>
-        <div className="flex gap-2">
+      <div className="mb-3 sm:mb-4">
+        <p className="text-[10px] sm:text-[11px] font-bold mb-1.5" style={{ color: "#1F2C3E" }}>عدد الأشهر</p>
+        <div className="flex gap-1.5 sm:gap-2">
           {MONTH_OPTIONS.map((m) => (
             <button
               key={m}
               onClick={() => setMonths(m)}
-              className="flex-1 py-2 rounded-xl text-[11px] sm:text-xs font-black border transition-all duration-200"
+              className="flex-1 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black border transition-all duration-200"
               style={{
                 backgroundColor: months === m ? "#8543C0" : "#faf7f2",
                 color: months === m ? "#fff" : "#1F2C3E",
@@ -94,20 +94,21 @@ function InstallmentCalc({ price }: { price: number }) {
       </div>
 
       {/* Result */}
-      <div className="rounded-2xl p-3 sm:p-4 flex items-center justify-between" style={{ background: "linear-gradient(135deg, #8543C0, #611FA0)" }}>
-        <div>
-          <p className="text-[10px] text-white/70 font-semibold">دفعة مقدمة</p>
-          <p className="text-base sm:text-lg font-black text-white">{fmt(down)} ر.س</p>
-        </div>
-        <div className="w-px h-8 bg-white/20" />
+      <div className="rounded-xl sm:rounded-2xl p-2.5 sm:p-4 grid grid-cols-3 gap-2" style={{ background: "linear-gradient(135deg, #8543C0, #611FA0)" }}>
         <div className="text-center">
-          <p className="text-[10px] text-white/70 font-semibold">عدد الأشهر</p>
-          <p className="text-base sm:text-lg font-black text-white">{months} شهر</p>
+          <p className="text-[9px] sm:text-[10px] text-white/70 font-semibold mb-0.5">دفعة مقدمة</p>
+          <p className="text-sm sm:text-lg font-black text-white leading-tight">{fmt(down)}</p>
+          <p className="text-[9px] text-white/60">ر.س</p>
         </div>
-        <div className="w-px h-8 bg-white/20" />
-        <div className="text-left">
-          <p className="text-[10px] text-white/70 font-semibold">القسط الشهري</p>
-          <p className="text-base sm:text-lg font-black text-white">{fmt(monthly)} ر.س</p>
+        <div className="text-center border-x border-white/20">
+          <p className="text-[9px] sm:text-[10px] text-white/70 font-semibold mb-0.5">عدد الأشهر</p>
+          <p className="text-sm sm:text-lg font-black text-white leading-tight">{months}</p>
+          <p className="text-[9px] text-white/60">شهر</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[9px] sm:text-[10px] text-white/70 font-semibold mb-0.5">القسط الشهري</p>
+          <p className="text-sm sm:text-lg font-black text-white leading-tight">{fmt(monthly)}</p>
+          <p className="text-[9px] text-white/60">ر.س</p>
         </div>
       </div>
     </div>
@@ -240,7 +241,7 @@ export default function ProductInfo({
                 <div>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(salePrice!)}</span>
-                    <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90" />
+                    <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90 w-[20px] h-[20px] sm:w-[26px] sm:h-[26px]" />
                   </div>
                   {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
                 </div>
@@ -249,7 +250,7 @@ export default function ProductInfo({
                     وفّر {savingsPercent}%
                   </span>
                   <span className="text-xs sm:text-sm line-through opacity-40 flex items-center gap-1" style={{ color: "#1F2C3E" }}>
-                    {fmt(originalPrice)} <Image src="/money-icon.webp" alt="ر.س" width={16} height={16} quality={100} className="inline-block opacity-60" />
+                    {fmt(originalPrice)} <Image src="/money-icon.webp" alt="ر.س" width={16} height={16} quality={100} className="inline-block opacity-60 w-[14px] h-[14px] sm:w-[16px] sm:h-[16px]" />
                   </span>
                 </div>
               </div>
@@ -257,7 +258,7 @@ export default function ProductInfo({
               <div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(originalPrice)}</span>
-                  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90" />
+                  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90 w-[20px] h-[20px] sm:w-[26px] sm:h-[26px]" />
                 </div>
                 {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
               </div>

@@ -71,7 +71,9 @@ export async function generateMetadata({
     ? rawImg
     : rawImg
     ? `${BACKEND}${rawImg}`
-    : "";
+    : `${SITE_URL}/web-app-manifest-512x512.png`;
+
+  const price = product.salePrice || product.price;
 
   return {
     title,
@@ -90,9 +92,7 @@ export async function generateMetadata({
       url: `${SITE_URL}/product/${id}`,
       title: `${title} | ${siteName}`,
       description,
-      images: imageUrl
-        ? [{ url: imageUrl, width: 800, height: 800, alt: title }]
-        : [],
+      images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
       siteName,
       locale: "ar_SA",
     },
@@ -100,7 +100,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: `${title} | ${siteName}`,
       description,
-      images: imageUrl ? [imageUrl] : [],
+      images: [imageUrl],
     },
     alternates: {
       canonical: `${SITE_URL}/product/${id}`,

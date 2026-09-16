@@ -1,22 +1,45 @@
 import type { Metadata } from "next";
 import ReturnPolicyClient from "./ReturnPolicyClient";
 
+const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
 const SITE_URL = "https://burjjstorre.com";
 
-export const metadata: Metadata = {
-  title: "سياسة الاستبدال والاسترجاع",
-  description: "الشروط المنظمة لطلبات الإلغاء والاستبدال والاسترجاع داخل برج المبدع للتقنية.",
-  keywords: ["سياسة الاسترجاع", "استبدال", "إلغاء طلب", "برج المبدع للتقنية", "السعودية"],
-  openGraph: {
-    type: "website",
-    url: `${SITE_URL}/return-policy`,
-    title: "سياسة الاستبدال والاسترجاع | برج المبدع للتقنية",
-    description: "الشروط المنظمة لطلبات الإلغاء والاستبدال والاسترجاع داخل برج المبدع للتقنية.",
-    locale: "ar_SA",
-    siteName: "برج المبدع للتقنية",
-  },
-  alternates: { canonical: `${SITE_URL}/return-policy` },
-};
+export const revalidate = 3600;
+
+async function getCompany() {
+  try {
+    const r = await fetch(`${BACKEND}/api/admin/company`, { next: { revalidate: 3600 } });
+    return r.ok ? r.json() : {};
+  } catch {
+    return {};
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const company = await getCompany();
+  const siteName = company.nameAr || "برج المبدع للتقنية";
+  const title = `سياسة الاستبدال والاسترجاع | ${siteName}`;
+  const description = `الشروط المنظمة لطلبات الإلغاء والاستبدال والاسترجاع داخل ${siteName}.`;
+  const ogImageUrl = company.logo
+    ? (company.logo.startsWith("http") ? company.logo : `${SITE_URL}${company.logo}`)
+    : `${SITE_URL}/web-app-manifest-512x512.png`;
+  return {
+    title,
+    description,
+    keywords: ["سياسة الاسترجاع", "استبدال", "إلغاء طلب", siteName, "السعودية"],
+    openGraph: {
+      type: "website",
+      url: `${SITE_URL}/return-policy`,
+      title,
+      description,
+      locale: "ar_SA",
+      siteName,
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [ogImageUrl] },
+    alternates: { canonical: `${SITE_URL}/return-policy` },
+  };
+}
 
 export default function ReturnPolicyPage() {
   return <ReturnPolicyClient />;
