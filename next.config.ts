@@ -67,6 +67,7 @@ const nextConfig: NextConfig = {
     // the same images every minute, generating unnecessary Function invocations.
     // 86400s matches Cloudinary's own CDN delivery TTL for transformed images.
     minimumCacheTTL: 86400,
+    qualities: [75, 80, 85, 100],
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { hostname: "ibb.co" },

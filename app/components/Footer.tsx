@@ -147,7 +147,7 @@ export default async function Footer() {
               {footerItems.map((item, i) => {
                 const href = getHref(item);
                 const el = (
-                  <Image key={i} src={item.image} alt={`شعار شريك ${i + 1}`} width={200} height={50} quality={100}
+                  <Image key={i} src={item.image} alt={`شعار شريك ${i + 1}`} width={200} height={50} quality={80}
                     className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" />
                 );
                 return href

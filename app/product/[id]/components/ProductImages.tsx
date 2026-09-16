@@ -68,7 +68,7 @@ export default function ProductImages({ images, name, discountPercent = 0 }: Pro
                 fill
                 className="object-cover"
                 priority
-                quality={100}
+                quality={85}
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
             )}
@@ -103,7 +103,7 @@ export default function ProductImages({ images, name, discountPercent = 0 }: Pro
                 alt=""
                 fill
                 className="object-contain p-2"
-                quality={100}
+                quality={75}
                 sizes="68px"
                 loading={i === 0 ? "eager" : "lazy"}
               />

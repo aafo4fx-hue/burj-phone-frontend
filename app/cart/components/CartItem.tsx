@@ -47,7 +47,7 @@ export default function CartItem({ product, qty, index, onUpdateQty, onRemove }:
       {/* Product Image */}
       <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-[#f9f5ff] to-[#f3eafc]">
         {img ? (
-          <Image src={img} alt={product.name} fill quality={100} className="object-contain p-2 group-hover:scale-105 transition-transform duration-300" />
+          <Image src={img} alt={product.name} fill quality={75} className="object-contain p-2 group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <span className="text-3xl flex items-center justify-center w-full h-full">📱</span>
         )}

@@ -56,7 +56,7 @@ function CategoryCard({ cat }: { cat: Category }) {
             alt={cat.name}
             fill
             className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-            quality={100}
+            quality={75}
             sizes="(max-width:640px) 140px, 160px"
           />
         ) : (
