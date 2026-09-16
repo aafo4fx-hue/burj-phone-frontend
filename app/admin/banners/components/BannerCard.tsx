@@ -64,7 +64,7 @@ export default function BannerCard({
               alt={LABELS[index] || `بانر ${index + 1}`}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105 opacity-90"
-              unoptimized
+              quality={100}
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
               <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-gray-800 text-sm font-semibold px-4 py-2 rounded-xl shadow">

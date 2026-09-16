@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PlaystationClient from "./PlaystationClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
 const SITE_URL = "https://burjjstorre.com";

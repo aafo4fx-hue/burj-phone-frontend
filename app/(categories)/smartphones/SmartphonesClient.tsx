@@ -39,10 +39,20 @@ export default function SmartphonesClient() {
   const ITEMS_PER_PAGE = 12;
 
   useEffect(() => {
-    fetch(`/api/products`)
-      .then((r) => r.json())
-      .then((data: Product[]) => {
-        const filtered = data.filter((p) =>
+    // Previously: fetched ALL products with no params, filtered in browser.
+    // Now: sends brand=Apple and brand=Samsung in parallel — MongoDB filters
+    // using the {brand,inStock} index. Eliminates full-catalog download.
+    Promise.all([
+      fetch(`/api/products?brand=Apple`).then((r) => r.json()).catch(() => [] as Product[]),
+      fetch(`/api/products?brand=Samsung`).then((r) => r.json()).catch(() => [] as Product[]),
+    ])
+      .then(([appleProds, samsungProds]) => {
+        const allProds: Product[] = [
+          ...(Array.isArray(appleProds) ? appleProds : []),
+          ...(Array.isArray(samsungProds) ? samsungProds : []),
+        ];
+        // Filter to smartphone categories only (exclude accessories, watches, etc.)
+        const filtered = allProds.filter((p) =>
           p.category?.includes("ايفون") ||
           p.category?.includes("آيفون") ||
           p.category?.includes("جالكسي") ||
@@ -101,7 +111,7 @@ export default function SmartphonesClient() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f7fafb]" dir="rtl">
+    <main className="min-h-screen bg-white" dir="rtl">
       {/* ═══ HERO WITH IMAGE ═══ */}
       <div className="relative h-[220px] sm:h-[280px] overflow-hidden">
         <Image src="/bbb.webp" alt="الهواتف الذكية" fill className="object-cover" priority />

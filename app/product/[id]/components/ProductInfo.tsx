@@ -11,10 +11,19 @@ import type { Product } from "../../../components/products/types";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
+// toKey is defined once here and used both for rendering storage buttons and
+// for comparing against selectedStorage. ProductPageClient passes selectedStorage
+// using the same toKey logic, so the keys always match.
+const toKey = (o: { storage: string; ram?: string; size?: string }) =>
+  `${o.storage}|${o.ram ?? ""}|${o.size ?? ""}`;
+
 interface ProductInfoProps {
   product: Product;
   selectedColor: string;
   selectedStorage: string;
+  // Pre-computed by ProductPageClient — no need to re-derive in this component.
+  originalPrice: number;
+  salePrice: number | null | undefined;
   addedToCart: boolean;
   onColorChange: (c: string) => void;
   onStorageChange: (s: string) => void;
@@ -22,22 +31,23 @@ interface ProductInfoProps {
 }
 
 export default function ProductInfo({
-  product, selectedColor, selectedStorage, addedToCart,
+  product, selectedColor, selectedStorage,
+  originalPrice, salePrice,
+  addedToCart,
   onColorChange, onStorageChange, onAddToCart,
 }: ProductInfoProps) {
   const router = useRouter();
-  const { name, brand, freeDelivery, deliveryTime, inStock, taxIncluded, installment } = product;
+  const { name, brand, freeDelivery, inStock, taxIncluded, installment } = product;
 
   const hasVariants = product.variants && product.variants.length > 0;
+  // storageOpts only needed here to render the storage selector buttons.
   const activeVariant = product.variants?.find((v) => v.color === selectedColor);
   const storageOpts = activeVariant?.storageOptions ?? product.variants?.[0]?.storageOptions ?? [];
-  const toKey = (o: { storage: string; ram?: string; size?: string }) => `${o.storage}|${o.ram ?? ""}|${o.size ?? ""}`;
-  const activeStorageOpt = storageOpts.find((o) => toKey(o) === selectedStorage) ?? storageOpts[0];
 
-  const originalPrice = activeStorageOpt?.originalPrice ?? product.originalPrice ?? 0;
-  const salePrice = activeStorageOpt?.salePrice ?? product.salePrice;
   const hasDiscount = salePrice != null && salePrice > 0 && salePrice < originalPrice;
-  const savingsPercent = hasDiscount ? Math.round(((originalPrice - (salePrice ?? 0)) / originalPrice) * 100) : 0;
+  const savingsPercent = hasDiscount
+    ? Math.round(((originalPrice - (salePrice ?? 0)) / originalPrice) * 100)
+    : 0;
 
   return (
     <div className="lg:sticky lg:top-[72px]">
@@ -130,7 +140,7 @@ export default function ProductInfo({
           </div>
         )}
 
-        {/* ── Price ── */}
+        {/* ── Price — animated on variant/storage change ── */}
         <AnimatePresence mode="wait">
           <motion.div
             key={`${selectedStorage}-${selectedColor}`}
@@ -146,7 +156,7 @@ export default function ProductInfo({
                 <div>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(salePrice!)}</span>
-                    <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} className="inline-block opacity-90" />
+                    <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90" />
                   </div>
                   {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
                 </div>
@@ -155,7 +165,7 @@ export default function ProductInfo({
                     وفّر {savingsPercent}%
                   </span>
                   <span className="text-xs sm:text-sm line-through opacity-40 flex items-center gap-1" style={{ color: "#1F2C3E" }}>
-                    {fmt(originalPrice)} <Image src="/money-icon.webp" alt="ر.س" width={16} height={16} className="inline-block opacity-60" />
+                    {fmt(originalPrice)} <Image src="/money-icon.webp" alt="ر.س" width={16} height={16} quality={100} className="inline-block opacity-60" />
                   </span>
                 </div>
               </div>
@@ -163,7 +173,7 @@ export default function ProductInfo({
               <div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(originalPrice)}</span>
-                  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} className="inline-block opacity-90" />
+                  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90" />
                 </div>
                 {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
               </div>
@@ -179,14 +189,14 @@ export default function ProductInfo({
             </div>
             <div>
               <p className="text-[11px] sm:text-xs font-bold flex items-center gap-1 flex-wrap" style={{ color: "#1F2C3E" }}>
-                تقسيط متاح {installment.downPayment ? <><span>• مقدم {fmt(installment.downPayment)}</span><Image src="/money-icon.webp" alt="ر.س" width={14} height={14} className="inline-block" /></> : ""}
+                tقسيط متاح {installment.downPayment ? <><span>• مقدم {fmt(installment.downPayment)}</span><Image src="/money-icon.webp" alt="ر.س" width={14} height={14} quality={100} className="inline-block" /></> : ""}
               </p>
               {installment.note && <p className="text-[10px] mt-0.5" style={{ color: "#611FA0" }}>{installment.note}</p>}
             </div>
           </div>
         )}
 
-        {/* ── Trust badges (توصيل + ضمان فقط) ── */}
+        {/* ── Trust badges ── */}
         <div className="grid grid-cols-2 gap-px" style={{ background: "#f0ebe4" }}>
           {[
             { icon: IoCarOutline, label: freeDelivery ? "توصيل مجاني" : "توصيل مدفوع", sub: null },

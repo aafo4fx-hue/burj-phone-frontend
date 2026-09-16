@@ -40,7 +40,11 @@ export const useCompanyStore = create<CompanyStore>()(
         if (lastFetched && Date.now() - lastFetched < COMPANY_TTL_MS) return;
 
         try {
-          const res = await fetch(`/api/admin/company`, { credentials: "include" });
+          // Uses /api/company/public — a cookie-free endpoint with route-level
+          // revalidate:3600 so the Vercel Function is NOT invoked on cache hits.
+          // The previous /api/admin/company used forwardCookies which prevented
+          // Next.js Data Cache from activating.
+          const res = await fetch(`/api/company/public`);
           if (!res.ok) return;
           const text = await res.text();
           if (!text) return;

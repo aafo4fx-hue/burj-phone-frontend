@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Keyboard, Pagination } from "swiper/modules";
 import "swiper/css";
@@ -14,20 +14,21 @@ interface Review {
   createdAt: string;
 }
 
-export default function CustomerReviews() {
-  const [reviews, setReviews] = useState<Review[]>([]);
+interface Props {
+  /** Pre-fetched reviews from the ISR server wrapper.
+   *  When provided the client-side useEffect fetch is skipped entirely,
+   *  eliminating the GET /api/reviews Vercel Function invocation per visit. */
+  initialReviews?: Review[];
+}
+
+export default function CustomerReviews({ initialReviews = [] }: Props) {
+  // Reviews come from ISR server-side; no client fetch needed.
+  const [reviews] = useState<Review[]>(initialReviews);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", comment: "", rating: 5 });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
-
-  useEffect(() => {
-    fetch(`/api/reviews`)
-      .then((r) => r.json())
-      .then((data) => Array.isArray(data) && setReviews(data))
-      .catch(() => {});
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,7 +53,7 @@ export default function CustomerReviews() {
       : "from-purple-500 to-indigo-500";
 
   return (
-    <section className="w-full py-6" dir="rtl">
+    <section className="w-full py-4" dir="rtl">
     <div className="max-w-6xl mx-auto px-3 sm:px-4">
       <div className="flex items-center gap-2 sm:gap-3 mb-6">
         <div className="flex-1 h-px bg-[#8543C0]/20" />

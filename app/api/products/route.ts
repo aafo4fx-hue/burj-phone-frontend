@@ -1,14 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getBackend } from "../admin/_lib";
 
-// Verified: GET /api/products is a public endpoint with no auth middleware
-// on the backend (productRoutes.js). forwardCookies was removed because:
-//   1. The endpoint does not use cookies for any logic.
-//   2. Sending cookies with a fetch() prevents Next.js Data Cache from
-//      caching the response, defeating the revalidate:60 setting entirely.
-// Double-JSON eliminated: response body is streamed directly to the client
-// without parse → object → re-stringify on the Vercel Function.
+// Route Handler-level cache — makes this route ○ Static in Next.js build output.
+// With this directive the Vercel Function is NOT invoked on a cache hit;
+// the full response is served from Full Route Cache for 60 seconds.
+// Public endpoint, no cookies, no user-specific data.
 // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
+export const revalidate = 60;
+
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q") || "";
   const brand = req.nextUrl.searchParams.get("brand") || "";

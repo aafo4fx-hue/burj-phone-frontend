@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Tajawal } from "next/font/google";
+import { Noto_Kufi_Arabic } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import ClientLayout from "./components/ClientLayout";
 import Footer from "./components/Footer";
 
-const tajawal = Tajawal({
+const notoKufiArabic = Noto_Kufi_Arabic({
   subsets: ["arabic"],
-  weight: ["400", "700", "800"],
+  weight: ["300", "400", "500", "700"],
   display: "swap",
 });
 
@@ -105,7 +105,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${tajawal.className} antialiased`} suppressHydrationWarning>
+      <body className={`${notoKufiArabic.className} antialiased`} suppressHydrationWarning>
         <ClientLayout footer={<Footer />}>{children}</ClientLayout>
         
         {/* Saudi Business Certificate Verification Seal */}

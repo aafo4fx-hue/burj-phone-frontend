@@ -53,7 +53,7 @@ export default function ProductPageClient({ id, initialProduct }: { id: string; 
 
   if (loading)
     return (
-      <main className="min-h-screen" dir="rtl" style={{ background: "#f5f0e8" }}>
+      <main className="min-h-screen" dir="rtl" style={{ background: "#ffffff" }}>
         <div className="h-screen flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "#8543C0", borderTopColor: "transparent" }} />
@@ -65,7 +65,7 @@ export default function ProductPageClient({ id, initialProduct }: { id: string; 
 
   if (fetchFailed || !product)
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: "#f5f0e8" }}>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: "#ffffff" }}>
         <p className="text-gray-400 text-lg">المنتج غير موجود</p>
         <button onClick={() => router.back()} className="text-sm font-bold px-6 py-3 rounded-full text-white" style={{ background: "linear-gradient(135deg, #8543C0, #611FA0)" }}>العودة</button>
       </div>
@@ -121,7 +121,7 @@ export default function ProductPageClient({ id, initialProduct }: { id: string; 
         .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none }
       `}</style>
 
-      <main className="min-h-screen" dir="rtl" style={{ background: "#f5f0e8" }}>
+      <main className="min-h-screen" dir="rtl" style={{ background: "#ffffff" }}>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-4">
           {/* ── Back + Breadcrumb + Share ── */}
@@ -186,6 +186,8 @@ export default function ProductPageClient({ id, initialProduct }: { id: string; 
                 product={displayProduct}
                 selectedColor={selectedColor}
                 selectedStorage={selectedStorage}
+                originalPrice={originalPrice}
+                salePrice={salePrice}
                 addedToCart={addedToCart}
                 onColorChange={(c) => {
                   setSelectedColor(c);

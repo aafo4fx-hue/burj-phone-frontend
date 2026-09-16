@@ -28,6 +28,10 @@ const categoryPageMap: Record<string, string> = {
   microphone: "/games/microphones",
   figures: "/games/figures",
   rgb: "/games/rgb-lighting",
+  "ابل ايفون 18 برو ماكس": "/smartphones/iphone-18-pro-max",
+  "ابل ايفون 18 برو": "/smartphones/iphone-18-pro",
+  "ابل ايفون 18 دو": "/smartphones/iphone-18-duo",
+  " ابل ايفون 18 دو": "/smartphones/iphone-18-duo",
   "ابل ايفون 17 برو": "/smartphones/iphone-17-pro",
   "ابل ايفون 17 برو ماكس": "/smartphones/iphone-17-pro-max",
   "ابل ايفون 17برو ماكس": "/smartphones/iphone-17-pro-max",
@@ -71,6 +75,7 @@ function parseStorage(s?: string): number {
 }
 
 const orangeFirstCategories = ["ابل ايفون 17 برو ماكس", "ابل ايفون 17 برو"];
+const priceSortedCategories = ["ابل ايفون 18 برو ماكس", "ابل ايفون 18 برو", "ابل ايفون 18 دو", " ابل ايفون 18 دو"];
 
 function colorOrder(color: string, isOrangeFirst: boolean): number {
   if (isOrangeFirst && /برتقالي|orange/i.test(color)) return -1;
@@ -78,6 +83,7 @@ function colorOrder(color: string, isOrangeFirst: boolean): number {
 }
 
 function CategoryRow({ category, items, isFirst }: { category: string; items: Product[]; isFirst?: boolean }) {
+  const isPriceSorted = priceSortedCategories.includes(category);
   const isOrangeFirst = orangeFirstCategories.includes(category);
   const colors = [...new Set(items.map((p) => p.color || ""))];
   colors.sort((a, b) => {
@@ -87,6 +93,7 @@ function CategoryRow({ category, items, isFirst }: { category: string; items: Pr
   });
   const colorRank = new Map(colors.map((c, i) => [c, i]));
   const visible = [...items].sort((a, b) => {
+    if (isPriceSorted) return (a.salePrice ?? a.originalPrice ?? 0) - (b.salePrice ?? b.originalPrice ?? 0);
     const sa = parseStorage(a.storage), sb = parseStorage(b.storage);
     if (sa !== sb) return sa - sb;
     return (colorRank.get(a.color || "") ?? 99) - (colorRank.get(b.color || "") ?? 99);
@@ -94,7 +101,7 @@ function CategoryRow({ category, items, isFirst }: { category: string; items: Pr
   const href = categoryPageMap[category] ?? categoryPageMap[category.toLowerCase()] ?? `/search?q=${encodeURIComponent(category)}`;
 
   return (
-    <div className="mb-8 sm:mb-12">
+    <div className="mb-5 sm:mb-7">
       {/* Category Header */}
       <div className="flex items-center gap-3 mb-5 sm:mb-7" dir="rtl">
         <div className="w-1 h-7 sm:h-8 rounded-full bg-gradient-to-b from-[#A842E4] to-[#611FA0]" />
@@ -112,9 +119,11 @@ function CategoryRow({ category, items, isFirst }: { category: string; items: Pr
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+      <div className="flex gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-hide pb-1 sm:pb-0">
         {visible.map((p, i) => (
-          <ProductCard key={p._id} product={p} priority={isFirst && i === 0} />
+          <div key={p._id} className="w-[60vw] shrink-0 sm:w-auto">
+            <ProductCard product={p} priority={isFirst && i === 0} />
+          </div>
         ))}
       </div>
     </div>
@@ -124,17 +133,34 @@ function CategoryRow({ category, items, isFirst }: { category: string; items: Pr
 type HomeSettings = { category: string; subCategory: string; showInHome: boolean; order: number };
 type HomeConfig = { settings: HomeSettings[]; max: number };
 
-export default function ProductGrid() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [homeConfig, setHomeConfig] = useState<HomeConfig | null>(null);
-  const [bannerMap, setBannerMap] = useState<Record<string, string[]>>({});
-  const [loading, setLoading] = useState(true);
+interface ProductGridProps {
+  /** Optional: pre-fetched products from ISR server component.
+   *  When provided the client useEffect fetch is skipped entirely,
+   *  eliminating the /api/products?limit=500 Function invocation for
+   *  users who load the homepage (the largest CPU source from the homepage). */
+  initialProducts?: Product[];
+  /** Optional: pre-fetched home config from ISR server component. */
+  initialConfig?: HomeConfig;
+  /** Optional: pre-fetched category banner map from ISR server component. */
+  initialBannerMap?: Record<string, string[]>;
+}
+
+export default function ProductGrid({
+  initialProducts,
+  initialConfig,
+  initialBannerMap,
+}: ProductGridProps = {}) {
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
+  const [homeConfig, setHomeConfig] = useState<HomeConfig | null>(initialConfig ?? null);
+  const [bannerMap, setBannerMap] = useState<Record<string, string[]>>(initialBannerMap ?? {});
+  // If initial data is provided from server, skip client fetching.
+  const [loading, setLoading] = useState(!initialProducts);
 
   useEffect(() => {
+    // Skip fetch if server already provided the data (ISR path).
+    if (initialProducts) return;
+
     Promise.all([
-      // limit=500 caps the response while still covering large catalogs.
-      // The backend now applies a .select() projection so each document is
-      // ~90% smaller (no sections, specGroups, variants, detailedSpecs).
       fetch(`/api/products?limit=500`).then((r) => r.json()),
       fetch("/api/sub-categories-home").then((r) => r.json()).catch(() => ({ settings: [], max: 4 })),
     ])
@@ -195,15 +221,15 @@ export default function ProductGrid() {
             <div className="h-5 w-36 bg-purple-100 animate-pulse rounded-lg" />
             <div className="flex-1" />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+          <div className="flex gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-hide pb-1 sm:pb-0">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-[20px] overflow-hidden border border-[#ede8f5]">
-                <div className="w-full aspect-square bg-[#f8f6fc] animate-pulse" />
+              <div key={i} className="w-[60vw] shrink-0 sm:w-auto bg-white rounded-2xl overflow-hidden border border-gray-100">
+                <div className="w-full aspect-square bg-gray-100 animate-pulse" />
                 <div className="p-3 space-y-2.5">
                   <div className="h-3 bg-gray-100 animate-pulse rounded-full w-[80%]" />
                   <div className="h-3 bg-gray-100 animate-pulse rounded-full w-[55%]" />
                   <div className="h-5 bg-gray-100 animate-pulse rounded-full w-[45%] mt-1" />
-                  <div className="h-9 bg-purple-50 animate-pulse rounded-xl mt-2" />
+                  <div className="h-9 bg-gray-100 animate-pulse rounded-xl mt-2" />
                 </div>
               </div>
             ))}
@@ -216,7 +242,7 @@ export default function ProductGrid() {
   if (!products.length) return <p className="text-center text-gray-400 py-10">لا توجد منتجات حالياً</p>;
 
   return (
-    <section className="w-full py-8 sm:py-12 overflow-hidden">
+    <section className="w-full py-4 sm:py-6 overflow-hidden">
       <div className="max-w-6xl mx-auto px-3 sm:px-4">
         {orderedCategories.map((category, catIdx) => (
           <div key={category}>

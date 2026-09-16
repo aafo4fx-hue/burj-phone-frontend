@@ -139,15 +139,15 @@ export default async function Footer() {
               {qrSrc && (
                 qrLink
                   ? <a href={qrLink} target="_blank" rel="noreferrer">
-                      <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} className="object-contain rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-1.5 h-[50px] w-auto hover:border-purple-400/40 transition-colors" />
+                      <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-1.5 h-[50px] w-auto hover:border-purple-400/40 transition-colors" />
                     </a>
-                  : <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} className="object-contain rounded-lg border border-white/10 bg-white/5 p-1.5 h-[50px] w-auto" />
+                  : <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-white/10 bg-white/5 p-1.5 h-[50px] w-auto" />
               )}
 
               {footerItems.map((item, i) => {
                 const href = getHref(item);
                 const el = (
-                  <Image key={i} src={item.image} alt={`شعار شريك ${i + 1}`} width={200} height={50}
+                  <Image key={i} src={item.image} alt={`شعار شريك ${i + 1}`} width={200} height={50} quality={100}
                     className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" />
                 );
                 return href
@@ -158,17 +158,17 @@ export default async function Footer() {
               {img1 && (
                 link1
                   ? <a href={link1} target="_blank" rel="noreferrer">
-                      <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" />
+                      <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" />
                     </a>
-                  : <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} className="object-contain rounded-lg h-[50px] w-auto" />
+                  : <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto" />
               )}
 
               {img2 && (
                 link2
                   ? <a href={link2} target="_blank" rel="noreferrer">
-                      <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" />
+                      <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" />
                     </a>
-                  : <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} className="object-contain rounded-lg h-[50px] w-auto" />
+                  : <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto" />
               )}
             </div>
           </div>
@@ -178,9 +178,9 @@ export default async function Footer() {
         <div className="relative border-t border-white/5">
           <div className="max-w-6xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
             <span className="text-xs text-gray-500">
-              جميع الحقوق محفوظة © {new Date().getFullYear()} برج المبدع للتقنية
+              جميع الحقوق محفوظة © 2026 برج المبدع للتقنية
             </span>
-            <Image src="/فيزا ماستر مدى.webp" alt="Visa Mastercard Mada" width={120} height={35} className="object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ width: "auto" }} />
+            <Image src="/فيزا ماستر مدى.webp" alt="Visa Mastercard Mada" width={120} height={35} quality={100} className="object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ width: "auto" }} />
           </div>
         </div>
       </div>

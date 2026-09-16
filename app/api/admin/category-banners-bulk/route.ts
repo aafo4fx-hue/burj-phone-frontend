@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 import { getBackend } from "../_lib";
 
+// Route Handler-level cache — 300s TTL.
+// Public endpoint, no auth, no cookies. Full Route Cache active.
+// Cache behavior: Expected from configuration, not verified by Vercel telemetry.
+export const revalidate = 300;
+
 // Verified: /api/admin/category-banners-bulk is a public endpoint — no auth
 // middleware in backend (adminRoutes.js line 1063: router.get("/category-banners-bulk", async ...)).
 // No cookies or user-specific data involved.

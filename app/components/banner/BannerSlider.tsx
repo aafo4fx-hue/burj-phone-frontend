@@ -43,12 +43,9 @@ export default function BannerSlider({ images }: { images: string[] }) {
   };
 
   return (
-    <section className="w-full flex justify-center pt-3 sm:pt-5 pb-1 sm:pb-2 px-3 sm:px-4 md:px-6">
+    <section className="w-full flex justify-center pt-4 sm:pt-5 pb-1 sm:pb-2 px-2 sm:px-4 md:px-6">
       <div className="relative w-full max-w-7xl">
-        <div
-          className="relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg"
-          style={{ boxShadow: "0 4px 24px rgba(133,67,192,0.12)" }}
-        >
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl">
           <div
             className="relative w-full aspect-[1.9/1] sm:aspect-[2.2/1]"
             onTouchStart={onTouchStart}
@@ -71,7 +68,8 @@ export default function BannerSlider({ images }: { images: string[] }) {
                   fill
                   className="object-cover"
                   priority={current === 0}
-                  sizes="100vw"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1280px"
+                  quality={100}
                 />
               </motion.div>
             </AnimatePresence>

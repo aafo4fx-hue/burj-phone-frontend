@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import SmartphonesClient from "./SmartphonesClient";
 
-export const dynamic = "force-dynamic";
+// Removed force-dynamic: metadata doesn't change per-request.
+// revalidate:3600 — metadata rebuilt hourly, served from cache otherwise.
+export const revalidate = 3600;
 
 const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
 const SITE_URL = "https://burjjstorre.com";

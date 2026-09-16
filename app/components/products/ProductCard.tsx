@@ -61,7 +61,7 @@ export default function ProductCard({ product, priority = false }: { product: Pr
   return (
     <>
       {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 text-base font-medium animate-fade-in-down">
+        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-sm font-bold animate-fade-in-down">
           <IoCheckmarkCircleOutline size={18} />
           تمت إضافة المنتج للسلة
         </div>
@@ -69,81 +69,110 @@ export default function ProductCard({ product, priority = false }: { product: Pr
 
       <Link
         href={`/product/${product._id}`}
-        className="pc-card group"
         dir="rtl"
+        className="group flex flex-col h-full bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden"
       >
-        {/* ── Image Zone ── */}
-        <div className="pc-img-zone">
+        {/* ── Image ── */}
+        <div className="relative w-full aspect-[4/3] sm:aspect-square bg-white overflow-hidden">
           {resolvedImage ? (
             <Image
               src={resolvedImage}
               alt={name}
               fill
-              className="object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="object-contain p-1.5 sm:p-3 transition-transform duration-500 group-hover:scale-105"
+              sizes="(max-width: 640px) 42vw, (max-width: 1024px) 33vw, 25vw"
+              quality={100}
               priority={priority}
               loading={priority ? "eager" : "lazy"}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-200 text-5xl">📱</div>
+            <div className="w-full h-full flex items-center justify-center text-4xl text-gray-200">📱</div>
           )}
 
           {discountPercent > 0 && (
-            <span className="pc-discount-badge">
+            <span className="absolute top-2.5 left-2.5 bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
               -{discountPercent}%
             </span>
           )}
+
+          {!inStock && (
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-sm flex items-center justify-center">
+              <span className="bg-gray-700 text-white text-xs font-bold px-3 py-1.5 rounded-full">غير متوفر</span>
+            </div>
+          )}
         </div>
 
-        {/* ── Content ── */}
-        <div className="pc-body">
-          <h3 className="pc-name">{name}</h3>
+        {/* ── Body ── */}
+        <div className="flex flex-col flex-1 p-2 sm:p-3.5 gap-1.5 sm:gap-2.5">
 
-          {(product.warrantyYears > 0 || product.storage || product.freeDelivery) && (
-            <div className="flex flex-wrap gap-1.5 items-center">
+          {/* Name */}
+          <h3 className="text-[11px] sm:text-[13.5px] font-bold text-gray-800 leading-snug line-clamp-2 group-hover:text-violet-700 transition-colors">
+            {name}
+          </h3>
+
+          {/* Badges */}
+          {(product.storage || product.freeDelivery || product.warrantyYears >= 2) && (
+            <div className="flex flex-wrap gap-1">
               {product.storage && (
-                <span className="pc-badge pc-badge-gray">{formatStorage(product.storage)}</span>
+                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold text-slate-500 bg-slate-50 border border-slate-200 px-1.5 sm:px-2 py-0.5 rounded-full">
+                  {formatStorage(product.storage)}
+                </span>
               )}
               {product.freeDelivery && (
-                <span className="pc-badge pc-badge-green">
-                  <TbTruckDelivery size={12} />
-                  توصيل مجاني
+                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 sm:px-2 py-0.5 rounded-full">
+                  <TbTruckDelivery size={10} />توصيل مجاني
                 </span>
               )}
               {product.warrantyYears >= 2 && (
-                <>
-                  <span className="pc-badge pc-badge-blue">
-                    <GoShieldCheck size={12} />
-                    ضمان سنتين
-                  </span>
-                  <span className="pc-badge pc-badge-purple">
-                    <MdOutlinePayment size={12} />
-                    تقسيط بسعر الكاش
-                  </span>
-                </>
+                <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 sm:px-2 py-0.5 rounded-full">
+                  <GoShieldCheck size={10} />ضمان سنتين
+                </span>
               )}
             </div>
           )}
 
-          <div className="pc-price-row">
-            <span className="pc-price">{fmt(displayPrice)}</span>
-            <Image src="/money-icon.webp" alt="ر.س" width={32} height={32} className="inline-block opacity-90 shrink-0" loading="lazy" />
+          {product.warrantyYears >= 2 && (
+            <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-semibold text-violet-700 bg-violet-50 border border-violet-200 px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-lg w-fit">
+              <MdOutlinePayment size={10} />تقسيط بسعر الكاش
+            </span>
+          )}
+
+          {/* Price */}
+          <div className="mt-auto pt-1 flex flex-col gap-0.5">
+            <div className="flex items-center gap-1">
+              <span className="text-[15px] sm:text-[21px] font-black text-gray-900 leading-none tracking-tight">
+                {fmt(displayPrice)}
+              </span>
+              <Image src="/money-icon.webp" alt="ر.س" width={18} height={18} quality={100} className="opacity-80 shrink-0 sm:w-[26px] sm:h-[26px]" loading="lazy" />
+            </div>
             {hasDiscount && (
-              <span className="pc-old-price">{fmt(originalPrice)}</span>
+              <span className="text-[9px] sm:text-[11px] text-gray-400 line-through font-medium">{fmt(originalPrice)} ر.س</span>
             )}
           </div>
 
+          {/* Button */}
           <button
             onClick={handleAddToCart}
             disabled={!inStock}
-            className={`pc-btn ${added ? "pc-btn-added" : inStock ? "pc-btn-cart" : "pc-btn-oos"}`}
+            className={
+              `w-full flex items-center justify-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl text-[10px] sm:text-[13px] font-bold py-1.5 sm:py-2.5 transition-all duration-200 ${
+                added
+                  ? "bg-green-500 text-white"
+                  : inStock
+                  ? "bg-violet-600 hover:bg-violet-700 text-white shadow-sm hover:shadow-md active:scale-95"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`
+            }
           >
             {added ? (
-              <><IoCheckmarkCircleOutline size={15} />تمت الإضافة</>
+              <><IoCheckmarkCircleOutline size={12} className="sm:w-[15px] sm:h-[15px]" />تمتالإضافة</>
+            ) : inStock ? (
+              <><IoCartOutline size={12} className="sm:w-[15px] sm:h-[15px]" />أضف للسلة</>
             ) : (
-              <><IoCartOutline size={15} />{inStock ? "أضف للسلة" : "غير متوفر"}</>
+              <>غير متوفر</>
             )}
           </button>
+
         </div>
       </Link>
     </>

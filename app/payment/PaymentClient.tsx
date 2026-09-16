@@ -21,10 +21,10 @@ function FadeUp({ children, delay = 0 }: { children: ReactNode; delay?: number }
 }
 
 const IconMada = () => (
-  <Image src="/mada975b.png" alt="مدى" width={72} height={44} className="object-contain w-auto h-auto max-w-[72px] max-h-[44px]" />
+  <Image src="/mada975b.png" alt="مدى" width={72} height={44} quality={100} className="object-contain w-auto h-auto max-w-[72px] max-h-[44px]" />
 );
 const IconVisa = () => (
-  <Image src="/cc975b.png" alt="بطاقات ائتمان" width={72} height={44} className="object-contain w-auto h-auto max-w-[72px] max-h-[44px]" />
+  <Image src="/cc975b.png" alt="بطاقات ائتمان" width={72} height={44} quality={100} className="object-contain w-auto h-auto max-w-[72px] max-h-[44px]" />
 );
 const IconInstallment = () => (
   <svg viewBox="0 0 48 48" className="w-7 h-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

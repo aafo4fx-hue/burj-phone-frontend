@@ -19,13 +19,10 @@ export default function ShopByCategoryClient({ categories }: { categories: Categ
   };
 
   return (
-    <section className="w-full py-12 sm:py-16" dir="rtl">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8 sm:mb-10">
+    <section className="w-full py-6 sm:py-8" dir="rtl">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-4 sm:mb-6">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-xs font-semibold text-[#A842E4] tracking-widest uppercase mb-1.5">
-              Browse Categories
-            </p>
             <h2 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">
               تسوّق حسب القسم
             </h2>

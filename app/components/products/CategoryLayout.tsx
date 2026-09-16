@@ -77,8 +77,8 @@ export default function CategoryLayout({ title, parentLabel, parentHref = "/", p
 
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 60" fill="none" className="w-full h-auto" preserveAspectRatio="none">
-            <path d="M0 60V30C180 10 360 0 540 10C720 20 900 45 1080 45C1260 45 1350 30 1440 20V60H0Z" fill="#f7fafb" />
-            <path d="M0 60V40C200 20 400 15 600 25C800 35 1000 50 1200 45C1320 42 1380 35 1440 30V60H0Z" fill="#f0f5f7" fillOpacity="0.5" />
+            <path d="M0 60V30C180 10 360 0 540 10C720 20 900 45 1080 45C1260 45 1350 30 1440 20V60H0Z" fill="#ffffff" />
+            <path d="M0 60V40C200 20 400 15 600 25C800 35 1000 50 1200 45C1320 42 1380 35 1440 30V60H0Z" fill="#ffffff" fillOpacity="0.5" />
           </svg>
         </div>
       </div>

@@ -15,7 +15,10 @@ export default async function Banner() {
     const res = await fetch(`${API}/api/admin/banners`, { next: { revalidate: 3600 } });
     const data: { url: string; active: boolean }[] = await res.json();
     if (Array.isArray(data))
-      images = data.filter((b) => b.url && b.active).map((b) => b.url.startsWith("http") ? b.url : `${API}${b.url}`);
+      images = data.filter((b) => b.url && b.active).map((b) => {
+      const url = b.url.startsWith("http") ? b.url : `${API}${b.url}`;
+      return url;
+    });
   } catch {
     images = ["/banner1.webp", "/banner2.webp"];
   }

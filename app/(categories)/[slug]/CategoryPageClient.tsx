@@ -137,7 +137,7 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
   const hasActiveFilters = selectedColor || selectedStorage;
 
   return (
-    <main className="min-h-screen bg-[#f7fafb]" dir="rtl">
+    <main className="min-h-screen bg-white" dir="rtl">
       {/* ═══ HERO WITH IMAGE ═══ */}
       <div className="relative h-[220px] sm:h-[280px] overflow-hidden">
         <Image
@@ -145,6 +145,7 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
           alt={label}
           fill
           className="object-cover"
+          quality={100}
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />

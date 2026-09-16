@@ -68,6 +68,7 @@ export default function ProductImages({ images, name, discountPercent = 0 }: Pro
                 fill
                 className="object-cover"
                 priority
+                quality={100}
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
             )}
@@ -93,7 +94,19 @@ export default function ProductImages({ images, name, discountPercent = 0 }: Pro
                 opacity: i === selected ? 1 : 0.6,
               }}
             >
-              <Image src={img} alt="" fill className="object-contain p-2" sizes="68px" />
+              {/* First thumbnail (index 0) is always eager — it's visible in the
+                  initial viewport and matches the pre-loaded main image.
+                  All subsequent thumbnails use lazy loading to avoid triggering
+                  unnecessary image requests on initial page load. */}
+              <Image
+                src={img}
+                alt=""
+                fill
+                className="object-contain p-2"
+                quality={100}
+                sizes="68px"
+                loading={i === 0 ? "eager" : "lazy"}
+              />
               {i === selected && (
                 <motion.div
                   layoutId="thumb-indicator"
@@ -108,3 +121,4 @@ export default function ProductImages({ images, name, discountPercent = 0 }: Pro
     </div>
   );
 }
+

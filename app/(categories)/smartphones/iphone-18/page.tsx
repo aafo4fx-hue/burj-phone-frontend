@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import ComingSoon from "./ComingSoon";
 import CategoryPageClient from "../../[slug]/CategoryPageClient";
 
-export const revalidate = 60;
+// Increased from 60s to 3600s: this is a pre-launch/coming-soon page.
+// The content changes at most once when the product launches.
+// 60s was causing ~1,440 ISR rebuilds/day with no benefit.
+export const revalidate = 3600;
 
 // ── Meta ──────────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {

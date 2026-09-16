@@ -1,6 +1,6 @@
 import { Banner } from "./components/banner";
-import { ProductGrid } from "./components/products";
-import CustomerReviews from "./components/CustomerReviews";
+import ProductGridServer from "./components/products/ProductGridServer";
+import CustomerReviewsServer from "./components/CustomerReviewsServer";
 import ShopByCategory from "./components/ShopByCategory";
 
 // Revalidate every 5 minutes — company data + banners + categories change infrequently.
@@ -82,11 +82,11 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
       />
-      <main className="min-h-screen home-gradient">
+      <main className="min-h-screen bg-white">
         <Banner />
         <ShopByCategory />
-        <ProductGrid />
-        <CustomerReviews />
+        <ProductGridServer />
+        <CustomerReviewsServer />
       </main>
     </>
   );

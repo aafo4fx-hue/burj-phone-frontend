@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackend } from "../admin/_lib";
 
+// Route Handler-level cache — 300s TTL.
+// Public endpoint, no cookies, no auth. Full Route Cache active.
+// Cache behavior: Expected from configuration, not verified by Vercel telemetry.
+export const revalidate = 300;
+
 export async function GET() {
   // Cache reviews for 5 minutes — new reviews require admin approval anyway,
   // so a short TTL is safe and prevents a DB query on every homepage visit.
