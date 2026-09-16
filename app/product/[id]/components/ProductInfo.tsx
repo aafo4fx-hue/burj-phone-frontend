@@ -12,9 +12,13 @@ import type { Product } from "../../../components/products/types";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-const isInstallmentProduct = (name: string) =>
-  name.includes("آيفون 18 برو") || name.includes("آيفون Duo") ||
-  name.includes("آيفون 17 برو") || name.includes("آيفون 17 اير") || name.includes("آيفون 17،");
+const isInstallmentProduct = (name: string, category?: string) => {
+  const cats = ["ابل ايفون 18 برو", "ابل ايفون 18 برو ماكس", "ابل ايفون 18 دو",
+                "ابل ايفون 17 برو", "ابل ايفون 17 برو ماكس", "ابل ايفون 17 اير", "ابل ايفون 17"];
+  if (category) return cats.some((c) => category.includes(c));
+  return name.includes("آيفون 18 برو") || name.includes("آيفون Duo") ||
+         name.includes("آيفون 17");
+};
 
 const DOWN_OPTIONS = [1000, 1500, 2000];
 const MONTH_OPTIONS = [6, 12, 18, 24];
