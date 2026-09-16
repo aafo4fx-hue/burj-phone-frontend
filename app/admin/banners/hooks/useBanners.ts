@@ -12,11 +12,12 @@ export function useBanners() {
   const [addingBanner, setAddingBanner] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  useEffect(() => {
+  const fetchBanners = () =>
     fetch(BASE, { credentials: "include" })
       .then((r) => r.json())
       .then((data) => Array.isArray(data) && setBanners(data));
-  }, []);
+
+  useEffect(() => { fetchBanners(); }, []);
 
   const handleUpload = async (index: number, file: File) => {
     setLoading(index);
@@ -28,8 +29,8 @@ export function useBanners() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setBanners((prev) => prev.map((b, i) => i === index ? { ...b, url: data.url } : b));
-      revalidateBanners();
+      await revalidateBanners();
+      await fetchBanners();
       toast.success("تم رفع البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الرفع");
@@ -45,8 +46,8 @@ export function useBanners() {
         method: "DELETE", credentials: "include",
       });
       if (!res.ok) throw new Error("فشل الحذف");
-      setBanners((prev) => prev.map((b, i) => i === index ? { ...b, url: "" } : b));
-      revalidateBanners();
+      await revalidateBanners();
+      await fetchBanners();
       toast.success("تم حذف الصورة");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الحذف");
@@ -62,8 +63,8 @@ export function useBanners() {
         method: "DELETE", credentials: "include",
       });
       if (!res.ok) throw new Error("فشل الحذف");
-      setBanners((prev) => prev.filter((_, i) => i !== index));
-      revalidateBanners();
+      await revalidateBanners();
+      await fetchBanners();
       toast.success("تم حذف البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل الحذف");
@@ -80,8 +81,8 @@ export function useBanners() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setBanners((prev) => prev.map((b, i) => i === index ? { ...b, active: data.active } : b));
-      revalidateBanners();
+      await revalidateBanners();
+      await fetchBanners();
       toast.success(data.active ? "تم تفعيل البانر" : "تم إيقاف البانر");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشل التعديل");
@@ -98,7 +99,8 @@ export function useBanners() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setBanners((prev) => [...prev, { url: "", active: true }]);
+      await revalidateBanners();
+      await fetchBanners();
       toast.success("تمت إضافة بانر جديد");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "فشلت الإضافة");
@@ -123,10 +125,11 @@ export function useBanners() {
         body: JSON.stringify({ order }),
       });
       if (!res.ok) throw new Error("فشل الترتيب");
-      revalidateBanners();
+      await revalidateBanners();
+      await fetchBanners();
       toast.success("تم تغيير الترتيب");
     } catch (e: unknown) {
-      setBanners(banners);
+      await fetchBanners();
       toast.error(e instanceof Error ? e.message : "فشل الترتيب");
     }
   };
