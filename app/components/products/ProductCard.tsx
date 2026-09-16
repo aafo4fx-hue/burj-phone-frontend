@@ -84,7 +84,7 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
         className="group flex flex-col h-full bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden"
       >
         {/* ── Image ── */}
-        <div className="relative w-full aspect-[4/3] sm:aspect-square bg-white overflow-hidden">
+        <div className="relative w-full aspect-[3/2] sm:aspect-[4/3] bg-white overflow-hidden">
           {resolvedImage ? (
             <Image
               src={resolvedImage}
