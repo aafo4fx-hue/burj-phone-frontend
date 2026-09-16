@@ -247,6 +247,15 @@ export default function ProductInfo({
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(salePrice!)}</span>
                     <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90 w-[26px] h-[26px] sm:w-[30px] sm:h-[30px]" />
+                  </div>
+                  {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(originalPrice)}</span>
+                  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90 w-[26px] h-[26px] sm:w-[30px] sm:h-[30px]" />
                 </div>
                 {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
               </div>
