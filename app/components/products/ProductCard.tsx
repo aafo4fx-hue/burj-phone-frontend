@@ -14,8 +14,10 @@ import { useCartStore } from "../../store/cartStore";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-const isInstallmentProduct = (name: string) =>
-  name.includes("آيفون 18 برو") || name.includes("آيفون Duo");
+const isInstallmentProduct = (name: string) => {
+  const n = name.replace(/\u0622/g, "\u0627").replace(/\u0623/g, "\u0627").replace(/\u0625/g, "\u0627");
+  return n.includes("\u0627\u064a\u0641\u0648\u0646 18 \u0628\u0631\u0648") || n.includes("\u0627\u064a\u0641\u0648\u0646 Duo");
+};
 
 const calcMonthly = (price: number) => Math.ceil((price - 1000) / 24);
 

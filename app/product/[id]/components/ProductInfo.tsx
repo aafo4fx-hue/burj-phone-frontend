@@ -6,10 +6,17 @@ import {
   IoCartOutline, IoShieldCheckmark, IoCarOutline,
   IoCheckmarkDoneCircle, IoFlash, IoBagCheckOutline, IoCheckmarkCircle,
 } from "react-icons/io5";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Product } from "../../../components/products/types";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
+
+const isInstallmentProduct = (name: string) =>
+  name.includes("آيفون 18 برو") || name.includes("آيفون Duo");
+
+const DOWN_OPTIONS = [1000, 1500, 2000];
+const MONTH_OPTIONS = [6, 12, 18, 24];
 
 // toKey is defined once here and used both for rendering storage buttons and
 // for comparing against selectedStorage. ProductPageClient passes selectedStorage
@@ -28,6 +35,83 @@ interface ProductInfoProps {
   onColorChange: (c: string) => void;
   onStorageChange: (s: string) => void;
   onAddToCart: () => void;
+}
+
+function InstallmentCalc({ price }: { price: number }) {
+  const [down, setDown] = useState(1000);
+  const [months, setMonths] = useState(24);
+  const remaining = Math.max(0, price - down);
+  const monthly = Math.ceil(remaining / months);
+
+  return (
+    <div className="px-4 sm:px-5 py-4" style={{ borderBottom: "1px solid #f0ebe4", background: "rgba(133,67,192,0.04)" }}>
+      <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest mb-3" style={{ color: "#611FA0" }}>
+        حاسبة التقسيط
+      </p>
+
+      {/* Down payment */}
+      <div className="mb-3">
+        <p className="text-[10px] font-bold mb-1.5" style={{ color: "#1F2C3E" }}>الدفعة المقدمة</p>
+        <div className="flex gap-2">
+          {DOWN_OPTIONS.map((d) => (
+            <button
+              key={d}
+              onClick={() => setDown(d)}
+              className="flex-1 py-2 rounded-xl text-[11px] sm:text-xs font-black border transition-all duration-200"
+              style={{
+                backgroundColor: down === d ? "#8543C0" : "#faf7f2",
+                color: down === d ? "#fff" : "#1F2C3E",
+                borderColor: down === d ? "#8543C0" : "#EBE6E2",
+                boxShadow: down === d ? "0 4px 14px rgba(133,67,192,0.3)" : "none",
+              }}
+            >
+              {fmt(d)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Months */}
+      <div className="mb-4">
+        <p className="text-[10px] font-bold mb-1.5" style={{ color: "#1F2C3E" }}>عدد الأشهر</p>
+        <div className="flex gap-2">
+          {MONTH_OPTIONS.map((m) => (
+            <button
+              key={m}
+              onClick={() => setMonths(m)}
+              className="flex-1 py-2 rounded-xl text-[11px] sm:text-xs font-black border transition-all duration-200"
+              style={{
+                backgroundColor: months === m ? "#8543C0" : "#faf7f2",
+                color: months === m ? "#fff" : "#1F2C3E",
+                borderColor: months === m ? "#8543C0" : "#EBE6E2",
+                boxShadow: months === m ? "0 4px 14px rgba(133,67,192,0.3)" : "none",
+              }}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Result */}
+      <div className="rounded-2xl p-3 sm:p-4 flex items-center justify-between" style={{ background: "linear-gradient(135deg, #8543C0, #611FA0)" }}>
+        <div>
+          <p className="text-[10px] text-white/70 font-semibold">دفعة مقدمة</p>
+          <p className="text-base sm:text-lg font-black text-white">{fmt(down)} ر.س</p>
+        </div>
+        <div className="w-px h-8 bg-white/20" />
+        <div className="text-center">
+          <p className="text-[10px] text-white/70 font-semibold">عدد الأشهر</p>
+          <p className="text-base sm:text-lg font-black text-white">{months} شهر</p>
+        </div>
+        <div className="w-px h-8 bg-white/20" />
+        <div className="text-left">
+          <p className="text-[10px] text-white/70 font-semibold">القسط الشهري</p>
+          <p className="text-base sm:text-lg font-black text-white">{fmt(monthly)} ر.س</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function ProductInfo({
@@ -180,6 +264,11 @@ export default function ProductInfo({
             )}
           </motion.div>
         </AnimatePresence>
+
+        {/* ── Installment Calculator ── */}
+        {isInstallmentProduct(name) && (
+          <InstallmentCalc price={salePrice ?? originalPrice} />
+        )}
 
         {/* ── Installment ── */}
         {installment?.available && (
