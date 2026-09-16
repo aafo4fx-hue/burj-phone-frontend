@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 
 export function getBackend(): string {
-  return (process.env.BACKEND_URL || "http://localhost:5000").replace(/\/$/, "");
+  const url = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  return url.replace(/\/$/, "");
 }
 
 export function forwardCookies(req: NextRequest, init: RequestInit): RequestInit {
