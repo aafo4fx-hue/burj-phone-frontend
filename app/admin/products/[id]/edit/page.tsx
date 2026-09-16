@@ -129,6 +129,7 @@ export default function EditProductPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "فشل الحفظ");
       toast.success("تم حفظ التعديلات بنجاح ✅");
+      await fetch(`/api/revalidate?tag=product-${id}`, { method: "POST" });
       router.push("/admin/products");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "حدث خطأ");
