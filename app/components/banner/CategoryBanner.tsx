@@ -9,7 +9,6 @@ const SWIPE_THRESHOLD = 50;
 function CategoryBannerSlider({ images }: { images: string[] }) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
-  // progressKey restarts the CSS progress animation without any JS timer.
   const [progressKey, setProgressKey] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const touchStart = useRef(0);
@@ -25,7 +24,6 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
     [images.length, current]
   );
 
-  // Single interval for auto-play. Progress bar is pure CSS.
   useEffect(() => {
     if (isHovered) return;
     intervalRef.current = setInterval(() => goTo(current + 1, 1), AUTO_PLAY_MS);
@@ -39,118 +37,100 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
   };
 
   return (
-    <div className="w-full px-3 sm:px-4 py-2">
-      <motion.div
-        className="relative w-full max-w-5xl mx-auto overflow-hidden rounded-2xl sm:rounded-3xl"
-        style={{ boxShadow: "0 4px 24px rgba(15,76,110,0.10), 0 1.5px 6px rgba(0,0,0,0.06)" }}
-        whileHover={{ boxShadow: "0 8px 32px rgba(15,76,110,0.18), 0 2px 10px rgba(0,0,0,0.08)" }}
-        transition={{ duration: 0.3 }}
+    <div className="w-full px-3 sm:px-4">
+      <div
+        className="relative w-full overflow-hidden rounded-2xl"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => {
+          const diff = touchStart.current - e.changedTouches[0].clientX;
+          if (Math.abs(diff) > SWIPE_THRESHOLD) goTo(current + (diff > 0 ? 1 : -1), diff > 0 ? 1 : -1);
+        }}
       >
-        {/* Gradient border accent */}
-        <div
-          className="absolute inset-0 rounded-2xl sm:rounded-3xl z-30 pointer-events-none"
-          style={{ border: "1.5px solid rgba(124,192,67,0.25)" }}
-        />
+        <AnimatePresence initial={false} custom={direction} mode="popLayout">
+          <motion.div
+            key={current}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+            className="w-full"
+          >
+            <Image
+              src={images[current]}
+              alt={`banner ${current + 1}`}
+              width={1200}
+              height={600}
+              className="w-full h-auto block"
+              sizes="100vw"
+              quality={100}
+              loading={current === 0 ? "eager" : "lazy"}
+            />
+          </motion.div>
+        </AnimatePresence>
 
-        <div
-          className="relative w-full aspect-[1.9/1] sm:aspect-[2.2/1]"
-          onTouchStart={(e) => { touchStart.current = e.touches[0].clientX; }}
-          onTouchEnd={(e) => {
-            const diff = touchStart.current - e.changedTouches[0].clientX;
-            if (Math.abs(diff) > SWIPE_THRESHOLD) goTo(current + (diff > 0 ? 1 : -1), diff > 0 ? 1 : -1);
-          }}
-        >
-          {/* Gradient overlays */}
-          <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-          <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-r from-[#0F4C6E]/5 via-transparent to-[#0F4C6E]/5" />
-
-          <AnimatePresence initial={false} custom={direction} mode="popLayout">
-            <motion.div
-              key={current}
-              custom={direction}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
-              className="absolute inset-0"
+        {/* Navigation arrows */}
+        {images.length > 1 && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <motion.button
+              onClick={() => goTo(current + 1, 1)}
+              aria-label="التالي"
+              className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer pointer-events-auto"
+              style={{
+                background: "rgba(255,255,255,0.15)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255,255,255,0.25)",
+              }}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -8 }}
+              whileHover={{ scale: 1.15, background: "rgba(124,192,67,0.5)" }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ duration: 0.2 }}
             >
-              {/* Ken Burns removed — was running a continuous compositor animation.
-                  Simple static fill is used instead. */}
-              <Image
-                src={images[current]}
-                alt={`banner ${current + 1}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 100vw, 960px"
-                quality={100}
-                loading={current === 0 ? "eager" : "lazy"}
-              />
-            </motion.div>
-          </AnimatePresence>
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </motion.button>
+            <motion.button
+              onClick={() => goTo(current - 1, -1)}
+              aria-label="السابق"
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer pointer-events-auto"
+              style={{
+                background: "rgba(255,255,255,0.15)",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255,255,255,0.25)",
+              }}
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : 8 }}
+              whileHover={{ scale: 1.15, background: "rgba(124,192,67,0.5)" }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+            >
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </motion.button>
+          </div>
+        )}
 
-          {/* Navigation arrows */}
-          {images.length > 1 && (
-            <>
-              <motion.button
-                onClick={() => goTo(current + 1, 1)}
-                aria-label="التالي"
-                className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer"
-                style={{
-                  background: "rgba(255,255,255,0.15)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255,255,255,0.25)",
-                }}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -8 }}
-                whileHover={{ scale: 1.15, background: "rgba(124,192,67,0.5)" }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ duration: 0.2 }}
-              >
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-              </motion.button>
-              <motion.button
-                onClick={() => goTo(current - 1, -1)}
-                aria-label="السابق"
-                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center cursor-pointer"
-                style={{
-                  background: "rgba(255,255,255,0.15)",
-                  backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255,255,255,0.25)",
-                }}
-                initial={{ opacity: 0, x: 8 }}
-                animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : 8 }}
-                whileHover={{ scale: 1.15, background: "rgba(124,192,67,0.5)" }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ duration: 0.2 }}
-              >
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </motion.button>
-            </>
-          )}
-
-          {/* Progress bar — CSS-driven, zero JS per-frame cost */}
-          {images.length > 1 && (
-            <div className="absolute bottom-0 left-0 right-0 z-20 h-[3px] bg-white/10">
-              <div
-                key={progressKey}
-                className="h-full rounded-full banner-progress"
-                style={{
-                  animationDuration: `${AUTO_PLAY_MS}ms`,
-                  animationPlayState: isHovered ? "paused" : "running",
-                  background: "linear-gradient(90deg, #7CC043, #5FA32E)",
-                }}
-              />
-            </div>
-          )}
-        </div>
-      </motion.div>
+        {/* Progress bar */}
+        {images.length > 1 && (
+          <div className="absolute bottom-0 left-0 right-0 z-20 h-[3px] bg-white/10">
+            <div
+              key={progressKey}
+              className="h-full rounded-full banner-progress"
+              style={{
+                animationDuration: `${AUTO_PLAY_MS}ms`,
+                animationPlayState: isHovered ? "paused" : "running",
+                background: "linear-gradient(90deg, #7CC043, #5FA32E)",
+              }}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Dots */}
       {images.length > 1 && (
