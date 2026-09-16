@@ -31,7 +31,7 @@ const resolveImg = (src: string) => {
   return clean.startsWith("http") ? clean : `${API}${clean.startsWith("/") ? clean : "/" + clean}`;
 };
 
-export default function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
+export default function ProductCard({ product, priority = false, zoomOnHover = false }: { product: Product; priority?: boolean; zoomOnHover?: boolean }) {
   const { name, salePrice, discountPercent = 0, inStock } = product;
   const image = product.images?.[0] || product.image;
   const resolvedImage = image ? resolveImg(image) : undefined;
