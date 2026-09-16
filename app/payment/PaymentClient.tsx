@@ -73,7 +73,7 @@ const sections = [
   { title: "الدفع المعتمد", Icon: IconShield, content: ["يتم توفير طرق دفع متعددة وآمنة تناسب احتياجات العملاء."] },
   { title: "العملة المستخدمة", Icon: IconCurrency, content: ["العملة الرسمية المستخدمة في جميع المعاملات هي الريال السعودي (SAR)."] },
   { title: "التحويل والشحن", Icon: IconShipping, content: ["يتم تنسيق الشحن بعد تأكيد الطلب حسب بيانات العميل."] },
-  { title: "ملاحظة هامة", Icon: IconInfo, content: ["نحرص في مؤسسة تبارك التقنية الذكية على توفير تجربة دفع واضحة وآمنة.", "بعد إتمام الطلب سيتم مراجعة البيانات والتواصل مع العميل عند الحاجة لتأكيد التفاصيل أو استكمال إجراءات الطلب."] },
+  { title: "ملاحظة هامة", Icon: IconInfo, content: ["نحرص في مؤسسة برج المبدع للتقنية على توفير تجربة دفع واضحة وآمنة.", "بعد إتمام الطلب سيتم مراجعة البيانات والتواصل مع العميل عند الحاجة لتأكيد التفاصيل أو استكمال إجراءات الطلب."] },
 ];
 
 interface Company { phone?: string; whatsapp?: string; email?: string; [k: string]: string | undefined; }
@@ -113,7 +113,7 @@ export default function PaymentClient({ company }: { company: Company }) {
         <div className="relative w-full px-4 sm:px-10 lg:px-20 py-16 sm:py-28 lg:py-36 text-center text-white">
           <div {...anim(80)} className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/15 rounded-full px-4 py-1.5 text-[11px] sm:text-sm font-medium text-purple-100 mb-5 sm:mb-7">
             <span className="w-2 h-2 rounded-full bg-[#A842E4] animate-pulse shadow-[0_0_8px_#A842E4]" />
-            مؤسسة تبارك التقنية الذكية
+            مؤسسة برج المبدع للتقنية
           </div>
           <h1 {...anim(200)} className="text-3xl sm:text-5xl lg:text-6xl font-black mb-4 sm:mb-6 leading-tight tracking-tight">
             وسائل الدفع
