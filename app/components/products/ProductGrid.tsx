@@ -183,7 +183,7 @@ export default function ProductGrid({
             .catch(() => {});
         }
       })
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 

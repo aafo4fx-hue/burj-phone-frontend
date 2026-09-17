@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -53,6 +53,11 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
   const router = useRouter();
   const [added, setAdded] = useState(false);
   const [toast, setToast] = useState(false);
+  // Track the redirect timer so we can clear it on unmount.
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clear the pending redirect if the component unmounts before the timer fires.
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -61,7 +66,9 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
     addItem(product);
     setAdded(true);
     setToast(true);
-    setTimeout(() => {
+    // Clear any previous timer before setting a new one.
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
       setToast(false);
       setAdded(false);
       window.scrollTo(0, 0);
@@ -161,7 +168,7 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
               <span className="text-[15px] sm:text-[21px] font-black text-gray-900 leading-none tracking-tight">
                 {fmt(displayPrice)}
               </span>
-              <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="opacity-80 shrink-0 sm:w-[30px] sm:h-[30px]" loading="lazy" />
+              <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="opacity-80 shrink-0 sm:w-[30px] sm:h-[30px]" style={{ width: "auto", height: "auto" }} loading="lazy" />
             </div>
             {hasDiscount && (
               <span className="text-[9px] sm:text-[11px] text-gray-400 line-through font-medium">{fmt(originalPrice)} ر.س</span>

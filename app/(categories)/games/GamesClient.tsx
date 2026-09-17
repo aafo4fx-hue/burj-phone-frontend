@@ -16,7 +16,7 @@ export default function GamesClient() {
       .then((data: Product[]) => {
         setProducts(Array.isArray(data) ? data : []);
       })
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 

@@ -48,8 +48,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: dbData.error || "فشل حفظ الطلب" }, { status: dbRes.status });
     }
     dbId = dbData._id ?? null;
-  } catch (e) {
-    console.error("Checkout DB error:", e);
+  } catch {
+    // DB connection error — do not expose internal details to the client.
     return NextResponse.json({ ok: false, error: "خطأ في الاتصال بالسيرفر" }, { status: 502 });
   }
 
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
   const reply_markup = { inline_keyboard: [buttons] };
 
   const sent = await sendToTelegram({ chat_id: process.env.TELEGRAM_CHAT_ID, text, reply_markup });
-  if (!sent) console.error("Telegram send failed for order:", orderId);
+  if (!sent) { /* Telegram notification failed — order is saved, proceed silently */ }
 
   return NextResponse.json({ ok: true, orderId, dbId });
 }

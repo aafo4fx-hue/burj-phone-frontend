@@ -65,8 +65,8 @@ export const useCompanyStore = create<CompanyStore>()(
             details: data.details || "",
             lastFetched: Date.now(),
           });
-        } catch (e) {
-          console.error(e);
+        } catch {
+          // Silently ignore fetch errors — store retains last known values.
         }
       },
 

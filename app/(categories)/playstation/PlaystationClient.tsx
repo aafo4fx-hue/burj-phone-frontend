@@ -36,7 +36,7 @@ export default function PlaystationClient() {
         }
         setProducts(merged);
       })
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { getBackend, forwardCookies } from "../_lib";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   // No cookies forwarded here — Next.js Data Cache only activates on requests
   // without varying headers (cookie/authorization). The backend GET /company
   // is intentionally public (no authMiddleware), so no cookie is needed.
@@ -26,11 +26,6 @@ export async function PUT(req: NextRequest) {
   }));
   if (!res.ok) return NextResponse.json({ error: "Backend unavailable" }, { status: res.status });
   const data = await res.json();
-  // Invalidate company cache immediately after a successful update so the
-  // next request for /api/company/public and the product page layout reflects
-  // the new data without waiting for the 3600s TTL to expire.
-  // "max" profile: stale-while-revalidate — existing in-flight requests are
-  // served stale while the background revalidation runs (recommended by Next.js docs).
   revalidateTag("company", "max");
   return NextResponse.json(data, { status: res.status });
 }

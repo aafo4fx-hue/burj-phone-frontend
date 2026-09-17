@@ -80,7 +80,7 @@ export default function SmartphonesClient() {
         });
         setProducts(sorted);
       })
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
@@ -222,9 +222,21 @@ export default function SmartphonesClient() {
                 <button onClick={() => goToPage(Math.max(1, page - 1))} disabled={page === 1} className="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center disabled:opacity-30">
                   <IoChevronForward size={18} />
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                  <button key={n} onClick={() => goToPage(n)} className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${page === n ? "bg-[#1F6F8B] text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>{n}</button>
-                ))}
+                {(totalPages <= 7
+                  ? Array.from({ length: totalPages }, (_, i) => i + 1)
+                  : (() => {
+                      const pages: (number | "…")[] = [1];
+                      if (page > 3) pages.push("…");
+                      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+                      if (page < totalPages - 2) pages.push("…");
+                      pages.push(totalPages);
+                      return pages;
+                    })()
+                ).map((n, idx) =>
+                  n === "…"
+                    ? <span key={`e-${idx}`} className="px-1 text-gray-400 text-sm">…</span>
+                    : <button key={n} onClick={() => goToPage(n as number)} className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${page === n ? "bg-[#1F6F8B] text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}>{n}</button>
+                )}
                 <button onClick={() => goToPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center disabled:opacity-30">
                   <IoChevronBack size={18} />
                 </button>

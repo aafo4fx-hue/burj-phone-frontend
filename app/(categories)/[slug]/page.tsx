@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { slugConfigs } from "../../lib/categoryConfig";
+import type { SlugConfig } from "../../lib/categoryConfig";
 import CategoryPageClient from "./CategoryPageClient";
+import type { Product } from "../../components/products/types";
 
 // Pre-render all known slugs at build time (ISR).
-// Eliminates the SSR Vercel Function execution for every sub-category visit —
-// the page shell (metadata HTML) is served from Full Route Cache.
-// Products are still fetched client-side by CategoryPageClient.
+// Products are now pre-fetched server-side and passed as initialProducts,
+// eliminating the client-side /api/products fetch on every category page visit.
 // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
 export const revalidate = 3600;
 
 // Statically generate all slug paths known at build time.
-// Any slug NOT in this list falls back to on-demand ISR.
 export function generateStaticParams() {
   return Object.keys(slugConfigs).map((slug) => ({ slug }));
 }
@@ -18,7 +19,9 @@ export function generateStaticParams() {
 const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
 const SITE_URL = "https://burjjstorre.com";
 
-async function getCompany() {
+// React cache deduplicates these within a single render pass so
+// generateMetadata and the page component share the same promise.
+const getCompany = cache(async () => {
   try {
     const r = await fetch(`${BACKEND}/api/admin/company`, {
       next: { revalidate: 3600, tags: ["company"] },
@@ -27,7 +30,26 @@ async function getCompany() {
   } catch {
     return {};
   }
-}
+});
+
+// Fetch only the fields needed by CategoryPageClient — avoids sending the full
+// product document (specs, sections, installment, description, etc.) to the
+// browser for the category listing view.
+const getProductsForSlug = cache(async (config: SlugConfig): Promise<Product[] | undefined> => {
+  try {
+    const params = new URLSearchParams();
+    if (config.filters.brand) params.set("brand", config.filters.brand);
+    if (config.filters.category) params.set("category", config.filters.category);
+    const r = await fetch(`${BACKEND}/api/products?${params.toString()}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!r.ok) return undefined;
+    const data = await r.json();
+    return Array.isArray(data) ? data : undefined;
+  } catch {
+    return undefined;
+  }
+});
 
 export async function generateMetadata({
   params,
@@ -36,6 +58,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const config = slugConfigs[slug];
+  // Shared cache — same promise reused in CategorySlugPage below.
   const company = await getCompany();
 
   const siteName = company.nameAr || "برج المبدع للتقنية";
@@ -84,5 +107,14 @@ export default async function CategorySlugPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return <CategoryPageClient slug={slug} />;
+  const config = slugConfigs[slug];
+
+  // Pre-fetch products server-side so CategoryPageClient receives initialProducts
+  // and skips its own client-side fetch entirely.
+  // Both getCompany and getProductsForSlug run in parallel — independent fetches.
+  const initialProducts = config
+    ? await getProductsForSlug(config)
+    : undefined;
+
+  return <CategoryPageClient slug={slug} initialProducts={initialProducts} />;
 }

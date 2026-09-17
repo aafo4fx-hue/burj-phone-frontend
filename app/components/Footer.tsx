@@ -3,12 +3,16 @@ import Image from "next/image";
 import { FaWhatsapp, FaMobileAlt, FaEnvelope } from "react-icons/fa";
 
 
-const API = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 
 async function getCompany() {
   try {
     const r = await fetch(`${API}/api/admin/company`, {
-      next: { revalidate: 0, tags: ["company"] },
+      // Was revalidate:0 — that opts the entire homepage OUT of ISR/Full Route Cache,
+      // causing server-side execution on every request. Changed to 3600 to match
+      // layout.tsx and page.tsx so all three calls share the same Next.js Data Cache
+      // entry and are deduplicated within the same render cycle.
+      next: { revalidate: 3600, tags: ["company"] },
     });
     return r.ok ? r.json() : {};
   } catch {
@@ -139,16 +143,16 @@ export default async function Footer() {
               {qrSrc && (
                 qrLink
                   ? <a href={qrLink} target="_blank" rel="noreferrer">
-                      <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-1.5 h-[50px] w-auto hover:border-purple-400/40 transition-colors" />
+                      <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-1.5 h-[50px] w-auto hover:border-purple-400/40 transition-colors" style={{ width: "auto" }} />
                     </a>
-                  : <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-white/10 bg-white/5 p-1.5 h-[50px] w-auto" />
+                  : <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-white/10 bg-white/5 p-1.5 h-[50px] w-auto" style={{ width: "auto" }} />
               )}
 
               {footerItems.map((item, i) => {
                 const href = getHref(item);
                 const el = (
                   <Image key={i} src={item.image} alt={`شعار شريك ${i + 1}`} width={200} height={50} quality={80}
-                    className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" />
+                    className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" style={{ width: "auto" }} />
                 );
                 return href
                   ? <a key={i} href={href} target="_blank" rel="noreferrer">{el}</a>
@@ -158,17 +162,17 @@ export default async function Footer() {
               {img1 && (
                 link1
                   ? <a href={link1} target="_blank" rel="noreferrer">
-                      <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" />
+                      <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" style={{ width: "auto" }} />
                     </a>
-                  : <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto" />
+                  : <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto" style={{ width: "auto" }} />
               )}
 
               {img2 && (
                 link2
                   ? <a href={link2} target="_blank" rel="noreferrer">
-                      <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" />
+                      <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" style={{ width: "auto" }} />
                     </a>
-                  : <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto" />
+                  : <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto" style={{ width: "auto" }} />
               )}
             </div>
           </div>

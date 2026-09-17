@@ -9,8 +9,8 @@ import { getBackend } from "../admin/_lib";
 //   - No req parameter (no cookies, no headers, no query params read)
 //   - Returns identical public data for every caller
 //   - No authentication or user-specific logic
-// Cache behavior: Expected from configuration, not verified by Vercel telemetry.
-export const dynamic = "force-dynamic";
+// NOTE: force-dynamic was previously set here but overrides revalidate, disabling caching.
+// Removed — revalidate:300 alone is sufficient and correct.
 export const revalidate = 300;
 
 export async function GET() {

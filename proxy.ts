@@ -26,5 +26,21 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  // Previous matcher /:path* ran on every request — including static assets,
+  // images, fonts, and Next.js internals. That's pure CPU overhead with no benefit.
+  //
+  // New matcher covers only:
+  //   1. The domain redirect (must run on all page routes)
+  //   2. /admin/* routes (need token check)
+  //
+  // Excluded (no middleware needed):
+  //   - _next/static, _next/image — CDN-served assets
+  //   - favicon.ico, robots.txt, sitemap.xml, manifest.json
+  //   - /api/* routes — handled by route handlers, no redirect needed
+  //   - All static files in /public (images, fonts, webp)
+  //
+  // Using negative lookahead to exclude these paths efficiently.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|manifest\\.json|api/|.*\\.(?:png|jpg|jpeg|webp|svg|ico|woff2?|ttf|otf|css|js|map)).*)",
+  ],
 };

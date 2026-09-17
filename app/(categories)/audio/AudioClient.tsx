@@ -38,7 +38,7 @@ export default function AudioClient() {
         }
         setProducts(merged);
       })
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 

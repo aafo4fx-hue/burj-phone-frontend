@@ -24,11 +24,24 @@ export default function BannerSlider({ images }: { images: string[] }) {
     [images.length, current]
   );
 
-  // Single interval — auto-play only. Progress is CSS-driven.
+  // Keep a ref to the latest goTo so the interval doesn't go stale
+  // without needing to re-create it on every slide change.
+  const goToRef = useRef(goTo);
+  useEffect(() => { goToRef.current = goTo; }, [goTo]);
+
+  // Single persistent interval — created once, never torn down mid-slide.
+  // Previously re-created on every current/goTo change (once per AUTO_PLAY_MS).
   useEffect(() => {
-    intervalRef.current = setInterval(() => goTo(current + 1, 1), AUTO_PLAY_MS);
+    intervalRef.current = setInterval(() => {
+      setCurrent((c) => {
+        const next = (c + 1 + images.length) % images.length;
+        goToRef.current(next, 1);
+        return c; // actual state update happens inside goToRef.current
+      });
+    }, AUTO_PLAY_MS);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [current, goTo]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [images.length]); // only re-create if the image list changes
 
   const onTouchStart = (e: React.TouchEvent) => { touchStart.current = e.touches[0].clientX; };
   const onTouchEnd = (e: React.TouchEvent) => {

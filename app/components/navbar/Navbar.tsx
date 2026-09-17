@@ -13,6 +13,13 @@ import { useCompanyStore } from "../../store/companyStore";
 // Computed once at module load — stable for the lifetime of the app.
 const API_IMG = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+// Defined at module level so it is never re-created on render.
+// Navbar renders on every navigation change (sticky header); keeping
+// this function outside the component avoids allocating a new closure
+// on every render.
+const resolveImg = (src: string) =>
+  src.startsWith("http") ? src : `${API_IMG}${src.startsWith("/") ? src : "/" + src}`;
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -29,11 +36,6 @@ export default function Navbar() {
   const [clientReady, setClientReady] = useState(false);
   const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.qty, 0));
   const { logo, fetchCompany } = useCompanyStore();
-
-  // API_IMG is constant for the lifetime of the app — compute it once at
-  // module level below rather than inside the render function.
-  const resolveImg = (src: string) =>
-    src.startsWith("http") ? src : `${API_IMG}${src.startsWith("/") ? src : "/" + src}`;
 
   // Flip clientReady after first paint so the cart badge is only rendered
   // on the client, preventing a hydration mismatch with the SSR snapshot
@@ -65,6 +67,8 @@ export default function Navbar() {
     } finally {
       setSearching(false);
     }
+  // fetchResults is stable — depends only on setters which are stable in React 18+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getBackend, forwardCookies } from "../_lib";
 
 export async function GET(req: NextRequest) {
@@ -27,5 +28,7 @@ export async function POST(req: NextRequest) {
     duplex: "half",
   });
   const data = await res.json();
+  // Flush homepage product ISR cache so the new product appears immediately.
+  if (res.ok) revalidateTag("products", "max");
   return NextResponse.json(data, { status: res.status });
 }

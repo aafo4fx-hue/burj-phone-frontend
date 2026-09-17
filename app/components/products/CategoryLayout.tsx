@@ -21,6 +21,17 @@ interface Props {
 
 
 
+/* ── windowed page buttons — max ~7 elements regardless of total pages ── */
+function windowedPageButtons(current: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | "…")[] = [1];
+  if (current > 3) pages.push("…");
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+  if (current < total - 2) pages.push("…");
+  pages.push(total);
+  return pages;
+}
+
 /* ── main layout ── */
 export default function CategoryLayout({ title, parentLabel, parentHref = "/", products, loading, emptyIcon = "📦" }: Props) {
   const [page, setPage] = useState(1);
@@ -147,18 +158,20 @@ export default function CategoryLayout({ title, parentLabel, parentHref = "/", p
                 </button>
 
                 <div className="flex items-center gap-1.5">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => goToPage(n)}
-                      className={`cat-pg-num ${page === n ? "active" : ""}`}
-                    >
-                      {page === n && (
-                        <div className="absolute inset-0 cat-pg-active-bg rounded-xl" />
-                      )}
-                      <span className="relative z-10">{n}</span>
-                    </button>
-                  ))}
+                  {windowedPageButtons(page, totalPages).map((n, idx) =>
+                    n === "…"
+                      ? <span key={`ellipsis-${idx}`} className="px-2 py-1 text-gray-400 text-sm">…</span>
+                      : <button
+                          key={n}
+                          onClick={() => goToPage(n)}
+                          className={`cat-pg-num ${page === n ? "active" : ""}`}
+                        >
+                          {page === n && (
+                            <div className="absolute inset-0 cat-pg-active-bg rounded-xl" />
+                          )}
+                          <span className="relative z-10">{n}</span>
+                        </button>
+                  )}
                 </div>
 
                 <button

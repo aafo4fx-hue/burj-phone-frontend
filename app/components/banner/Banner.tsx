@@ -6,28 +6,37 @@ export default async function Banner() {
   let images: string[] = [];
 
   try {
-    // Increased from 60s to 3600s (1 hour).
-    // No on-demand revalidation is wired from the admin panel, so revalidate:60
-    // was causing ~1,440 ISR background executions per day for data that changes
-    // at most a few times per week.
-    // ISR invocation reduction: 1,440/day → 24/day (Calculated).
-    // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
-    const res = await fetch(`${API}/api/admin/banners`, { next: { revalidate: 0, tags: ["banners"] } });
-    const data: { url: string; active: boolean }[] = await res.json();
-    if (Array.isArray(data))
-      images = data.filter((b) => b.url && b.active).map((b) => {
-      const url = b.url.startsWith("http") ? b.url : `${API}${b.url}`;
-      return url;
+    // revalidate:3600 — banners change infrequently (few times per week at most).
+    // tag:"banners" — admin mutation routes call revalidateTag("banners") so the
+    // cache is flushed immediately on any change without waiting the full hour.
+    //
+    // CRITICAL FIX: was previously revalidate:0 which opted the entire homepage
+    // OUT of ISR/Full Route Cache, forcing server-side execution on every request
+    // and accounting for a large fraction of the 528ms Active CPU P75.
+    const res = await fetch(`${API}/api/admin/banners`, {
+      next: { revalidate: 3600, tags: ["banners"] },
     });
+    if (!res.ok) throw new Error("banners fetch failed");
+    const data: { url: string; active: boolean }[] = await res.json();
+    if (Array.isArray(data)) {
+      images = data
+        .filter((b) => b.url && b.active)
+        .map((b) => (b.url.startsWith("http") ? b.url : `${API}${b.url}`));
+    }
   } catch {
     images = ["/banner1.webp", "/banner2.webp"];
   }
 
-  if (!images.length) return (
-    <section className="w-full flex justify-center py-6 px-4">
-      <div className="relative w-full overflow-hidden rounded-2xl bg-gray-200" style={{ maxWidth: 2048, aspectRatio: "2048/700" }} />
-    </section>
-  );
+  if (!images.length) {
+    return (
+      <section className="w-full flex justify-center py-6 px-4">
+        <div
+          className="relative w-full overflow-hidden rounded-2xl bg-gray-200"
+          style={{ maxWidth: 2048, aspectRatio: "2048/700" }}
+        />
+      </section>
+    );
+  }
 
   return <BannerSlider images={images} />;
 }

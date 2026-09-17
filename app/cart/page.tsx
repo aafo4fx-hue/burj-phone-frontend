@@ -30,7 +30,9 @@ export default function CartPage() {
 
   const total = mounted ? totalPrice() : 0;
   const count = mounted ? totalItems() : 0;
-  const installmentMonths = mounted ? Math.max(...items.map((i) => i.product.installment?.months ?? 0)) || undefined : undefined;
+  const installmentMonths = mounted
+    ? items.reduce((max, i) => Math.max(max, i.product.installment?.months ?? 0), 0) || undefined
+    : undefined;
 
   if (!mounted) return null;
 

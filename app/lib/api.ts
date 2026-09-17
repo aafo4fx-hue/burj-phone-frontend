@@ -5,7 +5,10 @@ const ALLOWED_PREFIXES = [
   "/api/checkout",
 ];
 
-function getApiBase(): string {
+// Computed once at module load — the API base never changes at runtime.
+// Previously getApiBase() was called on every apiFetch() invocation,
+// re-parsing and re-validating the URL each time.
+function _computeApiBase(): string {
   if (typeof window !== "undefined") {
     return "";
   }
@@ -19,13 +22,19 @@ function getApiBase(): string {
   }
 }
 
-export const API = getApiBase();
+// getApiBase is kept for backward-compat callers outside this module.
+// Internally we use the pre-computed _API constant.
+export function getApiBase(): string {
+  return _computeApiBase();
+}
+
+export const API = _computeApiBase();
 
 export function apiFetch(path: string, init?: RequestInit): Promise<Response> {
   if (!ALLOWED_PREFIXES.some((p) => path === p || path.startsWith(p + "/"))) {
     throw new Error(`Blocked path: ${path}`);
   }
-  const base = getApiBase();
+  const base = API;
   const url = base ? `${base}${path}` : path;
   return fetch(url, init);
 }

@@ -12,12 +12,18 @@ export default function SearchClient() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!q) return;
-    Promise.resolve().then(() => setLoading(true));
-    fetch(`/api/products?q=${encodeURIComponent(q)}`)
+    if (!q) { setProducts([]); return; }
+    // AbortController cancels the previous request when q changes quickly,
+    // preventing race conditions where a slower earlier request overwrites
+    // the results of a faster later one.
+    const controller = new AbortController();
+    setLoading(true);
+    fetch(`/api/products?q=${encodeURIComponent(q)}`, { signal: controller.signal })
       .then((r) => r.json())
-      .then((data) => setProducts(Array.isArray(data) ? data : []))
-      .finally(() => setLoading(false));
+      .then((data) => { if (!controller.signal.aborted) setProducts(Array.isArray(data) ? data : []); })
+      .catch(() => {/* aborted — ignore */})
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, [q]);
 
   return (

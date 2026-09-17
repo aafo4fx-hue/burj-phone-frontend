@@ -125,18 +125,41 @@ function resolveHref(catName: string): string {
 type Category = { name: string; count: number; image: string };
 type Setting = { category: string; subCategory: string; showInHome: boolean; order: number };
 
-async function getCategories(): Promise<(Category & { href: string; featured?: boolean })[]> {
+// homeSettings may be injected from ProductGridServer (which already fetched them)
+// to avoid a duplicate round-trip to the backend on the same ISR rebuild.
+// Falls back to its own fetch when called standalone (e.g. other pages).
+interface ShopByCategoryProps {
+  homeSettings?: Setting[];
+}
+
+async function getCategories(homeSettings?: Setting[]): Promise<(Category & { href: string; featured?: boolean })[]> {
   try {
-    const [catRes, settingsRes] = await Promise.all([
-      fetch(`${BACKEND}/api/admin/sub-categories/public`, {
+    // Fetch categories list. If homeSettings were injected (from ProductGridServer
+    // which already fetched home-settings), skip that second backend round-trip.
+    // Otherwise fetch both in parallel as before.
+    let allCats: Category[];
+    let settings: Setting[];
+
+    if (homeSettings !== undefined) {
+      // Settings injected — only need the categories list
+      const catRes = await fetch(`${BACKEND}/api/admin/sub-categories/public`, {
         next: { revalidate: 300, tags: ["categories"] },
-      }),
-      fetch(`${BACKEND}/api/admin/sub-categories/home-settings`, {
-        next: { revalidate: 300, tags: ["categories"] },
-      }),
-    ]);
-    const allCats: Category[] = catRes.ok ? await catRes.json() : [];
-    const settings: Setting[] = settingsRes.ok ? await settingsRes.json() : [];
+      });
+      allCats = catRes.ok ? await catRes.json() : [];
+      settings = homeSettings;
+    } else {
+      // Standalone: fetch both in parallel
+      const [catRes, settingsRes] = await Promise.all([
+        fetch(`${BACKEND}/api/admin/sub-categories/public`, {
+          next: { revalidate: 300, tags: ["categories"] },
+        }),
+        fetch(`${BACKEND}/api/admin/sub-categories/home-settings`, {
+          next: { revalidate: 300, tags: ["categories"] },
+        }),
+      ]);
+      allCats = catRes.ok ? await catRes.json() : [];
+      settings = settingsRes.ok ? await settingsRes.json() : [];
+    }
 
     const orderMap = new Map(
       settings.filter((s) => s.showInHome).map((s) => [s.category, s.order])
@@ -161,8 +184,8 @@ async function getCategories(): Promise<(Category & { href: string; featured?: b
   }
 }
 
-export default async function ShopByCategory() {
-  const categories = await getCategories();
+export default async function ShopByCategory({ homeSettings }: ShopByCategoryProps = {}) {
+  const categories = await getCategories(homeSettings);
   if (!categories.length) return null;
 
   return <ShopByCategoryClient categories={categories} />;

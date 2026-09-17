@@ -52,10 +52,11 @@ function getColorHex(color: string): string {
   return "#9ca3af";
 }
 
-export default function CategoryPageClient({ slug }: { slug: string }) {
+export default function CategoryPageClient({ slug, initialProducts }: { slug: string; initialProducts?: Product[] }) {
   const config = slugConfigs[slug];
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
+  // If initialProducts is provided from the server, skip loading state entirely.
+  const [loading, setLoading] = useState(!initialProducts);
   const [page, setPage] = useState(1);
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedStorage, setSelectedStorage] = useState<string>("");
@@ -65,6 +66,10 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
   const ITEMS_PER_PAGE = PRICE_SORTED_SLUGS.includes(slug) ? 10 : 12;
 
   useEffect(() => {
+    // Skip client fetch if server already provided products (ISR path).
+    // This eliminates the /api/products Function invocation for all
+    // category page visits that hit the ISR cache.
+    if (initialProducts) return;
     if (!config) return;
     const params = new URLSearchParams();
     if (config.filters.brand) params.set("brand", config.filters.brand);
@@ -97,9 +102,10 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
         });
         setProducts(sorted);
       })
-      .catch(console.error)
+      .catch(() => {})
       .finally(() => setLoading(false));
-  }, [slug, config]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, config, initialProducts]);
 
   // Extract unique colors and storages
   const colors = useMemo(() => [...new Set(products.map((p) => p.color).filter(Boolean))] as string[], [products]);
@@ -122,6 +128,20 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
   const heroImage = categoryHeroImages[slug] || "/bbb.webp";
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const currentProducts = filteredProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  // Windowed pagination — cap buttons at ~7 regardless of total pages.
+  // WHY: Array.from({length: totalPages}) renders every button; for 100 products
+  // at 12/page that is 9 buttons, but for edge cases with many products it grows
+  // unbounded. Windowing keeps the DOM constant at ≤7 elements.
+  function windowedPageButtons(current: number, total: number): (number | "…")[] {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | "…")[] = [1];
+    if (current > 3) pages.push("…");
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+    if (current < total - 2) pages.push("…");
+    pages.push(total);
+    return pages;
+  }
 
   const goToPage = (n: number) => {
     setPage(n);
@@ -305,15 +325,17 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
                 >
                   <IoChevronForward size={18} />
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => goToPage(n)}
-                    className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${page === n ? "bg-[#1F6F8B] text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
-                  >
-                    {n}
-                  </button>
-                ))}
+                {windowedPageButtons(page, totalPages).map((n, idx) =>
+                  n === "…"
+                    ? <span key={`ellipsis-${idx}`} className="px-2 py-1 text-gray-400 text-sm">…</span>
+                    : <button
+                        key={n}
+                        onClick={() => goToPage(n)}
+                        className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${page === n ? "bg-[#1F6F8B] text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"}`}
+                      >
+                        {n}
+                      </button>
+                )}
                 <button
                   onClick={() => goToPage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}

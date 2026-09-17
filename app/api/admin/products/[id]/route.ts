@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getBackend, forwardCookies } from "../../_lib";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -23,6 +24,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     duplex: "half",
   });
   const data = await res.json();
+  // Flush homepage product ISR cache immediately after any product update.
+  if (res.ok) revalidateTag("products", "max");
   return NextResponse.json(data, { status: res.status });
 }
 
@@ -31,5 +34,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const res = await fetch(`${getBackend()}/api/admin/products/${id}`, forwardCookies(req, { method: "DELETE" }));
   const text = await res.text();
   const data = text ? JSON.parse(text) : {};
+  // Flush homepage product ISR cache immediately after deletion.
+  if (res.ok) revalidateTag("products", "max");
   return NextResponse.json(data, { status: res.status });
 }

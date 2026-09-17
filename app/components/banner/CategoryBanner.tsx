@@ -24,11 +24,26 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
     [images.length, current]
   );
 
+  // Use a ref for the latest goTo so the interval callback doesn't go stale
+  // and we don't need to re-create the interval on every slide change.
+  const goToRef = useRef(goTo);
+  useEffect(() => { goToRef.current = goTo; }, [goTo]);
+
   useEffect(() => {
     if (isHovered) return;
-    intervalRef.current = setInterval(() => goTo(current + 1, 1), AUTO_PLAY_MS);
+    // Store current in a ref to avoid capturing it in closure.
+    const getCurrentSlide = () => {
+      let idx = 0;
+      setCurrent((c) => { idx = c; return c; });
+      return idx;
+    };
+    intervalRef.current = setInterval(() => {
+      goToRef.current(getCurrentSlide() + 1, 1);
+    }, AUTO_PLAY_MS);
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [current, goTo, isHovered]);
+  // Only re-run when isHovered changes — not on every slide change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHovered]);
 
   const variants = {
     enter: (d: number) => ({ x: `${d * 100}%`, opacity: 0 }),
