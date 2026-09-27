@@ -3,6 +3,7 @@ const ALLOWED_PREFIXES = [
   "/api/admin",
   "/api/products",
   "/api/checkout",
+  "/api/revalidate",
 ];
 
 // Computed once at module load — the API base never changes at runtime.

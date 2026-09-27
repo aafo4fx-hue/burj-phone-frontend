@@ -33,15 +33,28 @@ export default function ContractPage() {
   const { id } = useParams<{ id: string }>();
   const [data, setData]   = useState<{ order: Order; company: Company } | null>(null);
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState(false);
 
   // Uses the consolidated invoice endpoint — already fetching order+company in parallel.
   useEffect(() => {
+    let active = true;
     fetch(`/api/admin/orders/${id}/invoice`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("not found");
+        return r.json();
+      })
       .then((d) => {
+        if (!active) return;
+        if (!d || !d.order || !d.order.orderId) {
+          setError(true);
+          setReady(true);
+          return;
+        }
         setData(d);
         const imgs = [d.company?.header, d.company?.footer, d.company?.stamp].filter(Boolean) as string[];
         if (imgs.length === 0) { setReady(true); return; }
+
+        const timeout = setTimeout(() => { if (active) setReady(true); }, 2000);
         Promise.all(
           imgs.map(
             (src) =>
@@ -52,9 +65,19 @@ export default function ContractPage() {
                 img.src = src;
               })
           )
-        ).then(() => setReady(true));
+        ).then(() => {
+          clearTimeout(timeout);
+          if (active) setReady(true);
+        });
       })
-      .catch(() => setReady(true));
+      .catch(() => {
+        if (active) {
+          setError(true);
+          setReady(true);
+        }
+      });
+
+    return () => { active = false; };
   }, [id]);
 
   useEffect(() => {
@@ -63,11 +86,20 @@ export default function ContractPage() {
   }, []);
 
   useEffect(() => {
-    if (ready) setTimeout(() => window.print(), 500);
-  }, [ready]);
+    if (ready && data && !error) {
+      const timer = setTimeout(() => window.print(), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [ready, data, error]);
 
-  if (!ready || !data) return (
-    <div style={{ textAlign: "center", padding: 40 }}>جاري التحميل...</div>
+  if (!ready) return (
+    <div style={{ textAlign: "center", padding: 60, fontFamily: "Arial", color: "#666" }}>جاري التحميل...</div>
+  );
+
+  if (error || !data || !data.order) return (
+    <div style={{ textAlign: "center", padding: 60, fontFamily: "Arial", color: "#dc2626", fontWeight: "bold" }}>
+      لم يتم العثور على الطلب أو حدث خطأ أثناء التحميل
+    </div>
   );
 
   const { order, company } = data;

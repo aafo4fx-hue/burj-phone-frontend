@@ -42,7 +42,7 @@ const resolveImg = (src: string) => {
   return clean.startsWith("http") ? clean : `${API}${clean.startsWith("/") ? clean : "/" + clean}`;
 };
 
-export default function ProductCard({ product, priority = false, zoomOnHover = false }: { product: Product; priority?: boolean; zoomOnHover?: boolean }) {
+export default function ProductCard({ product, priority = false, zoomOnHover = false, prefetch }: { product: Product; priority?: boolean; zoomOnHover?: boolean; prefetch?: false }) {
   const { name, salePrice, discountPercent = 0, inStock } = product;
   const image = product.images?.[0] || product.image;
   const resolvedImage = image ? resolveImg(image) : undefined;
@@ -87,6 +87,7 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
 
       <Link
         href={`/product/${product._id}`}
+        prefetch={prefetch}
         dir="rtl"
         className="group flex flex-col h-full bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 overflow-hidden"
       >
@@ -98,7 +99,7 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
               alt={name}
               fill
               className="object-contain p-1.5 sm:p-3"
-              sizes="(max-width: 640px) 42vw, (max-width: 1024px) 33vw, 25vw"
+              sizes="(max-width: 640px) 55vw, (max-width: 1024px) 33vw, (max-width: 1152px) 25vw, 276px"
               quality={75}
               priority={priority}
               loading={priority ? "eager" : "lazy"}
@@ -168,10 +169,13 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
               <span className="text-[15px] sm:text-[21px] font-black text-gray-900 leading-none tracking-tight">
                 {fmt(displayPrice)}
               </span>
-              <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="opacity-80 shrink-0 sm:w-[30px] sm:h-[30px]" style={{ width: "auto", height: "auto" }} loading="lazy" />
+              <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} className="opacity-80 shrink-0 sm:w-[30px] sm:h-[30px]" style={{ width: "auto", height: "auto" }} loading="lazy" />
             </div>
             {hasDiscount && (
-              <span className="text-[9px] sm:text-[11px] text-gray-400 line-through font-medium">{fmt(originalPrice)} ر.س</span>
+              <span className="inline-flex items-center gap-0.5 text-[9px] sm:text-[11px] text-gray-400 line-through font-medium">
+                {fmt(originalPrice)}
+                <Image src="/money-icon.webp" alt="ر.س" width={14} height={14} quality={100} className="opacity-60 shrink-0" style={{ width: "auto", height: "auto" }} loading="lazy" />
+              </span>
             )}
           </div>
 

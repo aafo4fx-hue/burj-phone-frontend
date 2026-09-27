@@ -42,6 +42,8 @@ export default function OrderDetailPage() {
     return () => controller.abort();
   }, [id]);
 
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
   function calcMonthly() {
     const remaining = fin.total - fin.downPayment;
     if (fin.months > 0 && remaining > 0)
@@ -49,26 +51,46 @@ export default function OrderDetailPage() {
   }
 
   async function saveFinancials() {
+    if (saving) return;
     setSaving(true);
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
-      body: JSON.stringify({ financials: true, ...fin }),
-    });
-    if (res.ok) { setOrder(await res.json()); toast.success("تم حفظ الأرقام ✅"); }
-    else toast.error("حدث خطأ");
-    setSaving(false);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
+        body: JSON.stringify({ financials: true, ...fin }),
+      });
+      if (res.ok) {
+        setOrder(await res.json());
+        toast.success("تم حفظ الأرقام ✅");
+      } else {
+        toast.error("حدث خطأ أثناء حفظ الأرقام");
+      }
+    } catch {
+      toast.error("حدث خطأ في الاتصال");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function changeStatus(status: string) {
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      setOrder((prev) => prev ? { ...prev, status: status as Order["status"] } : prev);
-      toast.success("تم تحديث الحالة ✅");
+    if (statusUpdating) return;
+    setStatusUpdating(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        setOrder((prev) => (prev ? { ...prev, status: status as Order["status"] } : prev));
+        toast.success("تم تحديث الحالة ✅");
+      } else {
+        toast.error("فشل تحديث الحالة");
+      }
+    } catch {
+      toast.error("حدث خطأ في الاتصال");
+    } finally {
+      setStatusUpdating(false);
     }
   }
 

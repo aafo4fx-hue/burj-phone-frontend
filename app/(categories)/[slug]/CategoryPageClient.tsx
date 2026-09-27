@@ -52,9 +52,38 @@ function getColorHex(color: string): string {
   return "#9ca3af";
 }
 
+const PRICE_SORTED_SLUGS_SET = new Set(["iphone-18-pro-max", "iphone-18-pro", "iphone-18-duo"]);
+
+function sortProducts(filtered: Product[], slug: string): Product[] {
+  const parseStorage = (s?: string) => {
+    if (!s) return 0;
+    const n = parseFloat(s);
+    if (s.includes("تيرا") || s.toLowerCase().includes("tb")) return n * 1024;
+    return n || 0;
+  };
+  const colorOrder = (c?: string) => {
+    if (!c) return 99;
+    if (c.includes("برتقال") || c.toLowerCase().includes("orange")) return 0;
+    if (c.includes("سيلفر") || c.toLowerCase().includes("silver")) return 1;
+    if (c.includes("ازرق") || c.includes("أزرق") || c.toLowerCase().includes("blue")) return 2;
+    return 3;
+  };
+  return [...filtered].sort((a, b) => {
+    if (PRICE_SORTED_SLUGS_SET.has(slug)) {
+      return (a.salePrice ?? a.originalPrice ?? 0) - (b.salePrice ?? b.originalPrice ?? 0);
+    }
+    const storageDiff = parseStorage(a.storage) - parseStorage(b.storage);
+    if (storageDiff !== 0) return storageDiff;
+    return colorOrder(a.color) - colorOrder(b.color);
+  });
+}
+
 export default function CategoryPageClient({ slug, initialProducts }: { slug: string; initialProducts?: Product[] }) {
   const config = slugConfigs[slug];
-  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
+  const sortedInitial = initialProducts
+    ? sortProducts(filterProducts(initialProducts, slug), slug)
+    : [];
+  const [products, setProducts] = useState<Product[]>(sortedInitial);
   // If initialProducts is provided from the server, skip loading state entirely.
   const [loading, setLoading] = useState(!initialProducts);
   const [page, setPage] = useState(1);
@@ -62,8 +91,7 @@ export default function CategoryPageClient({ slug, initialProducts }: { slug: st
   const [selectedStorage, setSelectedStorage] = useState<string>("");
   const [showFilters, setShowFilters] = useState(true);
   const gridRef = useRef<HTMLDivElement>(null);
-  const PRICE_SORTED_SLUGS = ["iphone-18-pro-max", "iphone-18-pro", "iphone-18-duo"];
-  const ITEMS_PER_PAGE = PRICE_SORTED_SLUGS.includes(slug) ? 10 : 12;
+  const ITEMS_PER_PAGE = PRICE_SORTED_SLUGS_SET.has(slug) ? 10 : 12;
 
   useEffect(() => {
     // Skip client fetch if server already provided products (ISR path).
@@ -78,29 +106,7 @@ export default function CategoryPageClient({ slug, initialProducts }: { slug: st
       .then((r) => r.json())
       .then((data: Product[]) => {
         const filtered = filterProducts(data, slug);
-        const parseStorage = (s?: string) => {
-          if (!s) return 0;
-          const n = parseFloat(s);
-          if (s.includes("تيرا") || s.toLowerCase().includes("tb")) return n * 1024;
-          return n || 0;
-        };
-        const colorOrder = (c?: string) => {
-          if (!c) return 99;
-          if (c.includes("برتقال") || c.toLowerCase().includes("orange")) return 0;
-          if (c.includes("سيلفر") || c.toLowerCase().includes("silver")) return 1;
-          if (c.includes("ازرق") || c.includes("أزرق") || c.toLowerCase().includes("blue")) return 2;
-          return 3;
-        };
-        const priceSortedSlugs = ["iphone-18-pro-max", "iphone-18-pro", "iphone-18-duo"];
-        const sorted = [...filtered].sort((a, b) => {
-          if (priceSortedSlugs.includes(slug)) {
-            return (a.salePrice ?? a.originalPrice ?? 0) - (b.salePrice ?? b.originalPrice ?? 0);
-          }
-          const storageDiff = parseStorage(a.storage) - parseStorage(b.storage);
-          if (storageDiff !== 0) return storageDiff;
-          return colorOrder(a.color) - colorOrder(b.color);
-        });
-        setProducts(sorted);
+        setProducts(sortProducts(filtered, slug));
       })
       .catch(() => {})
       .finally(() => setLoading(false));

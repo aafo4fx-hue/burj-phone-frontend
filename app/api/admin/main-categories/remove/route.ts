@@ -10,7 +10,9 @@ export async function DELETE(req: NextRequest) {
     body: JSON.stringify(body),
   }));
   const data = await res.json();
-  // ✅ FIX #1: flush category cache so removed category disappears from all cached pages
-  if (res.ok) revalidateTag("main-categories", "max");
+  if (res.ok) {
+    revalidateTag("categories", "max");
+    revalidateTag("products", "max");
+  }
   return NextResponse.json(data, { status: res.status });
 }

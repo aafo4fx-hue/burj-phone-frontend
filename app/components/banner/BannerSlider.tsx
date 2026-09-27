@@ -3,6 +3,8 @@ import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { useVisiblePlayback } from "../../hooks/useVisiblePlayback";
+
 const AUTO_PLAY_MS = 5000;
 const SWIPE_THRESHOLD = 50;
 
@@ -12,7 +14,8 @@ export default function BannerSlider({ images }: { images: string[] }) {
   // progressKey increments on each slide change — CSS animation restarts via key prop.
   const [progressKey, setProgressKey] = useState(0);
   const touchStart = useRef(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { ref, active } = useVisiblePlayback<HTMLDivElement>();
+  const playing = active && images.length > 1;
 
   const goTo = useCallback(
     (i: number, dir?: number) => {
@@ -24,24 +27,11 @@ export default function BannerSlider({ images }: { images: string[] }) {
     [images.length, current]
   );
 
-  // Keep a ref to the latest goTo so the interval doesn't go stale
-  // without needing to re-create it on every slide change.
-  const goToRef = useRef(goTo);
-  useEffect(() => { goToRef.current = goTo; }, [goTo]);
-
-  // Single persistent interval — created once, never torn down mid-slide.
-  // Previously re-created on every current/goTo change (once per AUTO_PLAY_MS).
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setCurrent((c) => {
-        const next = (c + 1 + images.length) % images.length;
-        goToRef.current(next, 1);
-        return c; // actual state update happens inside goToRef.current
-      });
-    }, AUTO_PLAY_MS);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [images.length]); // only re-create if the image list changes
+    if (!playing) return;
+    const timer = setTimeout(() => goTo(current + 1, 1), AUTO_PLAY_MS);
+    return () => clearTimeout(timer);
+  }, [playing, current, goTo, progressKey]);
 
   const onTouchStart = (e: React.TouchEvent) => { touchStart.current = e.touches[0].clientX; };
   const onTouchEnd = (e: React.TouchEvent) => {
@@ -57,7 +47,7 @@ export default function BannerSlider({ images }: { images: string[] }) {
 
   return (
     <section className="w-full flex justify-center pt-4 sm:pt-5 pb-1 sm:pb-2 px-2 sm:px-4 md:px-6">
-      <div className="relative w-full" style={{ maxWidth: 2048 }}>
+      <div ref={ref} className="relative w-full" style={{ maxWidth: 2048 }}>
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl">
           <div
             className="relative w-full"
@@ -83,7 +73,7 @@ export default function BannerSlider({ images }: { images: string[] }) {
                   className="object-contain"
                   priority={current === 0}
                   sizes="100vw"
-                  quality={100}
+                  quality={85}
                 />
               </motion.div>
             </AnimatePresence>
@@ -96,6 +86,7 @@ export default function BannerSlider({ images }: { images: string[] }) {
                   className="h-full banner-progress"
                   style={{
                     animationDuration: `${AUTO_PLAY_MS}ms`,
+                    animationPlayState: playing ? "running" : "paused",
                     background: "linear-gradient(90deg, #A842E4, #7A2FCC)",
                   }}
                 />

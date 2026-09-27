@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { apiFetch } from "../../lib/api";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -85,36 +86,51 @@ export default function ProductsPage() {
       if (q)        params.set("q", q);
       if (category) params.set("category", category);
 
-      const res = await fetch(`/api/admin/products?${params}`, { credentials: "include", ...(signal ? { signal } : {}) });
-      if (res.ok && !signal?.aborted) setPageData(await res.json());
+      const res = await apiFetch(`/api/admin/products?${params}`, { credentials: "include", ...(signal ? { signal } : {}) });
+      if (res.status === 401) {
+        toast.error("انتهت الجلسة، يرجى تسجيل الدخول مجدداً");
+        router.push("/admin/login");
+        return;
+      }
+      if (res.ok && !signal?.aborted) {
+        setPageData(await res.json());
+      } else if (!signal?.aborted) {
+        toast.error("فشل تحميل قائمة المنتجات");
+      }
+    } catch (err: unknown) {
+      if (!signal?.aborted) {
+        console.error("fetchPage error:", err);
+      }
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
+  }, [router]);
+
+  const fetchSubCats = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const res = await apiFetch("/api/admin/sub-categories", { credentials: "include", ...(signal ? { signal } : {}) });
+      if (res.ok && !signal?.aborted) {
+        const data: SubCat[] = await res.json();
+        setSubCats(data);
+      }
+    } catch {
+      // ignore abort or network blip
+    }
   }, []);
 
-  // FIX #1 + #2: Merge into ONE useEffect so fetchPage is only called once on
-  // mount (not twice — the old code had two effects that both ran on mount
-  // because fetchPage is stable via useCallback).
-  // FIX #2: AbortController cancels the fetch if the component unmounts or
-  // the effect re-runs before the previous request finishes.
   const isFirstRun = useRef(true);
   useEffect(() => {
     const controller = new AbortController();
 
-    // Sub-categories only need to be fetched once on mount.
     if (isFirstRun.current) {
       isFirstRun.current = false;
-      fetch("/api/admin/sub-categories", { credentials: "include", signal: controller.signal })
-        .then((r) => (r.ok ? r.json() : []))
-        .then((data: SubCat[]) => { if (!controller.signal.aborted) setSubCats(data); })
-        .catch(() => {});
+      fetchSubCats(controller.signal);
     }
 
     fetchPage(currentPage, searchQuery, selectedCat, controller.signal);
 
     return () => controller.abort();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchQuery, selectedCat]);
+  }, [currentPage, searchQuery, selectedCat, fetchPage, fetchSubCats]);
 
   // ------------------------------------------------------------------
   // Search debounce
@@ -145,10 +161,10 @@ export default function ProductsPage() {
     setConfirmDelete(null);
     setDeleting(true);
     try {
-      const res  = await fetch(`/api/admin/products/${id}`, { method: "DELETE", credentials: "include" });
+      const res  = await apiFetch(`/api/admin/products/${id}`, { method: "DELETE", credentials: "include" });
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};
-      if (!res.ok) return toast.error(data.message || "فشل الحذف");
+      if (!res.ok) return toast.error(data.error || data.message || "فشل الحذف");
       toast.success(`تم حذف "${name}" بنجاح ✅`);
       // Stay on the same page; if it becomes empty the fetch will show page-1.
       const nextPage = pageData && pageData.products.length === 1 && currentPage > 1
@@ -156,6 +172,9 @@ export default function ProductsPage() {
         : currentPage;
       setCurrentPage(nextPage);
       fetchPage(nextPage, searchQuery, selectedCat);
+      fetchSubCats(); // Refresh category chips counts after deletion
+    } catch {
+      toast.error("حدث خطأ أثناء الحذف");
     } finally {
       setDeleting(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoPersonOutline, IoCardOutline, IoCallOutline, IoLocationOutline } from "react-icons/io5";
 import type { CustomerInfo } from "../../store/cartStore";
@@ -37,6 +38,28 @@ const schedule = useMemo(() => {
 }, [months, monthlyPayment]);
 
 const selectClass = "w-full rounded-xl px-4 py-3 text-sm font-bold text-gray-800 bg-[#f9f5ff]/50 border border-[#8543C0]/10 focus:outline-none focus:border-[#8543C0] focus:ring-2 focus:ring-[#8543C0]/10 focus:bg-white transition-all duration-200 cursor-pointer appearance-none";
+
+── OrderPopup (الموودال القديم – الدفع عند الاستلام) ─────────────────
+function OrderPopup({ whatsapp, onClose }: { whatsapp: string; onClose: () => void }) {
+  const wa = whatsapp.startsWith("0") ? "966" + whatsapp.slice(1) : whatsapp;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4" dir="rtl">
+      <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 300, damping: 25 }} className="bg-white rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.15)] w-full max-w-sm overflow-hidden">
+        <div className="bg-gradient-to-br from-[#090D54] via-[#611FA0] to-[#7A2FCC] px-6 pt-8 pb-6 text-center relative">
+          <button onClick={onClose} className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 transition-all"><span className="text-xl leading-none">&times;</span></button>
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.15 }} className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 flex items-center justify-center"><span className="text-4xl">✅</span></motion.div>
+          <h2 className="text-white font-extrabold text-xl">تم استلام طلبك!</h2>
+          <p className="text-white/60 text-sm mt-1">شكراً لثقتك بنا</p>
+        </div>
+        <div className="px-6 py-6 space-y-4 text-center">
+          <p className="text-gray-600 text-sm leading-8">تم تسجيل طلبك بنجاح 🎉<br /><span className="font-extrabold text-gray-800">سنتواصل معك على واتساب</span><br />لتأكيد الطلب وترتيب التوصيل.<br /><span className="text-[#8543C0] font-bold">الدفع عند الاستلام</span></p>
+          <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-[#25D366] text-white font-bold text-sm">تواصل معنا على واتساب</a>
+          <button onClick={onClose} className="w-full py-3 rounded-2xl border border-gray-200 text-gray-500 font-bold text-sm hover:bg-gray-50 transition-colors">إغلاق</button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 ──────────────────────────────────────────────────────────────────── */
 
 function Field({ label, icon, error, children }: { label: string; icon: React.ReactNode; error?: string; children: React.ReactNode }) {
@@ -66,63 +89,13 @@ interface CustomerFormProps {
   onSubmit: (info: CustomerInfo) => void;
 }
 
-function OrderPopup({ whatsapp, onClose }: { whatsapp: string; onClose: () => void }) {
-  const wa = whatsapp.startsWith("0") ? "966" + whatsapp.slice(1) : whatsapp;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4" dir="rtl">
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="bg-white rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.15)] w-full max-w-sm overflow-hidden"
-      >
-        <div className="bg-gradient-to-br from-[#090D54] via-[#611FA0] to-[#7A2FCC] px-6 pt-8 pb-6 text-center relative">
-          <button onClick={onClose} className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 transition-all">
-            <span className="text-xl leading-none">&times;</span>
-          </button>
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 200, delay: 0.15 }}
-            className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 flex items-center justify-center"
-          >
-            <span className="text-4xl">✅</span>
-          </motion.div>
-          <h2 className="text-white font-extrabold text-xl">تم استلام طلبك!</h2>
-          <p className="text-white/60 text-sm mt-1">شكراً لثقتك بنا</p>
-        </div>
-
-        <div className="px-6 py-6 space-y-4 text-center">
-          <p className="text-gray-600 text-sm leading-8">
-            تم تسجيل طلبك بنجاح 🎉<br />
-            <span className="font-extrabold text-gray-800">سنتواصل معك على واتساب</span><br />
-            لتأكيد الطلب وترتيب التوصيل.<br />
-            <span className="text-[#8543C0] font-bold">الدفع عند الاستلام</span>
-          </p>
-
-          {/* HIDDEN – زرار واتساب (محفوظ للرجوع)
-          <a href={`https://wa.me/${wa}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl bg-[#25D366] text-white font-bold text-sm shadow-[0_8px_24px_rgba(37,211,102,0.3)] hover:shadow-[0_12px_32px_rgba(37,211,102,0.4)] transition-shadow">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            تواصل معنا على واتساب
-          </a>
-          */}
-
-          <button onClick={onClose} className="w-full py-3 rounded-2xl border border-gray-200 text-gray-500 font-bold text-sm hover:bg-gray-50 transition-colors">
-            إغلاق
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
-export default function CustomerForm({ total: _total, itemCount: _itemCount, initialData, installmentMonths: _installmentMonths, onSubmit: _onSubmit }: CustomerFormProps) {
+export default function CustomerForm({ total: _total, itemCount: _itemCount, initialData, installmentMonths: _installmentMonths, onSubmit }: CustomerFormProps) {
+  const router = useRouter();
   const [name, setName] = useState(initialData?.name ?? "");
   const [nationalId, setNationalId] = useState(initialData?.nationalId ?? "");
   const [whatsapp, setWhatsapp] = useState(initialData?.whatsapp ?? "");
   const [address, setAddress] = useState(initialData?.address ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showPopup, setShowPopup] = useState(false);
 
   const inputClass = (field: string) =>
     `w-full rounded-xl px-4 py-3 text-sm text-gray-800 bg-[#f9f5ff]/50 border focus:outline-none transition-all duration-200 placeholder:text-gray-300 ${
@@ -144,12 +117,12 @@ export default function CustomerForm({ total: _total, itemCount: _itemCount, ini
       document.getElementById(`field-${Object.keys(newErrors)[0]}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    setShowPopup(true);
+    onSubmit({ name: name.trim(), nationalId: nationalId.trim(), whatsapp: whatsapp.trim(), address: address.trim(), installmentType: "full", months: 0, downPayment: 0 });
+    router.push("/checkout");
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="space-y-4">
-      {showPopup && <OrderPopup whatsapp={whatsapp} onClose={() => setShowPopup(false)} />}
 
       {/* Customer Info */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 space-y-4 border border-[#8543C0]/[0.06] shadow-[0_2px_16px_rgba(133,67,192,0.05)]">
@@ -186,70 +159,6 @@ export default function CustomerForm({ total: _total, itemCount: _itemCount, ini
         <span className="relative z-10">تأكيد الطلب</span>
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2.5s_infinite]" />
       </motion.button>
-
-      {/* HIDDEN – طريقة الدفع والتقسيط (محفوظ للرجوع)
-      <div className="bg-white rounded-2xl p-4 sm:p-5 space-y-5 border border-[#8543C0]/[0.06] shadow-[0_2px_16px_rgba(133,67,192,0.05)]">
-        <div className="flex items-center gap-2 pb-2 border-b border-[#8543C0]/[0.06]">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#A842E4]/10 to-[#7A2FCC]/10 flex items-center justify-center">
-            <IoWalletOutline size={16} className="text-[#A842E4]" />
-          </div>
-          <h3 className="text-sm font-extrabold text-gray-800">طريقة الدفع</h3>
-        </div>
-        <div className="space-y-4">
-          <Field label="عدد الأشهر" icon={<IoCalendarOutline size={12} className="text-[#8543C0]" />}>
-            <div className="relative">
-              <select value={String(months)} onChange={(e) => setMonths(Number(e.target.value))} className={selectClass}>
-                {MONTHS_OPTIONS.map((m) => (<option key={m} value={m}>{m} شهر</option>))}
-              </select>
-              <IoChevronDown size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-          </Field>
-          <Field label="الدفعة الأولى" icon={<IoWalletOutline size={12} className="text-[#8543C0]" />}>
-            <div className="relative">
-              <select value={String(downPaymentExtra)} onChange={(e) => setDownPaymentExtra(Number(e.target.value))} className={selectClass}>
-                {DOWN_PAYMENT_OPTIONS.map((v) => (<option key={v} value={v - minDownPayment}>{fmt(v)} ر.س</option>))}
-                <option value={total - minDownPayment}>الدفع بالكامل ({fmt(total)} ر.س )</option>
-              </select>
-              <IoChevronDown size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-          </Field>
-          <div className="relative overflow-hidden bg-gradient-to-br from-[#090D54] via-[#611FA0] to-[#7A2FCC] rounded-xl p-4">
-            <div className="absolute top-0 left-0 w-24 h-24 bg-[#A842E4]/20 rounded-full -translate-x-8 -translate-y-8 blur-xl" />
-            <div className="relative">
-              <p className="text-xs text-white/50 font-bold mb-1">القسط الشهري</p>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl font-extrabold text-white">{fmt(monthlyPayment)}</span>
-                <span className="text-sm font-medium text-white/40"><SAR /> / شهر</span>
-              </div>
-            </div>
-          </div>
-          {months > 0 && (
-            <div className="rounded-xl overflow-hidden border border-[#8543C0]/[0.08]">
-              <div className="max-h-64 overflow-y-auto scrollbar-hide">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 z-10">
-                    <tr className="bg-gradient-to-r from-[#090D54] via-[#611FA0] to-[#7A2FCC]">
-                      <th className="py-2.5 px-3 text-right text-xs font-bold text-white/80">#</th>
-                      <th className="py-2.5 px-3 text-right text-xs font-bold text-white/80">التاريخ</th>
-                      <th className="py-2.5 px-3 text-right text-xs font-bold text-white/80">المبلغ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {schedule.map((row, i) => (
-                      <tr key={row.index} className={`${i % 2 === 0 ? "bg-white" : "bg-[#f9f5ff]/50"} hover:bg-[#8543C0]/[0.03] transition-colors`}>
-                        <td className="py-2.5 px-3 text-gray-400 font-bold text-xs">{row.index}</td>
-                        <td className="py-2.5 px-3 text-gray-600 text-xs">{row.date}</td>
-                        <td className="py-2.5 px-3 font-bold text-[#7A2FCC] text-xs">{fmt(row.amount)} <SAR /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      */}
     </motion.div>
   );
 }

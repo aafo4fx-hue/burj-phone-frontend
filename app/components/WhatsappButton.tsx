@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import { useCompanyStore } from "../store/companyStore";
 
 export default function WhatsappButton() {
-  const { whatsapp, fetchCompany } = useCompanyStore();
+  const whatsapp = useCompanyStore(s => s.whatsapp);
+  const fetchCompany = useCompanyStore(s => s.fetchCompany);
 
   // fetchCompany is idempotent — if Navbar already called it this session,
   // the persisted store returns immediately without a network request.

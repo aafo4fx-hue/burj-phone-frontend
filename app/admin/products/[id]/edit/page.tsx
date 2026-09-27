@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { apiFetch } from "../../../../lib/api"; // FIX #6: apiFetch instead of raw fetch()
+import { compressImage } from "../../../../lib/image-utils";
 
 // FIX #7: stable key type — each gallery item carries a unique id
 type GalleryItem = { id: string; type: "url" | "file"; value: string; file?: File };
@@ -129,13 +130,15 @@ export default function EditProductPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally empty — runs only on unmount
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
     // Revoke previous preview blob before creating a new one
     if (imagePreviewRef.current && imagePreviewRef.current.startsWith("blob:")) {
       URL.revokeObjectURL(imagePreviewRef.current);
     }
+    // Pre-compress client-side to minimize upload payload and server memory buffering
+    const file = await compressImage(rawFile);
     const newUrl = URL.createObjectURL(file);
     imagePreviewRef.current = newUrl;
     setImagePreview(newUrl);
@@ -148,11 +151,13 @@ export default function EditProductPage() {
     setGalleryItems((prev) => [...prev, { id: nextGalleryId(), type: "url", value: "" }]);
   }
 
-  function handleGalleryFiles(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleGalleryFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
-    if (!files) return;
-    // FIX #7: assign stable ids
-    const newItems: GalleryItem[] = Array.from(files).map((f) => ({
+    if (!files || files.length === 0) return;
+    const fileList = Array.from(files);
+    const compressedFiles = await Promise.all(fileList.map((f) => compressImage(f)));
+
+    const newItems: GalleryItem[] = compressedFiles.map((f) => ({
       id: nextGalleryId(),
       type: "file" as const,
       value: URL.createObjectURL(f),
@@ -179,20 +184,33 @@ export default function EditProductPage() {
     );
   }
 
-  // FIX #8: useCallback so the function reference is stable; the `saving`
-  // check inside prevents a second submission if the button is clicked twice
-  // before React re-renders with disabled=true.
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       // Double-submit guard — bail out if a save is already in flight
       if (saving) return;
+
+      const numOriginal = parseFloat(originalPrice);
+      if (isNaN(numOriginal) || numOriginal <= 0) {
+        return toast.error("يرجى إدخال سعر صحيح أكبر من الصفر");
+      }
+
+      if (salePrice) {
+        const numSale = parseFloat(salePrice);
+        if (isNaN(numSale) || numSale < 0) {
+          return toast.error("سعر البيع لا يمكن أن يكون سالباً");
+        }
+        if (numSale >= numOriginal) {
+          return toast.error("سعر البيع بعد الخصم يجب أن يكون أقل من السعر الأصلي");
+        }
+      }
+
       setSaving(true);
       try {
         const fd = new FormData();
-        fd.append("name", name);
+        fd.append("name", name.trim());
         fd.append("originalPrice", originalPrice);
-        fd.append("salePrice", salePrice);
+        if (salePrice) fd.append("salePrice", salePrice);
         fd.append("category", category);
         fd.append("inStock", String(inStock));
         fd.append("description", description);
@@ -202,13 +220,13 @@ export default function EditProductPage() {
         if (imageMode === "upload" && imageFile) {
           fd.append("image", imageFile);
         } else if (imageMode === "url") {
-          fd.append("imageUrl", imageUrl);
+          fd.append("imageUrl", imageUrl.trim());
         }
 
         // Gallery
         const urls = galleryItems
           .filter((i) => i.type === "url" && i.value)
-          .map((i) => i.value);
+          .map((i) => i.value.trim());
         fd.append("galleryUrls", JSON.stringify(urls));
         galleryItems
           .filter((i) => i.type === "file" && i.file)
@@ -225,8 +243,12 @@ export default function EditProductPage() {
 
         toast.success("تم حفظ التعديلات بنجاح ✅");
 
-        // Revalidate the product cache tag after a successful save
-        await apiFetch(`/api/revalidate?tag=product-${id}`, { method: "POST" });
+        // Revalidate product cache tag safely
+        try {
+          await apiFetch(`/api/revalidate?tag=product-${id}`, { method: "POST" });
+        } catch {
+          // Non-blocking cache revalidation
+        }
 
         router.push("/admin/products");
       } catch (err: unknown) {
@@ -235,8 +257,7 @@ export default function EditProductPage() {
         setSaving(false);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [saving, name, originalPrice, salePrice, category, inStock, description, overviewImage, imageMode, imageFile, imageUrl, galleryItems, id]
+    [saving, name, originalPrice, salePrice, category, inStock, description, overviewImage, imageMode, imageFile, imageUrl, galleryItems, id, router]
   );
 
   if (loading) {

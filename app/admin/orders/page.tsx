@@ -107,10 +107,13 @@ export default function OrdersPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch]           = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortCtrlRef = useRef<AbortController | null>(null);
 
   // ── UI state ─────────────────────────────────────────────────────────────
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [csrfToken, setCsrfToken]         = useState("");
+  const [isDeleting, setIsDeleting]       = useState(false);
+  const [updatingId, setUpdatingId]       = useState<string | null>(null);
 
   // ── CSRF fetch — once on mount ───────────────────────────────────────────
   useEffect(() => {
@@ -125,21 +128,34 @@ export default function OrdersPage() {
   // JS. Now the DB does the work: only PER_PAGE rows are serialised, sent
   // over the wire, and rendered — regardless of total order count.
   const fetchOrders = useCallback((pg: number, q: string) => {
+    if (abortCtrlRef.current) {
+      abortCtrlRef.current.abort();
+    }
+    const ctrl = new AbortController();
+    abortCtrlRef.current = ctrl;
+
     setLoading(true);
     const params = new URLSearchParams({
       page:  String(pg),
       limit: String(PER_PAGE),
       ...(q ? { search: q } : {}),
     });
-    fetch(`/api/admin/orders?${params}`)
+    fetch(`/api/admin/orders?${params}`, { signal: ctrl.signal })
       .then((r) => r.json())
       .then((d) => {
+        if (ctrl.signal.aborted) return;
         setOrders(Array.isArray(d.orders) ? d.orders : []);
         setTotal(d.total ?? 0);
         setPages(d.pages ?? 1);
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          toast.error("فشل في تحميل الطلبات");
+        }
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setLoading(false);
+      });
   }, []);
 
   // Re-fetch whenever page or committed search changes.
@@ -158,40 +174,63 @@ export default function OrdersPage() {
     }, 250);
   }
 
-  // Cleanup debounce timer on unmount.
-  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
+  // Cleanup debounce timer and abort controller on unmount.
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (abortCtrlRef.current) abortCtrlRef.current.abort();
+  }, []);
 
   // ── Actions ──────────────────────────────────────────────────────────────
   async function deleteOrder(id: string) {
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "DELETE",
-      headers: { "x-csrf-token": csrfToken },
-    });
-    if (res.ok) {
-      // After delete: if the current page becomes empty, go back one.
-      const remainingOnPage = orders.length - 1;
-      const newPage = remainingOnPage === 0 && page > 1 ? page - 1 : page;
-      // Re-fetch the page from the server so counts stay accurate.
-      fetchOrders(newPage, search);
-      setPage(newPage);
-      toast.success("تم حذف الطلب ✅");
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "DELETE",
+        headers: { "x-csrf-token": csrfToken },
+      });
+      if (res.ok) {
+        // After delete: if the current page becomes empty, go back one.
+        const remainingOnPage = orders.length - 1;
+        const newPage = remainingOnPage === 0 && page > 1 ? page - 1 : page;
+        // Re-fetch the page from the server so counts stay accurate.
+        fetchOrders(newPage, search);
+        setPage(newPage);
+        toast.success("تم حذف الطلب ✅");
+      } else {
+        toast.error("فشل حذف الطلب");
+      }
+    } catch {
+      toast.error("حدث خطأ في الاتصال أثناء الحذف");
+    } finally {
+      setIsDeleting(false);
+      setConfirmDelete(null);
     }
-    setConfirmDelete(null);
   }
 
   async function changeStatus(id: string, status: string) {
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      // Optimistic local update — no full refetch needed for a single-row change.
-      // WHY: avoids re-serialising the entire current page just to flip one status badge.
-      setOrders((prev) =>
-        prev.map((o) => (o._id === id ? { ...o, status: status as Order["status"] } : o))
-      );
-      toast.success("تم تحديث الحالة ✅");
+    if (updatingId) return;
+    setUpdatingId(id);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        // Optimistic local update — no full refetch needed for a single-row change.
+        // WHY: avoids re-serialising the entire current page just to flip one status badge.
+        setOrders((prev) =>
+          prev.map((o) => (o._id === id ? { ...o, status: status as Order["status"] } : o))
+        );
+        toast.success("تم تحديث الحالة ✅");
+      } else {
+        toast.error("فشل تحديث الحالة");
+      }
+    } catch {
+      toast.error("حدث خطأ في الاتصال");
+    } finally {
+      setUpdatingId(null);
     }
   }
 
@@ -319,13 +358,20 @@ export default function OrdersPage() {
                         )}
                         <button
                           onClick={() => changeStatus(o._id, nextStatus)}
-                          className={`inline-flex items-center gap-1 ${STATUS_NEXT_BG[o.status]} text-white text-xs font-semibold px-2 py-1 rounded-lg transition-colors whitespace-nowrap`}
+                          disabled={updatingId === o._id}
+                          className={`inline-flex items-center gap-1 ${STATUS_NEXT_BG[o.status]} disabled:opacity-50 text-white text-xs font-semibold px-2 py-1 rounded-lg transition-colors whitespace-nowrap`}
                         >
-                          {IcoStatus} {STATUS_NEXT_LABEL[o.status]}
+                          {updatingId === o._id ? (
+                            <span className="inline-block w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            IcoStatus
+                          )}
+                          {STATUS_NEXT_LABEL[o.status]}
                         </button>
                         <button
                           onClick={() => setConfirmDelete({ id: o._id, name: o.customer || o.orderId })}
-                          className="inline-flex items-center gap-1 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-lg transition-colors whitespace-nowrap"
+                          disabled={isDeleting}
+                          className="inline-flex items-center gap-1 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-xs font-semibold px-2 py-1 rounded-lg transition-colors whitespace-nowrap"
                         >
                           {IcoDelete} حذف
                         </button>
@@ -389,13 +435,18 @@ export default function OrdersPage() {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => deleteOrder(confirmDelete.id)}
-                className="bg-red-500 hover:bg-red-600 text-white text-sm font-bold px-6 py-2 rounded-lg transition-colors"
+                disabled={isDeleting}
+                className="bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-bold px-6 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5"
               >
-                نعم، احذف
+                {isDeleting && (
+                  <span className="inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                )}
+                {isDeleting ? "جاري الحذف..." : "نعم، احذف"}
               </button>
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="border border-gray-300 text-gray-700 text-sm font-bold px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={isDeleting}
+                className="border border-gray-300 text-gray-700 text-sm font-bold px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 إلغاء
               </button>

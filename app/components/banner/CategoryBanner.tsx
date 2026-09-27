@@ -3,8 +3,17 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 
+import { useVisiblePlayback } from "../../hooks/useVisiblePlayback";
+
 const AUTO_PLAY_MS = 4500;
 const SWIPE_THRESHOLD = 50;
+const resolveBannerUrl = (url: string) => {
+  if (!url) return url;
+  if (url.includes("cloudinary.com") && !url.includes("/f_auto,q_auto/")) {
+    return url.replace("/image/upload/", "/image/upload/f_auto,q_auto/");
+  }
+  return url;
+};
 
 function CategoryBannerSlider({ images }: { images: string[] }) {
   const [current, setCurrent] = useState(0);
@@ -12,7 +21,8 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
   const [progressKey, setProgressKey] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const touchStart = useRef(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { ref, active } = useVisiblePlayback<HTMLDivElement>();
+  const playing = active && images.length > 1 && !isHovered;
 
   const goTo = useCallback(
     (i: number, dir?: number) => {
@@ -24,26 +34,11 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
     [images.length, current]
   );
 
-  // Use a ref for the latest goTo so the interval callback doesn't go stale
-  // and we don't need to re-create the interval on every slide change.
-  const goToRef = useRef(goTo);
-  useEffect(() => { goToRef.current = goTo; }, [goTo]);
-
   useEffect(() => {
-    if (isHovered) return;
-    // Store current in a ref to avoid capturing it in closure.
-    const getCurrentSlide = () => {
-      let idx = 0;
-      setCurrent((c) => { idx = c; return c; });
-      return idx;
-    };
-    intervalRef.current = setInterval(() => {
-      goToRef.current(getCurrentSlide() + 1, 1);
-    }, AUTO_PLAY_MS);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  // Only re-run when isHovered changes — not on every slide change.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isHovered]);
+    if (!playing) return;
+    const timer = setTimeout(() => goTo(current + 1, 1), AUTO_PLAY_MS);
+    return () => clearTimeout(timer);
+  }, [playing, current, goTo, progressKey]);
 
   const variants = {
     enter: (d: number) => ({ x: `${d * 100}%`, opacity: 0 }),
@@ -52,7 +47,7 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
   };
 
   return (
-    <div className="w-full px-3 sm:px-4">
+    <div ref={ref} className="w-full px-3 sm:px-4">
       <div
         className="relative w-full overflow-hidden rounded-2xl"
         onMouseEnter={() => setIsHovered(true)}
@@ -75,14 +70,14 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
             className="w-full"
           >
             <Image
-              src={images[current]}
+              src={resolveBannerUrl(images[current])}
               alt={`banner ${current + 1}`}
               width={1200}
               height={600}
               className="w-full h-auto block"
               sizes="100vw"
-              quality={100}
-              loading={current === 0 ? "eager" : "lazy"}
+              quality={85}
+              loading="lazy"
             />
           </motion.div>
         </AnimatePresence>
@@ -139,7 +134,7 @@ function CategoryBannerSlider({ images }: { images: string[] }) {
               className="h-full rounded-full banner-progress"
               style={{
                 animationDuration: `${AUTO_PLAY_MS}ms`,
-                animationPlayState: isHovered ? "paused" : "running",
+                animationPlayState: playing ? "running" : "paused",
                 background: "linear-gradient(90deg, #7CC043, #5FA32E)",
               }}
             />

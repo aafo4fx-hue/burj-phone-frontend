@@ -54,33 +54,32 @@ export default async function Footer() {
   }
 
   return (
-    <footer className="relative mt-20 overflow-hidden" dir="rtl">
+    <footer className="relative mt-14 overflow-hidden border-t border-gray-200 bg-[#f7f7f8] text-gray-700 sm:mt-20" dir="rtl">
 
       {/* Main Footer */}
-      <div className="relative bg-[#1a0533]">
-        {/* Decorative gradient orbs */}
-        <div className="absolute top-0 right-1/4 w-72 h-72 bg-purple-600/10 rounded-full blur-[100px]" />
-        <div className="absolute bottom-0 left-1/4 w-60 h-60 bg-violet-500/8 rounded-full blur-[80px]" />
+      <div className="relative">
 
-        <div className="relative max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="relative max-w-6xl mx-auto px-5 pt-8 pb-6 sm:px-8 sm:py-12 grid grid-cols-1 md:grid-cols-[1.1fr_1.4fr] gap-6 md:gap-x-16">
           {/* من نحن */}
-          <div className="space-y-4">
-            <h3 className="text-white font-bold text-lg flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-gradient-to-l from-purple-400 to-transparent rounded-full" />
-              من نحن
-            </h3>
-            <p className="text-sm leading-7 text-gray-400">
+          <div className="space-y-3 text-center md:text-right">
+            <Link href="/" className="inline-flex items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-600">
+              {c.logo && <Image src={c.logo} alt="شعار برج المبدع" width={56} height={64} className="h-16 w-14 object-contain" />}
+              <span>
+                <span className="block text-xl font-extrabold tracking-tight text-gray-900">برج المبدع</span>
+                <span className="mt-1 block text-xs font-medium text-violet-700">للتقنية والإلكترونيات</span>
+              </span>
+            </Link>
+            <p className="max-w-md mx-auto md:mx-0 text-xs sm:text-sm leading-7 text-gray-500">
               {c.details || "برج المبدع للتقنية هي اختيارك الأول لشراء أجهزتك بالأقساط داخل السعودية، ضمان موثوق وخدمة محلية."}
             </p>
           </div>
 
           {/* روابط مهمة */}
-          <div className="space-y-4">
-            <h3 className="text-white font-bold text-lg flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-gradient-to-l from-purple-400 to-transparent rounded-full" />
-              روابط مهمة
+          <div className="space-y-3">
+            <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2">
+              اكتشف المزيد
             </h3>
-            <ul className="space-y-3 text-sm">
+            <ul className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
               {[
                 { label: "عن برج المبدع للتقنية", href: "/about" },
                 { label: "طرق الدفع", href: "/payment" },
@@ -88,8 +87,9 @@ export default async function Footer() {
                 { label: "سياسة الخصوصية واتفاقية الاستخدام", href: "/privacy" },
               ].map(({ label, href }) => (
                 <li key={href}>
-                  <Link href={href} className="text-gray-400 hover:text-purple-300 hover:pr-2 transition-all duration-300 inline-block">
+                  <Link href={href} className="group flex h-full min-h-14 items-center justify-between gap-2 rounded-xl border border-gray-200/80 bg-white px-3 py-3 text-gray-600 hover:border-violet-200 hover:text-violet-700 hover:shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600">
                     {label}
+                    <span aria-hidden="true" className="shrink-0 text-lg text-gray-400 group-hover:text-violet-600">‹</span>
                   </Link>
                 </li>
               ))}
@@ -97,18 +97,17 @@ export default async function Footer() {
           </div>
 
           {/* تواصل معنا */}
-          <div className="space-y-4">
-            <h3 className="text-white font-bold text-lg flex items-center gap-2">
-              <span className="w-8 h-0.5 bg-gradient-to-l from-purple-400 to-transparent rounded-full" />
+          {(c.whatsapp || c.phone || c.email) && <div className="space-y-3 md:col-span-2 border-t border-gray-200 pt-5">
+            <h3 className="text-gray-900 font-bold text-sm flex items-center gap-2">
               تواصل معنا
             </h3>
-            <ul className="space-y-3 text-sm">
+            <ul className="flex flex-wrap gap-4 text-sm">
               {c.whatsapp && (
                 <li>
                   <a href={`https://wa.me/${c.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"
-                    className="flex items-center gap-3 text-gray-400 hover:text-emerald-400 transition-colors group">
-                    <span className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
-                      <FaWhatsapp className="text-emerald-400" size={15} />
+                    className="flex items-center gap-3 text-gray-600 hover:text-emerald-700 transition-colors group">
+                    <span className="w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+                      <FaWhatsapp className="text-emerald-700" size={15} />
                     </span>
                     <span dir="ltr">{c.whatsapp}</span>
                   </a>
@@ -117,9 +116,9 @@ export default async function Footer() {
               {c.phone && (
                 <li>
                   <a href={`tel:${c.phone}`}
-                    className="flex items-center gap-3 text-gray-400 hover:text-blue-400 transition-colors group">
-                    <span className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-                      <FaMobileAlt className="text-blue-400" size={15} />
+                    className="flex items-center gap-3 text-gray-600 hover:text-blue-700 transition-colors group">
+                    <span className="w-10 h-10 shrink-0 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                      <FaMobileAlt className="text-blue-700" size={15} />
                     </span>
                     <span dir="ltr">{c.phone}</span>
                   </a>
@@ -128,24 +127,31 @@ export default async function Footer() {
               {c.email && (
                 <li>
                   <a href={`mailto:${c.email}`}
-                    className="flex items-center gap-3 text-gray-400 hover:text-purple-400 transition-colors group">
-                    <span className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
-                      <FaEnvelope className="text-purple-400" size={14} />
+                    className="flex items-center gap-3 text-gray-600 hover:text-violet-700 transition-colors group">
+                    <span className="w-10 h-10 shrink-0 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                      <FaEnvelope className="text-violet-700" size={14} />
                     </span>
-                    <span dir="ltr">{c.email}</span>
+                    <span dir="ltr" className="min-w-0 break-all">{c.email}</span>
                   </a>
                 </li>
               )}
             </ul>
 
-            {/* Partners / Badges */}
-            <div className="flex gap-2 flex-wrap items-center justify-center md:justify-start pt-3">
+          </div>}
+
+          {/* Partners / Badges */}
+          {(qrSrc || footerItems.length > 0 || img1 || img2) && <div className="md:col-span-2 border-t border-gray-200 pt-5">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+              <h3 className="text-xs font-bold text-gray-600">بيانات المتجر والاعتمادات</h3>
+            </div>
+            <div className="flex gap-4 flex-wrap items-center justify-center md:justify-start rounded-2xl border border-gray-200/80 bg-white px-4 py-3 [&_img]:max-w-full [&_a]:max-w-full">
               {qrSrc && (
                 qrLink
                   ? <a href={qrLink} target="_blank" rel="noreferrer">
-                      <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm p-1.5 h-[50px] w-auto hover:border-purple-400/40 transition-colors" style={{ width: "auto" }} />
+                      <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-gray-200 bg-white p-1.5 h-[50px] w-auto hover:border-purple-400/40 transition-colors" style={{ width: "auto" }} />
                     </a>
-                  : <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-white/10 bg-white/5 p-1.5 h-[50px] w-auto" style={{ width: "auto" }} />
+                  : <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-gray-200 bg-white p-1.5 h-[50px] w-auto" style={{ width: "auto" }} />
               )}
 
               {footerItems.map((item, i) => {
@@ -175,16 +181,19 @@ export default async function Footer() {
                   : <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto" style={{ width: "auto" }} />
               )}
             </div>
-          </div>
+          </div>}
         </div>
 
         {/* Bottom Bar */}
-        <div className="relative border-t border-white/5">
-          <div className="max-w-6xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <span className="text-xs text-gray-500">
+        <div className="relative border-t border-gray-200/80 bg-white">
+          <div className="max-w-6xl mx-auto px-5 py-4 sm:px-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
+            <span className="text-xs leading-6 text-center text-gray-500">
               جميع الحقوق محفوظة © 2026 برج المبدع للتقنية
             </span>
-            <Image src="/فيزا ماستر مدى.webp" alt="Visa Mastercard Mada" width={120} height={35} quality={100} className="object-contain opacity-70 hover:opacity-100 transition-opacity" style={{ width: "auto" }} />
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500">وسائل الدفع</span>
+              <Image src="/فيزا ماستر مدى.webp" alt="Visa Mastercard Mada" width={120} height={35} quality={100} className="object-contain" style={{ width: "auto" }} />
+            </div>
           </div>
         </div>
       </div>

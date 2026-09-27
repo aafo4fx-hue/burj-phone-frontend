@@ -17,7 +17,7 @@ import WhatsappButton from "./WhatsappButton";
 
 export default function ClientLayout({ children, footer }: { children: React.ReactNode; footer: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdmin = pathname.startsWith("/admin") || pathname.startsWith("/invoice") || pathname.startsWith("/view-file");
+  const isAdmin = pathname.startsWith("/admin") || pathname.startsWith("/invoice") || pathname.startsWith("/view-file") || pathname === "/checkout/verify";
 
   return (
     <>

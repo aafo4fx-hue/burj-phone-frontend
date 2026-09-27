@@ -3,8 +3,13 @@ import { persist } from "zustand/middleware";
 import type { Product } from "../components/products/types";
 
 export interface CartItem {
+  id: string;
   product: Product;
   qty: number;
+  color?: string;
+  storage?: string;
+  price: number;
+  image?: string;
 }
 
 export interface CustomerInfo {
@@ -17,26 +22,20 @@ export interface CustomerInfo {
   downPayment: number;
 }
 
-export interface OrderRateLimit {
-  count: number;
-  blockedUntil: number | null;
-  blockCount: number;
-  day: string;
-}
-
 interface CartState {
   items: CartItem[];
   customer: CustomerInfo | null;
-  rateLimit: OrderRateLimit;
-  addItem: (product: Product) => void;
+  addItem: (
+    product: Product,
+    qty?: number,
+    variant?: { color?: string; storage?: string; price?: number; image?: string }
+  ) => void;
   removeItem: (id: string) => void;
   updateQty: (id: string, qty: number) => void;
   setCustomer: (info: CustomerInfo) => void;
   clear: () => void;
   totalItems: () => number;
   totalPrice: () => number;
-  recordOrder: () => void;
-  getRateLimitStatus: () => { blocked: boolean; remainingMs: number };
 }
 
 export const useCartStore = create<CartState>()(
@@ -44,57 +43,71 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       customer: null,
-      rateLimit: { count: 0, blockedUntil: null, blockCount: 0, day: "" },
-      addItem: (product) =>
+      addItem: (product, qty = 1, variant) =>
         set((s) => {
-          const existing = s.items.find((i) => i.product._id === product._id);
-          if (existing)
-            return {
-              items: s.items.map((i) =>
-                i.product._id === product._id ? { ...i, qty: i.qty + 1 } : i
-              ),
+          const color = variant?.color || product.color || "";
+          const storage = variant?.storage || product.storage || "";
+          const price =
+            variant?.price !== undefined
+              ? variant.price
+              : product.salePrice ?? product.originalPrice ?? product.price ?? 0;
+          const image =
+            variant?.image ||
+            product.images?.[0] ||
+            (product as { image?: string }).image ||
+            "";
+          const itemId = `${product._id}_${color}_${storage}`.replace(/\s+/g, "-");
+
+          const existingIndex = s.items.findIndex(
+            (i) =>
+              i.id === itemId ||
+              (!i.id &&
+                i.product._id === product._id &&
+                (i.color || "") === color &&
+                (i.storage || "") === storage)
+          );
+
+          if (existingIndex > -1) {
+            const updated = [...s.items];
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              qty: updated[existingIndex].qty + qty,
+              price,
+              image: image || updated[existingIndex].image,
             };
-          return { items: [...s.items, { product, qty: 1 }] };
+            return { items: updated };
+          }
+
+          return {
+            items: [...s.items, { id: itemId, product, qty, color, storage, price, image }],
+          };
         }),
       removeItem: (id) =>
-        set((s) => ({ items: s.items.filter((i) => i.product._id !== id) })),
+        set((s) => ({
+          items: s.items.filter((i) => i.id !== id && i.product._id !== id),
+        })),
       updateQty: (id, qty) =>
         set((s) => ({
           items:
             qty <= 0
-              ? s.items.filter((i) => i.product._id !== id)
+              ? s.items.filter((i) => i.id !== id && i.product._id !== id)
               : s.items.map((i) =>
-                  i.product._id === id ? { ...i, qty } : i
+                  i.id === id || i.product._id === id ? { ...i, qty } : i
                 ),
         })),
       setCustomer: (info) => set({ customer: info }),
       clear: () => set({ items: [], customer: null }),
-      recordOrder: () =>
-        set((s) => {
-          const today = new Date().toDateString();
-          const rl = s.rateLimit.day !== today
-            ? { count: 0, blockedUntil: null, blockCount: 0, day: today }
-            : s.rateLimit;
-          const newCount = rl.count + 1;
-          const limit = rl.blockCount > 0 ? 2 : 3;
-          if (newCount >= limit) {
-            return { rateLimit: { count: 0, blockedUntil: Date.now() + 5 * 60 * 1000, blockCount: rl.blockCount + 1, day: today } };
-          }
-          return { rateLimit: { ...rl, count: newCount, day: today } };
-        }),
-      getRateLimitStatus: () => {
-        const { blockedUntil, day } = get().rateLimit;
-        if (day !== new Date().toDateString()) return { blocked: false, remainingMs: 0 };
-        if (!blockedUntil) return { blocked: false, remainingMs: 0 };
-        const remaining = blockedUntil - Date.now();
-        if (remaining <= 0) return { blocked: false, remainingMs: 0 };
-        return { blocked: true, remainingMs: remaining };
-      },
       totalItems: () => get().items.reduce((sum, i) => sum + i.qty, 0),
       totalPrice: () =>
         get().items.reduce(
           (sum, i) =>
-            sum + (i.product.salePrice ?? i.product.originalPrice ?? i.product.price) * i.qty,
+            sum +
+            (i.price ??
+              i.product.salePrice ??
+              i.product.originalPrice ??
+              i.product.price ??
+              0) *
+              i.qty,
           0
         ),
     }),

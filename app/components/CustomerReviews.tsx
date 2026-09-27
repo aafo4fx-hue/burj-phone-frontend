@@ -1,9 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Keyboard, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+
+import type { Swiper as SwiperInstance } from "swiper";
+import { useVisiblePlayback } from "../hooks/useVisiblePlayback";
 
 interface Review {
   _id: string;
@@ -23,7 +26,15 @@ interface Props {
 
 export default function CustomerReviews({ initialReviews = [] }: Props) {
   // Reviews come from ISR server-side; no client fetch needed.
-  const [reviews] = useState<Review[]>(initialReviews);
+  const reviews = initialReviews;
+  const { ref, active } = useVisiblePlayback<HTMLElement>();
+  const [swiper, setSwiper] = useState<SwiperInstance | null>(null);
+  useEffect(() => {
+    if (!swiper || swiper.destroyed) return;
+    if (active && reviews.length > 1) swiper.autoplay.start();
+    else swiper.autoplay.stop();
+    return () => { if (!swiper.destroyed) swiper.autoplay.stop(); };
+  }, [swiper, active, reviews.length]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", comment: "", rating: 5 });
   const [submitting, setSubmitting] = useState(false);
@@ -53,7 +64,7 @@ export default function CustomerReviews({ initialReviews = [] }: Props) {
       : "from-purple-500 to-indigo-500";
 
   return (
-    <section className="w-full py-4" dir="rtl">
+    <section ref={ref} className="w-full py-4" dir="rtl">
     <div className="max-w-6xl mx-auto px-3 sm:px-4">
       <div className="flex items-center gap-2 sm:gap-3 mb-6">
         <div className="flex-1 h-px bg-[#8543C0]/20" />
@@ -193,4 +204,5 @@ export default function CustomerReviews({ initialReviews = [] }: Props) {
     </section>
   );
 }
+
 

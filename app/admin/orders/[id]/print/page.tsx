@@ -34,38 +34,69 @@ export default function PrintOrderPage() {
   const { id } = useParams<{ id: string }>();
   const [order, setOrder]     = useState<Order | null>(null);
   const [company, setCompany] = useState<Company>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // ── One consolidated fetch replacing two separate sequential fetches ──
-  // Old pattern: fetch(order) then fetch(company) — two sequential round-trips.
-  // New pattern: /api/admin/orders/[id]/invoice does Promise.all server-side
-  // and returns both in a single response.
   useEffect(() => {
     fetch(`/api/admin/orders/${id}/invoice`)
-      .then((r) => r.json())
-      .then(({ order: o, company: c }) => {
-        setOrder(o);
-        setCompany(c ?? {});
+      .then((r) => {
+        if (!r.ok) throw new Error("not found");
+        return r.json();
       })
-      .catch(() => {});
+      .then(({ order: o, company: c }) => {
+        if (!o || !o.orderId) {
+          setError(true);
+        } else {
+          setOrder(o);
+          setCompany(c ?? {});
+        }
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
     if (!order) return;
+    let printed = false;
+    const timer = setTimeout(() => {
+      if (!printed) { printed = true; window.print(); }
+    }, 2000);
+
     const imgs = document.querySelectorAll<HTMLImageElement>("img");
     const pending = Array.from(imgs).filter((img) => !img.complete);
-    const printNow = () => window.print();
-    if (pending.length === 0) { printNow(); return; }
+    if (pending.length === 0) {
+      clearTimeout(timer);
+      setTimeout(() => { if (!printed) { printed = true; window.print(); } }, 400);
+      return;
+    }
+
     let loaded = 0;
     pending.forEach((img) => {
-      const done = () => { if (++loaded === pending.length) printNow(); };
+      const done = () => {
+        if (printed) return;
+        if (++loaded >= pending.length) {
+          printed = true;
+          clearTimeout(timer);
+          window.print();
+        }
+      };
       img.addEventListener("load", done, { once: true });
       img.addEventListener("error", done, { once: true });
     });
+
+    return () => clearTimeout(timer);
   }, [order]);
 
-  if (!order) return (
-    <div style={{ textAlign: "center", padding: 40 }}>جاري التحميل...</div>
+  if (loading) return (
+    <div style={{ textAlign: "center", padding: 60, fontFamily: "Arial", color: "#666" }}>جاري التحميل...</div>
+  );
+
+  if (error || !order) return (
+    <div style={{ textAlign: "center", padding: 60, fontFamily: "Arial", color: "#dc2626", fontWeight: "bold" }}>
+      لم يتم العثور على الطلب أو حدث خطأ أثناء التحميل
+    </div>
   );
 
   // ── Financial summary rows — computed once, not inside JSX map ──

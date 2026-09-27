@@ -1,7 +1,16 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { apiFetch } from "../../../lib/api";
+import { compressImage } from "../../../lib/image-utils";
+
+type GalleryItem = { id: string; type: "url" | "file"; value: string; file?: File };
+
+let _galleryCounter = 0;
+function nextGalleryId() {
+  return `gi-${++_galleryCounter}`;
+}
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -19,93 +28,169 @@ export default function NewProductPage() {
   const [imagePreview, setImagePreview] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const [imageInputKey, setImageInputKey] = useState(0);
 
   // Gallery
-  const [galleryItems, setGalleryItems] = useState<{ type: "url" | "file"; value: string; file?: File }[]>([]);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [galleryInputKey, setGalleryInputKey] = useState(0);
 
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
 
+  // Track blob URLs for cleanup to prevent browser memory leaks
+  const imagePreviewRef = useRef("");
+
   useEffect(() => {
-    fetch("/api/admin/categories", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data: string[]) => setCategories(data.filter(Boolean).sort()))
-      .catch(() => {});
+    const controller = new AbortController();
+
+    apiFetch("/api/admin/categories", { credentials: "include", signal: controller.signal })
+      .then((r: Response) => r.json())
+      .then((data: string[]) => {
+        if (!controller.signal.aborted) setCategories(data.filter(Boolean).sort());
+      })
+      .catch((err: unknown) => {
+        if (!controller.signal.aborted) {
+          console.error("Failed to load categories:", err);
+          toast.error("فشل تحميل التصنيفات");
+        }
+      });
+
+    return () => controller.abort();
   }, []);
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Cleanup all blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreviewRef.current && imagePreviewRef.current.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreviewRef.current);
+      }
+      setGalleryItems((prev) => {
+        for (const item of prev) {
+          if (item.type === "file" && item.value.startsWith("blob:")) {
+            URL.revokeObjectURL(item.value);
+          }
+        }
+        return prev;
+      });
+    };
+  }, []);
+
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
+
+    // Revoke previous preview blob
+    if (imagePreviewRef.current && imagePreviewRef.current.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreviewRef.current);
+    }
+
+    // Pre-compress image client-side to minimize upload payload, memory, and backend bandwidth
+    const file = await compressImage(rawFile);
+    const newUrl = URL.createObjectURL(file);
+    imagePreviewRef.current = newUrl;
     setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-    e.target.value = "";
+    setImagePreview(newUrl);
+    setImageInputKey((k) => k + 1);
   }
 
   function addGalleryUrl() {
-    setGalleryItems((prev) => [...prev, { type: "url", value: "" }]);
+    setGalleryItems((prev) => [...prev, { id: nextGalleryId(), type: "url", value: "" }]);
   }
 
-  function handleGalleryFiles(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleGalleryFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
-    if (!files) return;
-    const newItems = Array.from(files).map((f) => ({
+    if (!files || files.length === 0) return;
+
+    const fileList = Array.from(files);
+    const compressedFiles = await Promise.all(fileList.map((f: File) => compressImage(f)));
+
+    const newItems: GalleryItem[] = compressedFiles.map((f: File) => ({
+      id: nextGalleryId(),
       type: "file" as const,
       value: URL.createObjectURL(f),
       file: f,
     }));
+
     setGalleryItems((prev) => [...prev, ...newItems]);
-    e.target.value = "";
+    setGalleryInputKey((k) => k + 1);
   }
 
-  function removeGalleryItem(index: number) {
-    setGalleryItems((prev) => prev.filter((_, i) => i !== index));
+  function removeGalleryItem(id: string) {
+    setGalleryItems((prev) => {
+      const item = prev.find((i) => i.id === id);
+      if (item?.type === "file" && item.value.startsWith("blob:")) {
+        URL.revokeObjectURL(item.value);
+      }
+      return prev.filter((i) => i.id !== id);
+    });
   }
 
-  function updateGalleryUrl(index: number, url: string) {
-    setGalleryItems((prev) => prev.map((item, i) => (i === index ? { ...item, value: url } : item)));
+  function updateGalleryUrl(id: string, url: string) {
+    setGalleryItems((prev) => prev.map((item) => (item.id === id ? { ...item, value: url } : item)));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      const fd = new FormData();
-      fd.append("name", name);
-      fd.append("originalPrice", originalPrice);
-      fd.append("salePrice", salePrice);
-      fd.append("category", category);
-      fd.append("inStock", String(inStock));
-      fd.append("description", description);
-      fd.append("overviewImage", overviewImage);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (saving) return;
 
-      // Main image
-      if (imageMode === "upload" && imageFile) {
-        fd.append("image", imageFile);
-      } else if (imageMode === "url" && imageUrl) {
-        fd.append("imageUrl", imageUrl);
+      const numOriginal = parseFloat(originalPrice);
+      if (isNaN(numOriginal) || numOriginal <= 0) {
+        return toast.error("يرجى إدخال سعر صحيح أكبر من الصفر");
       }
 
-      // Gallery
-      const urls = galleryItems.filter((i) => i.type === "url" && i.value).map((i) => i.value);
-      fd.append("galleryUrls", JSON.stringify(urls));
-      galleryItems.filter((i) => i.type === "file" && i.file).forEach((i) => fd.append("galleryFiles", i.file!));
+      if (salePrice) {
+        const numSale = parseFloat(salePrice);
+        if (isNaN(numSale) || numSale < 0) {
+          return toast.error("سعر البيع لا يمكن أن يكون سالباً");
+        }
+        if (numSale >= numOriginal) {
+          return toast.error("سعر البيع بعد الخصم يجب أن يكون أقل من السعر الأصلي");
+        }
+      }
 
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
-        credentials: "include",
-        body: fd,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل الإضافة");
-      toast.success("تم إضافة المنتج بنجاح ✅");
-      router.push("/admin/products");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "حدث خطأ");
-    } finally {
-      setSaving(false);
-    }
-  }
+      setSaving(true);
+      try {
+        const fd = new FormData();
+        fd.append("name", name.trim());
+        fd.append("originalPrice", originalPrice);
+        if (salePrice) fd.append("salePrice", salePrice);
+        fd.append("category", category);
+        fd.append("inStock", String(inStock));
+        fd.append("description", description);
+        fd.append("overviewImage", overviewImage);
+
+        // Main image
+        if (imageMode === "upload" && imageFile) {
+          fd.append("image", imageFile);
+        } else if (imageMode === "url" && imageUrl) {
+          fd.append("imageUrl", imageUrl.trim());
+        }
+
+        // Gallery
+        const urls = galleryItems.filter((i) => i.type === "url" && i.value).map((i) => i.value.trim());
+        fd.append("galleryUrls", JSON.stringify(urls));
+        galleryItems.filter((i) => i.type === "file" && i.file).forEach((i) => fd.append("galleryFiles", i.file!));
+
+        const res = await apiFetch("/api/admin/products", {
+          method: "POST",
+          credentials: "include",
+          body: fd,
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "فشل الإضافة");
+
+        toast.success("تم إضافة المنتج بنجاح ✅");
+        router.push("/admin/products");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "حدث خطأ");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [saving, name, originalPrice, salePrice, category, inStock, description, overviewImage, imageMode, imageFile, imageUrl, galleryItems, router]
+  );
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg mx-auto space-y-4 py-4">
@@ -125,7 +210,7 @@ export default function NewProductPage() {
 
         {imageMode === "upload" ? (
           <>
-            <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} />
+            <input key={imageInputKey} ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleImageChange} />
             {imagePreview ? (
               <div onClick={() => imageInputRef.current?.click()} className="relative w-full h-48 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden cursor-pointer group">
                 <img src={imagePreview} alt="صورة المنتج" className="w-full h-full object-contain" />
@@ -140,7 +225,7 @@ export default function NewProductPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <p className="text-sm text-gray-500 group-hover:text-blue-600">اضغط لاختيار صورة</p>
-                <p className="text-xs text-gray-400">JPG, PNG, WEBP</p>
+                <p className="text-xs text-gray-400">JPG, PNG, WEBP (يتم الضغط تلقائياً)</p>
               </button>
             )}
           </>
@@ -160,17 +245,17 @@ export default function NewProductPage() {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">معرض الصور</label>
         <div className="space-y-2">
-          {galleryItems.map((item, i) => (
-            <div key={i} className="flex items-center gap-2">
+          {galleryItems.map((item) => (
+            <div key={item.id} className="flex items-center gap-2">
               {item.type === "url" ? (
-                <input type="text" value={item.value || ""} onChange={(e) => updateGalleryUrl(i, e.target.value)} placeholder="https://..." className={inputCls + " flex-1"} dir="ltr" />
+                <input type="text" value={item.value || ""} onChange={(e) => updateGalleryUrl(item.id, e.target.value)} placeholder="https://..." className={inputCls + " flex-1"} dir="ltr" />
               ) : (
                 <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-xl px-3 py-2">
                   <img src={item.value} alt="" className="w-10 h-10 object-cover rounded" />
                   <span className="text-xs text-gray-500 truncate">{item.file?.name}</span>
                 </div>
               )}
-              <button type="button" onClick={() => removeGalleryItem(i)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+              <button type="button" onClick={() => removeGalleryItem(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -180,7 +265,7 @@ export default function NewProductPage() {
           <button type="button" onClick={addGalleryUrl} className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
             + رابط صورة
           </button>
-          <input ref={galleryInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handleGalleryFiles} />
+          <input key={galleryInputKey} ref={galleryInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handleGalleryFiles} />
           <button type="button" onClick={() => galleryInputRef.current?.click()} className="px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
             + رفع صور
           </button>
@@ -188,8 +273,8 @@ export default function NewProductPage() {
         {/* Gallery preview */}
         {galleryItems.some((i) => i.value) && (
           <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-            {galleryItems.filter((i) => i.value).map((item, i) => (
-              <img key={i} src={item.value} alt="" className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0" />
+            {galleryItems.filter((i) => i.value).map((item) => (
+              <img key={item.id} src={item.value} alt="" className="w-16 h-16 object-cover rounded-lg border border-gray-200 flex-shrink-0" />
             ))}
           </div>
         )}

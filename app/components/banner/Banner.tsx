@@ -21,7 +21,13 @@ export default async function Banner() {
     if (Array.isArray(data)) {
       images = data
         .filter((b) => b.url && b.active)
-        .map((b) => (b.url.startsWith("http") ? b.url : `${API}${b.url}`));
+        .map((b) => {
+          const full = b.url.startsWith("http") ? b.url : `${API}${b.url}`;
+          if (full.includes("cloudinary.com") && !full.includes("/f_auto,q_auto/")) {
+            return full.replace("/image/upload/", "/image/upload/f_auto,q_auto/");
+          }
+          return full;
+        });
     }
   } catch {
     images = ["/banner1.webp", "/banner2.webp"];

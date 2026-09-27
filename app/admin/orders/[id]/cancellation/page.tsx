@@ -45,34 +45,68 @@ export default function CancellationInvoicePage() {
   const [order, setOrder]     = useState<Order | null>(null);
   const [company, setCompany] = useState<Company>({});
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(false);
+
   // ── Single consolidated fetch — eliminates the old N+1 product image requests ──
-  // Uses the same /api/admin/orders/[id]/invoice route that resolves product
-  // images server-side (Node→backend, sub-ms) instead of N browser round-trips.
   useEffect(() => {
     fetch(`/api/admin/orders/${id}/invoice`)
-      .then((r) => r.json())
-      .then(({ order: o, company: c }) => {
-        if (!o?.items) { setCompany(c ?? {}); return; }
-        setOrder(o);
-        setCompany(c ?? {});
+      .then((r) => {
+        if (!r.ok) throw new Error("not found");
+        return r.json();
       })
-      .catch(() => {});
+      .then(({ order: o, company: c }) => {
+        if (!o || !o.orderId) {
+          setError(true);
+        } else {
+          setOrder(o);
+          setCompany(c ?? {});
+        }
+      })
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
     if (!order) return;
+    let printed = false;
+    const timer = setTimeout(() => {
+      if (!printed) { printed = true; window.print(); }
+    }, 2000);
+
     const images = document.querySelectorAll<HTMLImageElement>("img");
-    if (images.length === 0) { setTimeout(() => window.print(), 500); return; }
+    if (images.length === 0) {
+      clearTimeout(timer);
+      setTimeout(() => { if (!printed) { printed = true; window.print(); } }, 400);
+      return;
+    }
+
     let loaded = 0;
-    const tryPrint = () => { if (++loaded >= images.length) window.print(); };
+    const tryPrint = () => {
+      if (printed) return;
+      if (++loaded >= images.length) {
+        printed = true;
+        clearTimeout(timer);
+        window.print();
+      }
+    };
+
     images.forEach((img) => {
       if (img.complete) tryPrint();
       else { img.onload = tryPrint; img.onerror = tryPrint; }
     });
+
+    return () => clearTimeout(timer);
   }, [order]);
 
-  if (!order) return (
-    <div style={{ textAlign: "center", padding: 40, fontFamily: "Arial" }}>جاري التحميل...</div>
+  if (loading) return (
+    <div style={{ textAlign: "center", padding: 60, fontFamily: "Arial", color: "#666" }}>جاري التحميل...</div>
+  );
+
+  if (error || !order) return (
+    <div style={{ textAlign: "center", padding: 60, fontFamily: "Arial", color: "#dc2626", fontWeight: "bold" }}>
+      لم يتم العثور على الطلب أو حدث خطأ أثناء التحميل
+    </div>
   );
 
   const currency = company.currencyAr || "ر.س";

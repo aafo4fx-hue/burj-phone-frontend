@@ -10,7 +10,9 @@ export async function PUT(req: NextRequest) {
     body: JSON.stringify(body),
   }));
   const data = await res.json();
-  // ✅ FIX #1: any cached page that shows category names must update immediately
-  if (res.ok) revalidateTag("main-categories", "max");
+  if (res.ok) {
+    revalidateTag("categories", "max");
+    revalidateTag("products", "max");
+  }
   return NextResponse.json(data, { status: res.status });
 }

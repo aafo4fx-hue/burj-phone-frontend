@@ -16,10 +16,10 @@ export const revalidate = 300;
 export async function GET() {
   const [settingsRes, maxRes] = await Promise.all([
     fetch(`${getBackend()}/api/admin/sub-categories/home-settings`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 300, tags: ["categories"] },
     }),
     fetch(`${getBackend()}/api/admin/sub-categories/max`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 300, tags: ["categories"] },
     }),
   ]);
   const settings = settingsRes.ok ? await settingsRes.json() : [];

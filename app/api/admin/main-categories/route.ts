@@ -16,7 +16,9 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify(body),
   }));
   const data = await res.json();
-  // ✅ FIX #1: invalidate any cached page that lists categories
-  if (res.ok) revalidateTag("main-categories", "max");
+  if (res.ok) {
+    revalidateTag("categories", "max");
+    revalidateTag("products", "max");
+  }
   return NextResponse.json(data, { status: res.status });
 }

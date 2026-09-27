@@ -82,7 +82,7 @@ function colorOrder(color: string, isOrangeFirst: boolean): number {
   return 0;
 }
 
-function CategoryRow({ category, items, isFirst }: { category: string; items: Product[]; isFirst?: boolean }) {
+function CategoryRow({ category, items }: { category: string; items: Product[] }) {
   const isPriceSorted = priceSortedCategories.includes(category);
   const isOrangeFirst = orangeFirstCategories.includes(category);
   const colors = [...new Set(items.map((p) => p.color || ""))];
@@ -109,6 +109,7 @@ function CategoryRow({ category, items, isFirst }: { category: string; items: Pr
         <div className="flex-1 h-px bg-gradient-to-l from-transparent via-[#8543C0]/15 to-transparent" />
         <Link
           href={href}
+          prefetch={false}
           className="text-[11px] sm:text-xs font-bold text-[#7A2FCC] hover:text-[#A842E4] transition-colors flex items-center gap-1"
         >
           عرض الكل
@@ -120,9 +121,9 @@ function CategoryRow({ category, items, isFirst }: { category: string; items: Pr
 
       {/* Products Grid */}
       <div className="flex gap-3 sm:grid sm:grid-cols-3 lg:grid-cols-4 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-hide pb-1 sm:pb-0">
-        {visible.map((p, i) => (
+        {visible.map((p) => (
           <div key={p._id} className="w-[55vw] shrink-0 sm:w-auto">
-            <ProductCard product={p} priority={isFirst && i === 0} zoomOnHover={isPriceSorted} />
+            <ProductCard product={p} prefetch={false} zoomOnHover={isPriceSorted} />
           </div>
         ))}
       </div>
@@ -161,7 +162,7 @@ export default function ProductGrid({
     if (initialProducts) return;
 
     Promise.all([
-      fetch(`/api/products?limit=500`).then((r) => r.json()),
+      fetch(`/api/products/home`).then((r) => r.ok ? r.json() : Promise.reject(r.status)),
       fetch("/api/sub-categories-home").then((r) => r.json()).catch(() => ({ settings: [], max: 4 })),
     ])
       .then(([prods, config]) => {
@@ -244,14 +245,14 @@ export default function ProductGrid({
   return (
     <section className="w-full py-4 sm:py-6 overflow-hidden">
       <div className="max-w-6xl mx-auto px-3 sm:px-4">
-        {orderedCategories.map((category, catIdx) => (
+        {orderedCategories.map((category) => (
           <div key={category}>
             {bannerMap[category] && (
               <div className="-mx-3 sm:-mx-4 mb-5 sm:mb-7">
                 <CategoryBanner images={bannerMap[category]} />
               </div>
             )}
-            <CategoryRow category={category} items={grouped[category]} isFirst={catIdx === 0} />
+            <CategoryRow category={category} items={grouped[category]} />
           </div>
         ))}
       </div>

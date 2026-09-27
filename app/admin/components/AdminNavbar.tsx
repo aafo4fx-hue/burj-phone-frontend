@@ -4,9 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCompanyStore } from "../../store/companyStore";
 
-// Polling interval in ms — 30 s is plenty for a notification badge.
-// The previous value was 15 s which doubled the request rate with no benefit.
-const POLL_INTERVAL_MS = 30_000;
+// Polling interval in ms — 45s is optimal for badge updates when active.
+const POLL_INTERVAL_MS = 45_000;
 
 export default function AdminNavbar({ onMenuClick }: { onMenuClick: () => void }) {
   const router = useRouter();
@@ -22,19 +21,49 @@ export default function AdminNavbar({ onMenuClick }: { onMenuClick: () => void }
   }, [fetchCompany]);
 
   useEffect(() => {
-    // Fetches only the total count — not the full orders list.
-    // The /api/admin/orders/count endpoint returns { count: number } by asking
-    // the backend for limit=1 and reading the `total` field — zero document
-    // data is serialised compared to the previous approach of fetching all orders.
-    const loadCount = () =>
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const loadCount = () => {
+      // Don't poll if document is hidden to save client & server resources
+      if (typeof document !== "undefined" && document.hidden) return;
       fetch("/api/admin/orders/count")
         .then((r) => r.json())
         .then((d) => setOrderCount(typeof d.count === "number" ? d.count : 0))
         .catch(() => {});
+    };
 
+    const startPolling = () => {
+      if (!interval) {
+        interval = setInterval(loadCount, POLL_INTERVAL_MS);
+      }
+    };
+
+    const stopPolling = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        loadCount();
+        startPolling();
+      }
+    };
+
+    // Initial load
     loadCount();
-    const interval = setInterval(loadCount, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
+    startPolling();
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   async function handleLogout() {

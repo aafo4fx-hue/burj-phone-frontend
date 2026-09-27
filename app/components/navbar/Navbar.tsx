@@ -35,7 +35,8 @@ export default function Navbar() {
   // result with less overhead and is the idiomatic React pattern.
   const [clientReady, setClientReady] = useState(false);
   const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.qty, 0));
-  const { logo, fetchCompany } = useCompanyStore();
+  const logo = useCompanyStore(s => s.logo);
+  const fetchCompany = useCompanyStore(s => s.fetchCompany);
 
   // Flip clientReady after first paint so the cart badge is only rendered
   // on the client, preventing a hydration mismatch with the SSR snapshot

@@ -4,6 +4,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 // Cache TTL: 1 hour — company data rarely changes.
+let companyRequest: Promise<void> | null = null;
+
 const COMPANY_TTL_MS = 60 * 60 * 1000;
 
 interface CompanyStore {

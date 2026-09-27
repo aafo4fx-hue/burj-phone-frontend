@@ -7,19 +7,52 @@ import DeleteModal from "./components/DeleteModal";
 
 export default function MainCategoriesPage() {
   const {
-    categories, filtered, search, setSearch,
-    showModal, setShowModal, name, setName, error, loading, handleAdd,
-    editCat, setEditCat, editName, setEditName, editError, editLoading, handleEdit,
-    confirmDelete, setConfirmDelete, confirmDeleteAction,
+    categories,
+    filtered,
+    search,
+    setSearch,
+    initialLoading,
+    fetchError,
+    fetchCategories,
+    showModal,
+    setShowModal,
+    name,
+    setName,
+    error,
+    setError,
+    loading,
+    handleAdd,
+    editCat,
+    setEditCat,
+    editName,
+    setEditName,
+    editError,
+    setEditError,
+    editLoading,
+    handleEdit,
+    confirmDelete,
+    setConfirmDelete,
+    deleteLoading,
+    confirmDeleteAction,
   } = useMainCategories();
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4 sm:mb-6 gap-3">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">التصنيفات الرئيسية</h1>
+        <div>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
+            التصنيفات الرئيسية
+          </h1>
+          <p className="text-xs text-gray-500 mt-0.5">
+            إدارة التصنيفات الرئيسية للمنتجات وعرض إحصائياتها
+          </p>
+        </div>
         <button
-          onClick={() => { setShowModal(true); }}
-          className="bg-blue-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-blue-700 text-xs sm:text-sm font-medium whitespace-nowrap"
+          onClick={() => {
+            setError("");
+            setShowModal(true);
+          }}
+          className="bg-blue-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:bg-blue-700 text-xs sm:text-sm font-medium whitespace-nowrap shadow-sm hover:shadow transition-all"
         >
           + إضافة تصنيف
         </button>
@@ -29,9 +62,16 @@ export default function MainCategoriesPage() {
         categories={categories}
         filtered={filtered}
         search={search}
+        loading={initialLoading}
+        error={fetchError}
+        onRetry={() => fetchCategories()}
         onSearchChange={setSearch}
-        onEdit={(cat) => { setEditCat(cat); setEditName(cat.name); }}
-        onDelete={setConfirmDelete}
+        onEdit={(cat) => {
+          setEditCat(cat);
+          setEditName(cat.name);
+          setEditError("");
+        }}
+        onDelete={(cat) => setConfirmDelete(cat)}
       />
 
       {showModal && (
@@ -41,7 +81,11 @@ export default function MainCategoriesPage() {
           loading={loading}
           onNameChange={setName}
           onSubmit={handleAdd}
-          onClose={() => { setShowModal(false); setName(""); }}
+          onClose={() => {
+            setShowModal(false);
+            setName("");
+            setError("");
+          }}
         />
       )}
 
@@ -53,13 +97,17 @@ export default function MainCategoriesPage() {
           editLoading={editLoading}
           onNameChange={setEditName}
           onSubmit={handleEdit}
-          onClose={() => setEditCat(null)}
+          onClose={() => {
+            setEditCat(null);
+            setEditError("");
+          }}
         />
       )}
 
       {confirmDelete && (
         <DeleteModal
-          name={confirmDelete}
+          cat={confirmDelete}
+          loading={deleteLoading}
           onConfirm={confirmDeleteAction}
           onClose={() => setConfirmDelete(null)}
         />

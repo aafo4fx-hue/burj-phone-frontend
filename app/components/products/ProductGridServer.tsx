@@ -1,51 +1,8 @@
 import { ProductGrid } from "./index";
 import type { Product } from "./types";
 
-// Server Component wrapper — runs at ISR time (revalidate:300 from page.tsx).
-//
-// CPU optimizations applied here:
-//
-// 1. PARALLEL FETCHES — products, settings, and max are now kicked off
-//    simultaneously. Previously: products was awaited first, then banners
-//    were fetched in a sequential waterfall.
-//
-// 2. MINIMAL PRODUCT FIELDS — the query now passes a `fields` param so the
-//    backend can project only the fields the homepage card actually needs.
-//    Full Product objects carry sections, specGroups, variants, detailedSpecs,
-//    features, description, etc. — 5–10× larger than a card requires.
-//    Smaller JSON = less parse work + smaller RSC payload.
-//    If the backend doesn't yet support `fields`, the param is silently ignored
-//    and the full object is returned — no breakage.
-//
-// 3. FETCH DEDUPLICATION — /api/admin/sub-categories/home-settings is fetched
-//    here with the same URL + revalidate:300 + tag:"categories" as ShopByCategory.
-//    Next.js Request Memoization automatically deduplicates identical fetch()
-//    calls within the same render cycle, so only one network request fires
-//    even though two Server Components call it independently.
-
+// Homepage data is cached for five minutes and invalidated by product edits.
 const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
-
-// Minimal fields the homepage ProductCard actually renders.
-// Reduces backend response size and RSC serialization work.
-const HOME_PRODUCT_FIELDS = [
-  "_id",
-  "name",
-  "salePrice",
-  "originalPrice",
-  "price",
-  "discountPercent",
-  "images",
-  "image",
-  "color",
-  "storage",
-  "freeDelivery",
-  "warrantyYears",
-  "inStock",
-  "category",
-  "subCategory",
-  "status",
-  "purchasable",
-].join(",");
 
 type HomeSettings = {
   category: string;
@@ -63,7 +20,7 @@ export default async function ProductGridServer() {
     // All three independent fetches start in parallel — no waterfall.
     const [prodsRes, settingsRes, maxRes] = await Promise.all([
       fetch(
-        `${BACKEND}/api/products?limit=500&fields=${encodeURIComponent(HOME_PRODUCT_FIELDS)}`,
+        `${BACKEND}/api/products/home`,
         { next: { revalidate: 300, tags: ["products"] } }
       ),
       fetch(`${BACKEND}/api/admin/sub-categories/home-settings`, {
@@ -80,7 +37,31 @@ export default async function ProductGridServer() {
       maxRes.ok ? maxRes.json() : { max: 4 },
     ]);
 
-    products = prodsData !== null && Array.isArray(prodsData) ? prodsData : undefined;
+    const sanitizedProds = prodsData !== null && Array.isArray(prodsData)
+      ? prodsData.map((p: any) => ({
+          _id: String(p._id),
+          name: p.name || "",
+          originalPrice: p.originalPrice ?? p.price ?? 0,
+          salePrice: p.salePrice ?? undefined,
+          price: p.price ?? p.salePrice ?? p.originalPrice ?? 0,
+          discountPercent: p.discountPercent ?? 0,
+          image: p.image || undefined,
+          images: Array.isArray(p.images) && p.images.length > 0 ? [p.images[0]] : p.image ? [p.image] : [],
+          color: p.color || undefined,
+          storage: p.storage || undefined,
+          freeDelivery: p.freeDelivery ?? true,
+          deliveryTime: p.deliveryTime || undefined,
+          warrantyYears: p.warrantyYears ?? undefined,
+          inStock: p.inStock ?? true,
+          status: p.status || undefined,
+          purchasable: p.purchasable ?? true,
+          category: p.category || "",
+          subCategory: p.subCategory || undefined,
+          brand: p.brand || undefined,
+        }))
+      : undefined;
+
+    products = sanitizedProds as Product[] | undefined;
     homeConfig = {
       settings: Array.isArray(settingsData) ? settingsData : [],
       max: maxData?.max ?? 4,
@@ -104,8 +85,7 @@ export default async function ProductGridServer() {
       }
     }
   } catch {
-    // Fallback: undefined → ProductGrid falls back to client-side fetch.
-    products = undefined;
+    // Retain successfully loaded products if only category banners fail.
   }
 
   return (
