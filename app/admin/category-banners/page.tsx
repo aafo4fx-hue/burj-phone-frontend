@@ -416,7 +416,7 @@ export default function CategoryBannersPage() {
           ...new Set(
             data
               .flatMap((d) => [d.name, d.category])
-              .filter(Boolean)
+              .filter((x): x is string => Boolean(x))
           ),
         ];
         setCategories(unique);
