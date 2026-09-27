@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const categories = req.nextUrl.searchParams.get("categories") || "";
   const res = await fetch(
     `${getBackend()}/api/admin/category-banners-bulk?categories=${encodeURIComponent(categories)}`,
-    { next: { revalidate: 300 } }
+    { next: { revalidate: 300, tags: ["category-banners", "banners"] } }
   );
   return new Response(res.body, {
     status: res.status,
