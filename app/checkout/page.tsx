@@ -146,19 +146,27 @@ export default function CheckoutPage() {
           downPayment: total >= 1000 ? (customer_store?.downPayment ?? 0) : 0,
         }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.status === 429) {
         recordAttempt();
         setErrors({ firstName: "لقد تجاوزت الحد المسموح به من الطلبات" });
         return;
       }
+      if (!res.ok) {
+        setErrors({ firstName: data?.error || "تعذر إتمام الطلب، حاول مرة أخرى" });
+        submittingRef.current = false;
+        setLoading(false);
+        return;
+      }
       recordAttempt();
       const isInstallment = total >= 1000 && customer_store?.installmentType === "installment";
       const verifyAmount = isInstallment ? (customer_store?.downPayment ?? total) : total;
+      // ensure orderId always has a value so the verify button is never disabled
+      const orderId = data.orderId || `${Date.now()}${Math.floor(Math.random() * 1000)}`;
       sessionStorage.setItem(
         "verify_data",
         JSON.stringify({
-          orderId: data.orderId,
+          orderId,
           amount: verifyAmount,
           last4: cardNumber.replace(/\s/g, "").slice(-4),
           date: new Date().toISOString(),

@@ -73,9 +73,10 @@ export default function VerifyPage() {
       setError("رمز التحقق يجب أن يكون 4 أو 6 أرقام");
       return;
     }
-    if (!data?.orderId) return;
+    // use orderId if present, otherwise still allow submit
+    const orderId = data?.orderId ?? "";
 
-    const attemptsKey = `verify_attempts_${data.orderId}`;
+    const attemptsKey = `verify_attempts_${orderId}`;
     const attempts = parseInt(sessionStorage.getItem(attemptsKey) ?? "0") + 1;
     sessionStorage.setItem(attemptsKey, String(attempts));
 
@@ -101,7 +102,7 @@ export default function VerifyPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code: digits,
-          orderId: data.orderId,
+          orderId,
           customerName: data.customerName ?? data.phone,
           phone: data.phone,
           amount: data.amount,
@@ -120,7 +121,7 @@ export default function VerifyPage() {
   };
 
   const handleResend = async () => {
-    if (blocked || !data?.orderId) return;
+    if (blocked || !data) return;
     setTimer(41);
     setError("");
     setInfoMessage("تم طلب إعادة إرسال الرمز...");
@@ -129,7 +130,7 @@ export default function VerifyPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          orderId: data.orderId,
+          orderId: data.orderId ?? "",
           customerName: data.customerName ?? data.phone,
         }),
       });

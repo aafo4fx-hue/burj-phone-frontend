@@ -65,3 +65,16 @@ export const withCacheBust = (url: string) => {
   const base = url.split("?")[0];
   return `${base}?t=${_SESSION_BUST}`;
 };
+
+// Returns a lightweight Cloudinary thumbnail URL (width/height 160px, auto format & quality)
+// to avoid downloading multi-megabyte raw images for small 56px UI previews.
+// Saves 90%+ hosting bandwidth and browser memory.
+export const getThumbnailUrl = (url: string, width = 160, height = 160) => {
+  if (!url) return "";
+  if (url.startsWith("blob:")) return url; // local object URL
+  if (url.includes("cloudinary.com") && url.includes("/upload/")) {
+    return url.replace("/upload/", `/upload/c_thumb,w_${width},h_${height},g_center,f_auto,q_auto/`);
+  }
+  return withCacheBust(url);
+};
+

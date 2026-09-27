@@ -8,6 +8,8 @@ export default function CompanyPage() {
     data,
     loading,
     saving,
+    uploadingKey,
+    previewUrls,
     loadError,
     handleChange,
     handleImageChange,
@@ -34,20 +36,33 @@ export default function CompanyPage() {
     );
   }
 
+  const isBusy = saving || !!uploadingKey;
+
   return (
     <div className="pt-2">
       <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">بيانات الشركة</h1>
       <div className="bg-white rounded-xl shadow p-4 sm:p-6 space-y-4 sm:space-y-5">
-        <CompanyFields data={data} onChange={handleChange} />
-        <CompanyImages data={data} onImageChange={handleImageChange} onImageDelete={handleImageDelete} />
+        <CompanyFields data={data} onChange={handleChange} disabled={saving} />
+        <CompanyImages
+          data={data}
+          uploadingKey={uploadingKey}
+          previewUrls={previewUrls}
+          disabled={saving}
+          onImageChange={handleImageChange}
+          onImageDelete={handleImageDelete}
+        />
         <button
           onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-3 rounded-lg transition disabled:opacity-50"
+          disabled={isBusy}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg font-bold py-3 rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {saving ? "جاري الحفظ..." : "حفظ البيانات"}
+          {isBusy && <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+          <span>
+            {saving ? "جاري الحفظ..." : uploadingKey ? "جاري رفع الصورة..." : "حفظ البيانات"}
+          </span>
         </button>
       </div>
     </div>
   );
 }
+

@@ -16,8 +16,8 @@ export function useCompany() {
   const [data, setData] = useState<CompanyData>(defaultData);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  // New: explicit error state so the UI can show a retry button instead of
-  // leaving the user staring at a blank form forever.
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
   const [loadError, setLoadError] = useState(false);
 
   // Track the last-saved snapshot so handleSave only sends changed fields.
@@ -26,6 +26,17 @@ export function useCompany() {
   // Mirror of data state kept in a ref so handleSave can read the current
   // value without being listed as a dependency (avoids recreating it on every keystroke).
   const dataRef = useRef<CompanyData>(defaultData);
+
+  // Keep track of active blob URLs for memory leak cleanup on unmount
+  const activeBlobsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const blobs = activeBlobsRef.current;
+    return () => {
+      blobs.forEach((url) => URL.revokeObjectURL(url));
+      blobs.clear();
+    };
+  }, []);
 
   const loadData = useCallback(() => {
     // AbortController: cancels the in-flight request if the component unmounts
@@ -39,8 +50,12 @@ export function useCompany() {
       credentials: "include",
       signal: controller.signal,
     })
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((res) => {
+        if (!res || typeof res !== "object") throw new Error("Invalid response");
         const merged: CompanyData = { ...defaultData };
         for (const k of Object.keys(defaultData)) {
           if (res[k] !== undefined && res[k] !== "") {
@@ -77,11 +92,27 @@ export function useCompany() {
   }, []);
 
   const handleImageChange = useCallback(async (key: string, file: File) => {
-    // Client-side size guard — catches oversized files before the expensive upload.
-    if (file.size > MAX_IMAGE_BYTES) {
-      toast.error(`حجم الصورة يتجاوز الحد المسموح (5 ميغابايت)`);
+    if (uploadingKey) {
+      toast.error("يرجى الانتظار حتى اكتمال رفع الصورة الحالية");
       return;
     }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("الملف المرفوع يجب أن يكون صورة فقط");
+      return;
+    }
+
+    // Client-side size guard — catches oversized files before the expensive upload.
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error("حجم الصورة يتجاوز الحد المسموح (5 ميغابايت)");
+      return;
+    }
+
+    // Instant local preview for zero-perceived latency
+    const localBlob = URL.createObjectURL(file);
+    activeBlobsRef.current.add(localBlob);
+    setPreviewUrls((prev) => ({ ...prev, [key]: localBlob }));
+    setUploadingKey(key);
 
     const formData = new FormData();
     formData.append("image", file);
@@ -92,7 +123,10 @@ export function useCompany() {
         body: formData,
       });
       const json = await res.json();
-      if (!res.ok) { toast.error(json.error || "فشل رفع الصورة"); return; }
+      if (!res.ok) {
+        toast.error(json.error || "فشل رفع الصورة");
+        return;
+      }
       const fullUrl = json.url.startsWith("http") ? json.url : `${API}${json.url}`;
       setData((prev) => {
         const next = { ...prev, [key]: fullUrl };
@@ -102,14 +136,24 @@ export function useCompany() {
       // Keep savedRef in sync so the image URL isn't treated as a dirty field.
       savedRef.current = { ...savedRef.current, [key]: fullUrl };
       if (key === "logo") { setLogo(withCacheBust(fullUrl)); }
-      toast.success("تم رفع الصورة");
+      toast.success("تم رفع الصورة بنجاح");
     } catch (e) {
       console.error(e);
       toast.error("فشل رفع الصورة");
+    } finally {
+      URL.revokeObjectURL(localBlob);
+      activeBlobsRef.current.delete(localBlob);
+      setPreviewUrls((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+      setUploadingKey(null);
     }
-  }, [setLogo]);
+  }, [setLogo, uploadingKey]);
 
   const handleImageDelete = useCallback(async (key: string) => {
+    if (uploadingKey) return;
     try {
       const res = await fetch(`/api/admin/company/image/${key}`, {
         method: "DELETE",
@@ -127,9 +171,14 @@ export function useCompany() {
     } catch {
       toast.error("فشل حذف الصورة");
     }
-  }, [setLogo]);
+  }, [setLogo, uploadingKey]);
 
   const handleSave = useCallback(async () => {
+    if (uploadingKey) {
+      toast.error("يرجى الانتظار حتى اكتمال رفع الصورة");
+      return;
+    }
+
     // Read the latest data from the ref (stable, no stale closure).
     const current = dataRef.current;
     const saved = savedRef.current;
@@ -163,12 +212,14 @@ export function useCompany() {
     } finally {
       setSaving(false);
     }
-  }, []);
+  }, [uploadingKey]);
 
   return {
     data,
     loading,
     saving,
+    uploadingKey,
+    previewUrls,
     loadError,
     handleChange,
     handleImageChange,
