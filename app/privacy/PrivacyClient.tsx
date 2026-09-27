@@ -87,16 +87,17 @@ const sections = [
   },
 ];
 
-type Company = { nameAr?: string; addressAr?: string; phone?: string; whatsapp?: string; email?: string; taxNumber?: string };
+type Company = { nameAr?: string; addressAr?: string; phone?: string; whatsapp?: string; email?: string; taxNumber?: string; [k: string]: unknown };
 
-export default function PrivacyClient() {
-  const [heroVisible, setHeroVisible] = useState(false);
-  const [company, setCompany] = useState<Company | null>(null);
+export default function PrivacyClient({ initialCompany }: { initialCompany?: Company | null }) {
+  const [heroVisible] = useState(true);
+  const [company, setCompany] = useState<Company | null>(initialCompany || null);
 
-  useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 60); return () => clearTimeout(t); }, []);
   useEffect(() => {
-    fetch("/api/admin/company").then((r) => r.json()).then(setCompany).catch(() => {});
-  }, []);
+    if (!company) {
+      fetch("/api/company/public").then((r) => r.json()).then(setCompany).catch(() => {});
+    }
+  }, [company]);
 
   const anim = (delay: number) => ({
     style: {
@@ -187,7 +188,7 @@ export default function PrivacyClient() {
         <div className="mt-8 sm:mt-12">
           <ContactSection
             title="وسائل التواصل"
-            phone={company?.whatsapp}
+            phone={company?.phone || company?.whatsapp}
             whatsapp={company?.whatsapp}
             email={company?.email}
             fadeDelay={300}

@@ -10,6 +10,20 @@ interface CompanyFieldsProps {
 
 const inputClass = "w-full border border-gray-300 rounded-lg px-3 py-2 sm:px-4 sm:py-2.5 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500";
 
+// Pre-built lookup map — computed once at module load, not on every render.
+// Replaces the previous `fields.find()` call inside FieldInput which ran O(n)
+// on every keystroke even though the label never changes.
+const fieldLabelMap = new Map(fields.map((f) => [f.key, f.label]));
+
+// Map field keys to their proper HTML input type so the browser renders the
+// correct keyboard on mobile and applies built-in format hints.
+const fieldTypeMap: Record<string, string> = {
+  phone:     "tel",
+  whatsapp:  "tel",
+  email:     "email",
+  website:   "url",
+};
+
 const ltrFields = new Set(["phone", "whatsapp", "website", "email", "taxNumber"]);
 
 // Memoised per-field input — only re-renders when its own value changes,
@@ -24,11 +38,13 @@ const FieldInput = memo(function FieldInput({
   data: CompanyData;
   onChange: (k: string, v: string) => void;
 }) {
-  const label = fields.find((f) => f.key === fieldKey)?.label;
+  const label = fieldLabelMap.get(fieldKey);
+  const inputType = fieldTypeMap[fieldKey] ?? "text";
   return (
     <div>
       <label className="block text-sm sm:text-base font-semibold text-gray-700 mb-1">{label}</label>
       <input
+        type={inputType}
         value={data[fieldKey] || ""}
         onChange={(e) => onChange(fieldKey, e.target.value)}
         className={inputClass}

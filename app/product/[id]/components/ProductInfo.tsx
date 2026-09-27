@@ -12,14 +12,6 @@ import type { Product } from "../../../components/products/types";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-const isInstallmentProduct = (name: string, category?: string) => {
-  const cats = ["ابل ايفون 18 برو", "ابل ايفون 18 برو ماكس", "ابل ايفون 18 دو",
-                "ابل ايفون 17 برو", "ابل ايفون 17 برو ماكس", "ابل ايفون 17 اير", "ابل ايفون 17"];
-  if (category) return cats.some((c) => category.includes(c));
-  return name.includes("آيفون 18 برو") || name.includes("آيفون Duo") ||
-         name.includes("آيفون 17");
-};
-
 const DOWN_OPTIONS = [1000, 1500, 2000];
 const MONTH_OPTIONS = [6, 12, 18, 24];
 
@@ -246,7 +238,7 @@ export default function ProductInfo({
                 <div>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(salePrice!)}</span>
-                    <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90 w-[26px] h-[26px] sm:w-[30px] sm:h-[30px]" />
+                    <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={80} className="inline-block opacity-90 w-[26px] h-[26px] sm:w-[30px] sm:h-[30px]" />
                   </div>
                   {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
                 </div>
@@ -255,7 +247,7 @@ export default function ProductInfo({
               <div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-3xl sm:text-4xl font-black" style={{ color: "#8543C0" }}>{fmt(originalPrice)}</span>
-                  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={100} className="inline-block opacity-90 w-[26px] h-[26px] sm:w-[30px] sm:h-[30px]" />
+                  <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} quality={80} className="inline-block opacity-90 w-[26px] h-[26px] sm:w-[30px] sm:h-[30px]" />
                 </div>
                 {taxIncluded && <p className="text-[10px] mt-1" style={{ color: "#611FA0" }}>شامل ضريبة القيمة المضافة</p>}
               </div>
@@ -264,7 +256,7 @@ export default function ProductInfo({
         </AnimatePresence>
 
         {/* ── Installment Calculator ── */}
-        {isInstallmentProduct(name, product.category) && (
+        {installment?.available && (
           <InstallmentCalc price={salePrice ?? originalPrice} />
         )}
 
@@ -276,7 +268,7 @@ export default function ProductInfo({
             </div>
             <div>
               <p className="text-[11px] sm:text-xs font-bold flex items-center gap-1 flex-wrap" style={{ color: "#1F2C3E" }}>
-                tقسيط متاح {installment.downPayment ? <><span>• مقدم {fmt(installment.downPayment)}</span><Image src="/money-icon.webp" alt="ر.س" width={14} height={14} quality={100} className="inline-block" /></> : ""}
+                tقسيط متاح {installment.downPayment ? <><span>• مقدم {fmt(installment.downPayment)}</span><Image src="/money-icon.webp" alt="ر.س" width={14} height={14} quality={80} className="inline-block" /></> : ""}
               </p>
               {installment.note && <p className="text-[10px] mt-0.5" style={{ color: "#611FA0" }}>{installment.note}</p>}
             </div>

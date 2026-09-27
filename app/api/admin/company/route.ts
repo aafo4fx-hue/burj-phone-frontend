@@ -2,19 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { getBackend, forwardCookies } from "../_lib";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
-  // No cookies forwarded here — Next.js Data Cache only activates on requests
-  // without varying headers (cookie/authorization). The backend GET /company
-  // is intentionally public (no authMiddleware), so no cookie is needed.
-  // Cache: force-cache + tags["company"] gives us persistent caching keyed by
-  // tag, invalidated immediately on PUT via revalidateTag("company", "max").
   const res = await fetch(`${getBackend()}/api/admin/company`, {
-    cache: "force-cache",
-    next: { tags: ["company"] },
+    cache: "no-store",
   });
   if (!res.ok) return NextResponse.json({ error: "Backend unavailable" }, { status: res.status });
   const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
+  return NextResponse.json(data, {
+    status: res.status,
+    headers: { "Cache-Control": "no-store, no-cache, must-revalidate" },
+  });
 }
 
 export async function PUT(req: NextRequest) {
@@ -26,6 +25,10 @@ export async function PUT(req: NextRequest) {
   }));
   if (!res.ok) return NextResponse.json({ error: "Backend unavailable" }, { status: res.status });
   const data = await res.json();
+  // revalidateTag(tag, profile): In Next.js 16 "use cache" mode, revalidateTag
+  // requires a second cache-life profile argument. "max" is a built-in profile
+  // that sets the longest possible TTL — suitable for company data that changes
+  // infrequently but must be fresh immediately after a PUT.
   revalidateTag("company", "max");
   return NextResponse.json(data, { status: res.status });
 }

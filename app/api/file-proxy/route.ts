@@ -4,19 +4,44 @@ export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
   if (!url) return new NextResponse("missing url", { status: 400 });
 
-  // fix: replace /image/upload/ with /raw/upload/ for PDF files
-  const fetchUrl = url.replace("/image/upload/", "/raw/upload/").replace(/\/fl_attachment:[^/]+\//, "/");
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+    const allowedHosts = [
+      "res.cloudinary.com",
+      "cloudinary.com",
+      "burjjstorre.com",
+      "burj-phone-backend.vercel.app",
+    ];
+    const isAllowed = allowedHosts.some(
+      (h) => parsed.hostname === h || parsed.hostname.endsWith(`.${h}`)
+    );
+    if (!["http:", "https:"].includes(parsed.protocol) || !isAllowed) {
+      return new NextResponse("Forbidden target URL", { status: 403 });
+    }
+  } catch {
+    return new NextResponse("Invalid URL", { status: 400 });
+  }
+
+  const isPdf = /\.pdf($|\?)/i.test(url);
+  // Only replace /image/upload/ with /raw/upload/ for PDF files
+  const fetchUrl = isPdf
+    ? url.replace("/image/upload/", "/raw/upload/").replace(/\/fl_attachment:[^/]+\//, "/")
+    : url;
 
   const res = await fetch(fetchUrl);
   if (!res.ok) return new NextResponse("failed", { status: res.status });
 
   const body = await res.arrayBuffer();
-  const rawCt = res.headers.get("content-type") || "";
-  // Force PDF content type for octet-stream or when URL hints at PDF
-  const contentType =
-    rawCt === "application/octet-stream" || !rawCt
-      ? "application/pdf"
-      : rawCt;
+  let contentType = res.headers.get("content-type") || "";
+  
+  if (!contentType || contentType === "application/octet-stream") {
+    if (isPdf) contentType = "application/pdf";
+    else if (/\.(jpg|jpeg)($|\?)/i.test(url)) contentType = "image/jpeg";
+    else if (/\.png($|\?)/i.test(url)) contentType = "image/png";
+    else if (/\.webp($|\?)/i.test(url)) contentType = "image/webp";
+    else contentType = "application/pdf";
+  }
 
   return new NextResponse(body, {
     headers: {

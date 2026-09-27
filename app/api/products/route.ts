@@ -25,6 +25,9 @@ export async function GET(req: NextRequest) {
   // Stream backend JSON directly — no parse/stringify on this Function.
   return new Response(res.body, {
     status: res.status,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+    },
   });
 }

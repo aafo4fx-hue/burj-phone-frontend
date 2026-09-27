@@ -41,6 +41,21 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function PlaystationPage() {
-  return <PlaystationClient />;
+async function getPlaystationProducts() {
+  try {
+    const r = await fetch(
+      `${BACKEND}/api/products?category=${encodeURIComponent("ps5,ps4,xbox,controller,gaming-accessories,بلاي ستيشن")}`,
+      { next: { revalidate: 3600, tags: ["products"] } }
+    );
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data)) return data;
+    }
+  } catch {}
+  return [];
+}
+
+export default async function PlaystationPage() {
+  const products = await getPlaystationProducts();
+  return <PlaystationClient initialProducts={products} />;
 }

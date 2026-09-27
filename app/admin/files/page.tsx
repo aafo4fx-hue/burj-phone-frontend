@@ -21,14 +21,8 @@ const DEFAULT_DATA: Data = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function openFile(url: string) {
-  const rawUrl = url
-    .replace("/image/upload/", "/raw/upload/")
-    .replace(/\/fl_attachment:[^/]+\//, "/");
-  window.open(
-    `https://docs.google.com/viewer?url=${encodeURIComponent(rawUrl)}&embedded=false`,
-    "_blank",
-    "noopener,noreferrer"
-  );
+  if (!url) return;
+  window.open(`/view-file?url=${encodeURIComponent(url)}`, "_blank", "noopener,noreferrer");
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -70,7 +64,7 @@ export default function FilesPage() {
 
   // ── Load ─────────────────────────────────────────────────────────────────
   useEffect(() => {
-    fetch(`/api/admin/company`, { credentials: "include" }) // ✅ FIX #3
+    fetch(`/api/admin/company`, { credentials: "include" })
       .then((r) => r.json())
       .then((d) => {
         const normalize = (item: Partial<FooterItem>): FooterItem => ({
@@ -97,7 +91,6 @@ export default function FilesPage() {
   }, [showMsg]);
 
   // ── Unified save helper ───────────────────────────────────────────────────
-  // ✅ FIX #1: credentials: "include" added — previously all PUTs failed with 401
   const saveSection = useCallback(async (section: string, body: object) => {
     setSavingSection(section);
     try {
@@ -115,26 +108,7 @@ export default function FilesPage() {
     }
   }, [showMsg]);
 
-  // ── Unified upload helper ─────────────────────────────────────────────────
-  // ✅ FIX #8: replaces 7 nearly-identical upload functions with one
-  const uploadImage = useCallback(async (
-    endpoint: string,
-    fieldName: "image" | "file",
-    uploadingKey: string,
-    onSuccess: (url: string) => void
-  ) => {
-    // Get file from the matching input
-    let file: File | null = null;
-    if (uploadingKey === "qr")      file = qrRef.current?.files?.[0]    ?? null;
-    else if (uploadingKey === "img1") file = img1Ref.current?.files?.[0] ?? null;
-    else if (uploadingKey === "img2") file = img2Ref.current?.files?.[0] ?? null;
-    else if (uploadingKey === "file1") file = fileRef1.current?.files?.[0] ?? null;
-    else if (uploadingKey === "file2") file = fileRef2.current?.files?.[0] ?? null;
-    // item img/file handled by passing file directly via uploadWithFile
-    if (!file) return;
-    await uploadWithFile(endpoint, fieldName, uploadingKey, file, onSuccess);
-  }, []);
-
+  // ── Unified upload helper with client-side file size & type validation ────
   const uploadWithFile = useCallback(async (
     endpoint: string,
     fieldName: "image" | "file",
@@ -142,6 +116,17 @@ export default function FilesPage() {
     file: File,
     onSuccess: (url: string) => void
   ) => {
+    // Client-side payload limit (4.5 MB serverless execution limit)
+    const MAX_SIZE = 4.5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      showMsg("upload", "❌ حجم الملف كبير جداً (الحد الأقصى 4.5 ميجابايت لتجنب فشل الرفع والضغط على السيرفر)");
+      return;
+    }
+    if (fieldName === "image" && !file.type.startsWith("image/")) {
+      showMsg("upload", "❌ يجب اختيار ملف صورة صالح");
+      return;
+    }
+
     setUploading(uploadingKey);
     try {
       const fd = new FormData();
@@ -152,6 +137,7 @@ export default function FilesPage() {
       if (json.url) {
         onSuccess(json.url);
         bumpKey(uploadingKey);
+        showMsg("upload", "✅ تم الرفع بنجاح");
       }
     } catch {
       showMsg("upload", "❌ خطأ في الاتصال");
@@ -174,13 +160,13 @@ export default function FilesPage() {
         items.splice(index, 1);
         return { ...p, footerItems: items };
       });
+      showMsg("items", "✅ تم حذف العنصر بنجاح");
     } catch {
       showMsg("items", "❌ خطأ في الاتصال");
     }
   }, [showMsg]);
 
   // ── Add a new footer-item via backend ────────────────────────────────────
-  // ✅ FIX #5: button was missing from UI; now wired to POST /footer-items/add
   const addFooterItem = useCallback(async () => {
     setAddingItem(true);
     try {
@@ -196,6 +182,7 @@ export default function FilesPage() {
           { image: "", linkType: "link", link: "", file: "" },
         ],
       }));
+      showMsg("items", "✅ تمت الإضافة بنجاح");
     } catch {
       showMsg("items", "❌ خطأ في الاتصال");
     } finally {
@@ -207,12 +194,7 @@ export default function FilesPage() {
   const updateItem = useCallback((index: number, field: keyof FooterItem, value: string) => {
     setData((p) => {
       const items = [...p.footerItems];
-      const updated = { ...items[index], [field]: value };
-      if (field === "linkType") {
-        if (value === "link") updated.file = "";
-        else updated.link = "";
-      }
-      items[index] = updated;
+      items[index] = { ...items[index], [field]: value };
       return { ...p, footerItems: items };
     });
   }, []);
@@ -225,18 +207,6 @@ export default function FilesPage() {
       <span className={`text-xs px-2 py-1 rounded-lg font-medium ${
         m.includes("✅") ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
       }`}>{m}</span>
-    );
-  }
-
-  function SaveBtn({ section, disabled }: { section: string; disabled?: boolean }) {
-    return (
-      <button
-        onClick={() => { /* handled per section */ }}
-        disabled={disabled || savingSection === section}
-        className="px-4 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
-      >
-        {savingSection === section ? "جاري..." : "حفظ"}
-      </button>
     );
   }
 
@@ -302,6 +272,7 @@ export default function FilesPage() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
+                  e.target.value = "";
                   uploadWithFile("/api/admin/company/footer-image/qrImage", "image", "qr", file,
                     (url) => setData((p) => ({ ...p, qrImage: url })));
                 }}
@@ -398,6 +369,7 @@ export default function FilesPage() {
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
+                        e.target.value = "";
                         uploadWithFile(
                           `/api/admin/company/footer-items/image/${i}`,
                           "image", `img-${i}`, file,
@@ -464,11 +436,13 @@ export default function FilesPage() {
                       </button>
                       <input
                         type="file"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp"
                         className="hidden"
                         ref={(el) => { fileRefs.current[i] = el; }}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
+                          e.target.value = "";
                           uploadWithFile(
                             `/api/admin/company/footer-items/file/${i}`,
                             "file", `file-${i}`, file,
@@ -549,6 +523,7 @@ export default function FilesPage() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
+                  e.target.value = "";
                   uploadWithFile("/api/admin/company/footer-image/img1", "image", "img1", file,
                     (url) => setData((p) => ({ ...p, img1: url })));
                 }}
@@ -571,7 +546,7 @@ export default function FilesPage() {
                   <input
                     type="radio" name="type-1" value={t}
                     checked={(data.linkType1 || "link") === t}
-                    onChange={() => setData((p) => ({ ...p, linkType1: t, ...(t === "link" ? { file1: "" } : { link1: "" }) }))}
+                    onChange={() => setData((p) => ({ ...p, linkType1: t }))}
                     className="accent-blue-600"
                   />
                   {t === "link" ? "رابط" : "ملف"}
@@ -601,10 +576,15 @@ export default function FilesPage() {
                     : <FiUpload size={13} />}
                   رفع ملف
                 </button>
-                <input type="file" className="hidden" ref={fileRef1}
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp"
+                  className="hidden"
+                  ref={fileRef1}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+                    e.target.value = "";
                     uploadWithFile("/api/admin/company/footer-file/file1", "file", "file1", file,
                       (url) => setData((p) => ({ ...p, file1: url })));
                   }}
@@ -614,7 +594,13 @@ export default function FilesPage() {
                     <button onClick={() => openFile(data.file1)} className="flex items-center gap-1 text-emerald-600 text-sm hover:underline">
                       <FiExternalLink size={13} /> عرض الملف
                     </button>
-                    <button onClick={() => setData((p) => ({ ...p, file1: "" }))} className="text-red-400 hover:text-red-600 text-xs hover:underline">
+                    <button
+                      onClick={() => {
+                        setData((p) => ({ ...p, file1: "" }));
+                        saveSection("s1", { file1: "" });
+                      }}
+                      className="text-red-400 hover:text-red-600 text-xs hover:underline"
+                    >
                       حذف
                     </button>
                   </>
@@ -665,6 +651,7 @@ export default function FilesPage() {
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
+                  e.target.value = "";
                   uploadWithFile("/api/admin/company/footer-image/img2", "image", "img2", file,
                     (url) => setData((p) => ({ ...p, img2: url })));
                 }}
@@ -687,7 +674,7 @@ export default function FilesPage() {
                   <input
                     type="radio" name="type-2" value={t}
                     checked={(data.linkType2 || "link") === t}
-                    onChange={() => setData((p) => ({ ...p, linkType2: t, ...(t === "link" ? { file2: "" } : { link2: "" }) }))}
+                    onChange={() => setData((p) => ({ ...p, linkType2: t }))}
                     className="accent-blue-600"
                   />
                   {t === "link" ? "رابط" : "ملف"}
@@ -717,10 +704,15 @@ export default function FilesPage() {
                     : <FiUpload size={13} />}
                   رفع ملف
                 </button>
-                <input type="file" className="hidden" ref={fileRef2}
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp"
+                  className="hidden"
+                  ref={fileRef2}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+                    e.target.value = "";
                     uploadWithFile("/api/admin/company/footer-file/file2", "file", "file2", file,
                       (url) => setData((p) => ({ ...p, file2: url })));
                   }}
@@ -730,7 +722,13 @@ export default function FilesPage() {
                     <button onClick={() => openFile(data.file2)} className="flex items-center gap-1 text-emerald-600 text-sm hover:underline">
                       <FiExternalLink size={13} /> عرض الملف
                     </button>
-                    <button onClick={() => setData((p) => ({ ...p, file2: "" }))} className="text-red-400 hover:text-red-600 text-xs hover:underline">
+                    <button
+                      onClick={() => {
+                        setData((p) => ({ ...p, file2: "" }));
+                        saveSection("s2", { file2: "" });
+                      }}
+                      className="text-red-400 hover:text-red-600 text-xs hover:underline"
+                    >
                       حذف
                     </button>
                   </>

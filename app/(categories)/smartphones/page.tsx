@@ -43,6 +43,33 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function SmartphonesPage() {
-  return <SmartphonesClient />;
+async function getSmartphonesProducts() {
+  try {
+    const [appleRes, samsungRes] = await Promise.all([
+      fetch(`${BACKEND}/api/products?brand=Apple`, { next: { revalidate: 3600, tags: ["products"] } }),
+      fetch(`${BACKEND}/api/products?brand=Samsung`, { next: { revalidate: 3600, tags: ["products"] } }),
+    ]);
+    const [appleProds, samsungProds] = await Promise.all([
+      appleRes.ok ? appleRes.json() : [],
+      samsungRes.ok ? samsungRes.json() : [],
+    ]);
+    const allProds = [
+      ...(Array.isArray(appleProds) ? appleProds : []),
+      ...(Array.isArray(samsungProds) ? samsungProds : []),
+    ];
+    return allProds.filter((p) =>
+      p.category?.includes("ايفون") ||
+      p.category?.includes("آيفون") ||
+      p.category?.includes("جالكسي") ||
+      p.category?.includes("جالاكسي") ||
+      p.category?.toLowerCase().includes("iphone") ||
+      p.category?.toLowerCase().includes("samsung")
+    );
+  } catch {}
+  return [];
+}
+
+export default async function SmartphonesPage() {
+  const products = await getSmartphonesProducts();
+  return <SmartphonesClient initialProducts={products} />;
 }

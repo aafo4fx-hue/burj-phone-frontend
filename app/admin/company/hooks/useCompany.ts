@@ -8,11 +8,17 @@ import type { CompanyData } from "../types";
 // Image keys that need URL normalisation on load.
 const IMAGE_KEYS = new Set(["logo", "header", "footer", "stamp", "cancelStamp"]);
 
+// Max file size allowed for image uploads: 5 MB.
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
 export function useCompany() {
   const { setLogo } = useCompanyStore();
   const [data, setData] = useState<CompanyData>(defaultData);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // New: explicit error state so the UI can show a retry button instead of
+  // leaving the user staring at a blank form forever.
+  const [loadError, setLoadError] = useState(false);
 
   // Track the last-saved snapshot so handleSave only sends changed fields.
   const savedRef = useRef<CompanyData>(defaultData);
@@ -21,8 +27,18 @@ export function useCompany() {
   // value without being listed as a dependency (avoids recreating it on every keystroke).
   const dataRef = useRef<CompanyData>(defaultData);
 
-  useEffect(() => {
-    fetch(`/api/admin/company`, { credentials: "include" })
+  const loadData = useCallback(() => {
+    // AbortController: cancels the in-flight request if the component unmounts
+    // before the response arrives — prevents "Can't perform a React state update
+    // on an unmounted component" warnings and avoids stale state updates.
+    const controller = new AbortController();
+    setLoading(true);
+    setLoadError(false);
+
+    fetch(`/api/admin/company`, {
+      credentials: "include",
+      signal: controller.signal,
+    })
       .then((r) => r.json())
       .then((res) => {
         const merged: CompanyData = { ...defaultData };
@@ -35,9 +51,22 @@ export function useCompany() {
         dataRef.current = merged;
         savedRef.current = merged;
       })
-      .catch(() => toast.error("فشل تحميل بيانات الشركة"))
+      .catch((err) => {
+        // Ignore AbortError — it's an intentional cancellation, not a real failure.
+        if (err?.name === "AbortError") return;
+        setLoadError(true);
+        toast.error("فشل تحميل بيانات الشركة");
+      })
       .finally(() => setLoading(false));
+
+    return controller;
   }, []);
+
+  useEffect(() => {
+    const controller = loadData();
+    // Cleanup: abort the fetch if the component unmounts mid-flight.
+    return () => controller.abort();
+  }, [loadData]);
 
   const handleChange = useCallback((key: string, value: string) => {
     setData((prev) => {
@@ -48,6 +77,12 @@ export function useCompany() {
   }, []);
 
   const handleImageChange = useCallback(async (key: string, file: File) => {
+    // Client-side size guard — catches oversized files before the expensive upload.
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast.error(`حجم الصورة يتجاوز الحد المسموح (5 ميغابايت)`);
+      return;
+    }
+
     const formData = new FormData();
     formData.append("image", file);
     try {
@@ -112,9 +147,9 @@ export function useCompany() {
     try {
       const res = await fetch(`/api/admin/company`, {
         method: "PUT",
-        credentials: "include",          // ✅ was missing — auth cookie must be forwarded
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(diff),       // ✅ only changed fields, not the whole object
+        body: JSON.stringify(diff), // only changed fields, not the whole object
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -130,5 +165,15 @@ export function useCompany() {
     }
   }, []);
 
-  return { data, loading, saving, handleChange, handleImageChange, handleImageDelete, handleSave };
+  return {
+    data,
+    loading,
+    saving,
+    loadError,
+    handleChange,
+    handleImageChange,
+    handleImageDelete,
+    handleSave,
+    retryLoad: loadData,
+  };
 }

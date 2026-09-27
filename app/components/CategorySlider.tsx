@@ -42,7 +42,6 @@ function CategoryCard({ cat }: { cat: Category }) {
   return (
     <Link
       href={cat.href}
-      prefetch={false}
       className={[
         "group relative shrink-0 flex flex-col overflow-hidden rounded-2xl bg-white",
         "border border-gray-100 w-[140px] sm:w-[160px] transition-all duration-300",

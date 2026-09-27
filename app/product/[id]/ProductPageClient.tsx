@@ -112,15 +112,6 @@ export default function ProductPageClient({ id, initialProduct }: { id: string; 
 
   return (
     <>
-      <style>{`
-        @keyframes floatUp { from { opacity:0; transform:translateY(32px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes fadeIn  { from { opacity:0 } to { opacity:1 } }
-        .anim-float { animation: floatUp 0.7s cubic-bezier(.22,1,.36,1) both }
-        .anim-fade  { animation: fadeIn  0.5s ease both }
-        .scrollbar-hide::-webkit-scrollbar { display:none }
-        .scrollbar-hide { -ms-overflow-style:none; scrollbar-width:none }
-      `}</style>
-
       <main className="min-h-screen" dir="rtl" style={{ background: "#ffffff" }}>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-4">
@@ -163,9 +154,9 @@ export default function ProductPageClient({ id, initialProduct }: { id: string; 
             {/* Images */}
             <motion.div
               className="lg:col-span-7"
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="bg-white rounded-3xl p-4 shadow-xl" style={{ border: "1px solid #EBE6E2" }}>
                 <ProductImages images={allImages} name={product.name} discountPercent={displayProduct.discountPercent} />
@@ -175,9 +166,9 @@ export default function ProductPageClient({ id, initialProduct }: { id: string; 
             {/* Info */}
             <motion.div
               className="lg:col-span-5"
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
             >
               {/* Product name (desktop) */}
               <h2 className="hidden lg:block text-2xl xl:text-3xl font-black mb-5 leading-snug" style={{ color: "#1F2C3E" }}>{displayName}</h2>
@@ -205,9 +196,9 @@ export default function ProductPageClient({ id, initialProduct }: { id: string; 
 
           {/* Details & Sections */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
           >
             <ProductDetails
               installment={product.installment}

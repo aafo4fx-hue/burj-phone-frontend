@@ -50,16 +50,17 @@ const steps = [
   { Icon: RotateCcw, text: "أعد المنتج بحالته الأصلية واستلم المبلغ" },
 ];
 
-type Company = { whatsapp?: string; email?: string; phone?: string };
+type Company = { whatsapp?: string; email?: string; phone?: string; [k: string]: unknown };
 
-export default function ReturnPolicyClient() {
-  const [heroVisible, setHeroVisible] = useState(false);
-  const [company, setCompany] = useState<Company | null>(null);
+export default function ReturnPolicyClient({ initialCompany }: { initialCompany?: Company | null }) {
+  const [heroVisible] = useState(true);
+  const [company, setCompany] = useState<Company | null>(initialCompany || null);
 
-  useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 60); return () => clearTimeout(t); }, []);
   useEffect(() => {
-    fetch("/api/admin/company").then(r => r.json()).then(setCompany).catch(() => {});
-  }, []);
+    if (!company) {
+      fetch("/api/company/public").then(r => r.json()).then(setCompany).catch(() => {});
+    }
+  }, [company]);
 
   const anim = (delay: number) => ({
     style: {
@@ -156,7 +157,7 @@ export default function ReturnPolicyClient() {
       <section className="max-w-4xl mx-auto px-4 sm:px-8 pb-16">
         <ContactSection
           title="التواصل بخصوص الطلبات"
-          phone={company?.phone}
+          phone={company?.phone || company?.whatsapp}
           whatsapp={company?.whatsapp}
           email={company?.email}
           fadeDelay={200}

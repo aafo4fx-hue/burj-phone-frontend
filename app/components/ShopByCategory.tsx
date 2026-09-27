@@ -107,8 +107,15 @@ function resolveHref(catName: string): string {
   if (cached) return cached;
 
   // Semantic shortcuts for patterns not in the map
-  if (name.toLowerCase().includes("سماعات")) return "/audio";
-  if (name.includes("بطاريات")) return "/accessories/anker-batteries";
+  const lower = name.toLowerCase();
+  if (lower.includes("سماعات") || lower.includes("صوت") || lower.includes("earbuds") || lower.includes("airpods")) return "/audio";
+  if (lower.includes("بطاريات") || lower.includes("شواحن") || lower.includes("كيابل")) return "/accessories";
+  if (lower.includes("لابتوب") || lower.includes("laptop") || lower.includes("ماك بوك")) return "/laptops";
+  if (lower.includes("ايباد") || lower.includes("آيباد") || lower.includes("ipad") || lower.includes("لوحي")) return "/tablets";
+  if (name.includes("ساعات ابل")) return "/apple-watches";
+  if (lower.includes("ساعات") || lower.includes("watch")) return "/smart-watches";
+  if (lower.includes("بلاي ستيشن") || lower.includes("playstation") || lower.includes("xbox")) return "/playstation";
+  if (lower.includes("اكسسوار") || lower.includes("ألعاب") || lower.includes("العاب")) return "/games";
 
   // Rare fallback: substring nameIncludes scan (same as original logic)
   for (const [slug, config] of Object.entries(slugConfigs)) {

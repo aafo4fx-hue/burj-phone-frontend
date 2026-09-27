@@ -33,6 +33,19 @@ export default async function Footer() {
     return `/view-file?url=${encodeURIComponent(url)}`;
   }
 
+  function formatWhatsapp(phone: string) {
+    const digits = phone.replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("05")) return `https://wa.me/966${digits.slice(1)}`;
+    if (digits.startsWith("5") && digits.length === 9) return `https://wa.me/966${digits}`;
+    return `https://wa.me/${digits}`;
+  }
+
+  function formatTel(phone: string) {
+    const cleaned = phone.replace(/[^\d+]/g, "");
+    return cleaned ? `tel:${cleaned}` : "";
+  }
+
   const qrSrc: string = c.qrImage || "";
   const qrLink: string = ensureAbsolute(c.qrLink || "");
 
@@ -87,7 +100,7 @@ export default async function Footer() {
                 { label: "سياسة الخصوصية واتفاقية الاستخدام", href: "/privacy" },
               ].map(({ label, href }) => (
                 <li key={href}>
-                  <Link href={href} className="group flex h-full min-h-14 items-center justify-between gap-2 rounded-xl border border-gray-200/80 bg-white px-3 py-3 text-gray-600 hover:border-violet-200 hover:text-violet-700 hover:shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600">
+                  <Link href={href} prefetch={true} className="group flex h-full min-h-14 items-center justify-between gap-2 rounded-xl border border-gray-200/80 bg-white px-3 py-3 text-gray-600 hover:border-violet-200 hover:text-violet-700 hover:shadow-sm transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600">
                     {label}
                     <span aria-hidden="true" className="shrink-0 text-lg text-gray-400 group-hover:text-violet-600">‹</span>
                   </Link>
@@ -104,7 +117,7 @@ export default async function Footer() {
             <ul className="flex flex-wrap gap-4 text-sm">
               {c.whatsapp && (
                 <li>
-                  <a href={`https://wa.me/${c.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer"
+                  <a href={formatWhatsapp(c.whatsapp)} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-3 text-gray-600 hover:text-emerald-700 transition-colors group">
                     <span className="w-10 h-10 shrink-0 rounded-xl bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
                       <FaWhatsapp className="text-emerald-700" size={15} />
@@ -115,7 +128,7 @@ export default async function Footer() {
               )}
               {c.phone && (
                 <li>
-                  <a href={`tel:${c.phone}`}
+                  <a href={formatTel(c.phone)}
                     className="flex items-center gap-3 text-gray-600 hover:text-blue-700 transition-colors group">
                     <span className="w-10 h-10 shrink-0 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
                       <FaMobileAlt className="text-blue-700" size={15} />
@@ -148,37 +161,37 @@ export default async function Footer() {
             <div className="flex gap-4 flex-wrap items-center justify-center md:justify-start rounded-2xl border border-gray-200/80 bg-white px-4 py-3 [&_img]:max-w-full [&_a]:max-w-full">
               {qrSrc && (
                 qrLink
-                  ? <a href={qrLink} target="_blank" rel="noreferrer">
-                      <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-gray-200 bg-white p-1.5 h-[50px] w-auto hover:border-purple-400/40 transition-colors" style={{ width: "auto" }} />
+                  ? <a href={qrLink} target="_blank" rel="noopener noreferrer">
+                      <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={85} loading="lazy" className="object-contain rounded-lg border border-gray-200 bg-white p-1.5 h-[50px] w-auto hover:border-purple-400/40 transition-colors" style={{ width: "auto" }} />
                     </a>
-                  : <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={100} className="object-contain rounded-lg border border-gray-200 bg-white p-1.5 h-[50px] w-auto" style={{ width: "auto" }} />
+                  : <Image src={qrSrc} alt="رمز QR للتواصل" width={200} height={50} quality={85} loading="lazy" className="object-contain rounded-lg border border-gray-200 bg-white p-1.5 h-[50px] w-auto" style={{ width: "auto" }} />
               )}
 
               {footerItems.map((item, i) => {
                 const href = getHref(item);
                 const el = (
-                  <Image key={i} src={item.image} alt={`شعار شريك ${i + 1}`} width={200} height={50} quality={80}
+                  <Image key={i} src={item.image} alt={`شعار شريك ${i + 1}`} width={200} height={50} quality={85} loading="lazy"
                     className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" style={{ width: "auto" }} />
                 );
                 return href
-                  ? <a key={i} href={href} target="_blank" rel="noreferrer">{el}</a>
+                  ? <a key={i} href={href} target="_blank" rel="noopener noreferrer">{el}</a>
                   : <span key={i}>{el}</span>;
               })}
 
               {img1 && (
                 link1
-                  ? <a href={link1} target="_blank" rel="noreferrer">
-                      <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" style={{ width: "auto" }} />
+                  ? <a href={link1} target="_blank" rel="noopener noreferrer">
+                      <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={85} loading="lazy" className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" style={{ width: "auto" }} />
                     </a>
-                  : <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto" style={{ width: "auto" }} />
+                  : <Image src={img1} alt="وسيلة دفع معتمدة" width={200} height={50} quality={85} loading="lazy" className="object-contain rounded-lg h-[50px] w-auto" style={{ width: "auto" }} />
               )}
 
               {img2 && (
                 link2
-                  ? <a href={link2} target="_blank" rel="noreferrer">
-                      <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" style={{ width: "auto" }} />
+                  ? <a href={link2} target="_blank" rel="noopener noreferrer">
+                      <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={85} loading="lazy" className="object-contain rounded-lg h-[50px] w-auto hover:opacity-80 transition-opacity" style={{ width: "auto" }} />
                     </a>
-                  : <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={100} className="object-contain rounded-lg h-[50px] w-auto" style={{ width: "auto" }} />
+                  : <Image src={img2} alt="وسيلة دفع معتمدة" width={200} height={50} quality={85} loading="lazy" className="object-contain rounded-lg h-[50px] w-auto" style={{ width: "auto" }} />
               )}
             </div>
           </div>}
@@ -192,7 +205,7 @@ export default async function Footer() {
             </span>
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-500">وسائل الدفع</span>
-              <Image src="/فيزا ماستر مدى.webp" alt="Visa Mastercard Mada" width={120} height={35} quality={100} className="object-contain" style={{ width: "auto" }} />
+              <Image src="/payment-methods.webp" alt="Visa Mastercard Mada" width={120} height={35} quality={85} loading="lazy" className="object-contain" style={{ width: "auto" }} />
             </div>
           </div>
         </div>

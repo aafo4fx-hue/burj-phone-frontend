@@ -67,6 +67,13 @@ export default function MobileMenu({ items, isOpen, onClose }: MobileMenuProps) 
                 }`}
               >
                 <div className="bg-gray-50 py-1">
+                  <Link
+                    href={item.href}
+                    className="block px-6 py-2.5 text-xs font-bold text-[#8543C0] hover:text-[#7A2FCC] hover:bg-[#f3eafc] transition-colors border-b border-gray-100"
+                    onClick={onClose}
+                  >
+                    عرض كل {item.label} ←
+                  </Link>
                   {/* groups mode */}
                   {item.groups?.map((group, gi) => (
                     <div key={gi}>

@@ -4,9 +4,35 @@ import CompanyFields from "./components/CompanyFields";
 import CompanyImages from "./components/CompanyImages";
 
 export default function CompanyPage() {
-  const { data, loading, saving, handleChange, handleImageChange, handleImageDelete, handleSave } = useCompany();
+  const {
+    data,
+    loading,
+    saving,
+    loadError,
+    handleChange,
+    handleImageChange,
+    handleImageDelete,
+    handleSave,
+    retryLoad,
+  } = useCompany();
 
   if (loading) return <div className="text-center py-20 text-gray-500 text-xl">جاري التحميل...</div>;
+
+  // Error state: shown when the initial fetch fails so the user can retry
+  // instead of being left with an empty form that silently discards changes.
+  if (loadError) {
+    return (
+      <div className="text-center py-20 space-y-4">
+        <p className="text-red-600 text-lg font-semibold">فشل تحميل بيانات الشركة</p>
+        <button
+          onClick={retryLoad}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition"
+        >
+          إعادة المحاولة
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-2">

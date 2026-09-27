@@ -76,13 +76,18 @@ export async function generateMetadata({
       : `${SITE_URL}${company.logo}`
     : `${SITE_URL}/web-app-manifest-512x512.png`;
 
+  const parentHref = config?.parentHref ?? "";
+  const canonicalUrl = parentHref && parentHref !== "/"
+    ? `${SITE_URL}${parentHref}/${slug}`
+    : `${SITE_URL}/${slug}`;
+
   return {
     title,
     description,
     keywords: [label, parentLabel, siteName, "أقساط", "شراء", "السعودية"].filter(Boolean),
     openGraph: {
       type: "website",
-      url: `${SITE_URL}/categories/${slug}`,
+      url: canonicalUrl,
       title: `${title} | ${siteName}`,
       description,
       siteName,
@@ -96,7 +101,7 @@ export async function generateMetadata({
       images: logoUrl ? [logoUrl] : [],
     },
     alternates: {
-      canonical: `${SITE_URL}/categories/${slug}`,
+      canonical: canonicalUrl,
     },
   };
 }

@@ -10,6 +10,7 @@ const SITE_URL = "https://burjjstorre.com";
 // Next.js Data Cache (revalidate:3600) handles cross-request deduplication;
 // React cache handles within-request deduplication so the network call
 // fires exactly once per render regardless of how many callers exist.
+export const revalidate = 3600;
 
 const getProduct = cache(async (id: string) => {
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(id)) return null;

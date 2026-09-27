@@ -28,9 +28,29 @@ function getColorHex(color: string): string {
   return "#9ca3af";
 }
 
-export default function SmartphonesClient() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function SmartphonesClient({ initialProducts = [] }: { initialProducts?: Product[] }) {
+  const [products, setProducts] = useState<Product[]>(() => {
+    if (!initialProducts.length) return [];
+    const parseStorage = (s?: string) => {
+      if (!s) return 0;
+      const n = parseFloat(s);
+      if (s.includes("تيرا") || s.toLowerCase().includes("tb")) return n * 1024;
+      return n || 0;
+    };
+    const colorOrder = (c?: string) => {
+      if (!c) return 99;
+      if (c.includes("برتقال") || c.toLowerCase().includes("orange")) return 0;
+      if (c.includes("سيلفر") || c.toLowerCase().includes("silver")) return 1;
+      if (c.includes("ازرق") || c.includes("أزرق") || c.toLowerCase().includes("blue")) return 2;
+      return 3;
+    };
+    return [...initialProducts].sort((a, b) => {
+      const storageDiff = parseStorage(a.storage) - parseStorage(b.storage);
+      if (storageDiff !== 0) return storageDiff;
+      return colorOrder(a.color) - colorOrder(b.color);
+    });
+  });
+  const [loading, setLoading] = useState(initialProducts.length === 0);
   const [page, setPage] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedStorage, setSelectedStorage] = useState("");
@@ -39,6 +59,7 @@ export default function SmartphonesClient() {
   const ITEMS_PER_PAGE = 12;
 
   useEffect(() => {
+    if (initialProducts.length > 0) return;
     // Previously: fetched ALL products with no params, filtered in browser.
     // Now: sends brand=Apple and brand=Samsung in parallel — MongoDB filters
     // using the {brand,inStock} index. Eliminates full-catalog download.
@@ -82,7 +103,7 @@ export default function SmartphonesClient() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialProducts]);
 
   const colors = useMemo(() => [...new Set(products.map((p) => p.color).filter(Boolean))] as string[], [products]);
   const storages = useMemo(() => [...new Set(products.map((p) => p.storage).filter(Boolean))] as string[], [products]);

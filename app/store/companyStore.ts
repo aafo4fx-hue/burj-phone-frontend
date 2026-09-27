@@ -40,36 +40,41 @@ export const useCompanyStore = create<CompanyStore>()(
         // Skip fetch if data was loaded within the TTL window.
         const { lastFetched } = get();
         if (lastFetched && Date.now() - lastFetched < COMPANY_TTL_MS) return;
+        if (companyRequest) return companyRequest;
 
-        try {
-          // Uses /api/company/public — a cookie-free endpoint with route-level
-          // revalidate:3600 so the Vercel Function is NOT invoked on cache hits.
-          // The previous /api/admin/company used forwardCookies which prevented
-          // Next.js Data Cache from activating.
-          const res = await fetch(`/api/company/public`);
-          if (!res.ok) return;
-          const text = await res.text();
-          if (!text) return;
-          const data = JSON.parse(text);
-          const fullLogo = data.logo
-            ? data.logo.startsWith("http")
-              ? data.logo
-              : `${API}${data.logo}`
-            : "";
-          set({
-            logo: fullLogo,
-            nameAr: data.nameAr || "",
-            nameEn: data.nameEn || "",
-            phone: data.phone || "",
-            whatsapp: data.whatsapp || "",
-            email: data.email || "",
-            website: data.website || "",
-            details: data.details || "",
-            lastFetched: Date.now(),
-          });
-        } catch {
-          // Silently ignore fetch errors — store retains last known values.
-        }
+        companyRequest = (async () => {
+          try {
+            // Uses /api/company/public — a cookie-free endpoint with route-level
+            // revalidate:3600 so the Vercel Function is NOT invoked on cache hits.
+            const res = await fetch(`/api/company/public`);
+            if (!res.ok) return;
+            const text = await res.text();
+            if (!text) return;
+            const data = JSON.parse(text);
+            const fullLogo = data.logo
+              ? data.logo.startsWith("http")
+                ? data.logo
+                : `${API}${data.logo}`
+              : "";
+            set({
+              logo: fullLogo,
+              nameAr: data.nameAr || "",
+              nameEn: data.nameEn || "",
+              phone: data.phone || "",
+              whatsapp: data.whatsapp || "",
+              email: data.email || "",
+              website: data.website || "",
+              details: data.details || "",
+              lastFetched: Date.now(),
+            });
+          } catch {
+            // Silently ignore fetch errors — store retains last known values.
+          } finally {
+            companyRequest = null;
+          }
+        })();
+
+        return companyRequest;
       },
 
       setLogo: (url) => set({ logo: url }),

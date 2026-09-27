@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, Component, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 
@@ -17,11 +17,33 @@ interface ProductSection {
 
 const P = "#8543C0";
 
-function Visible({ children }: { children: React.ReactNode }) {
+// ── Simple Error Boundary ──────────────────────────────────────────────────
+class SectionErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { error: false };
+  }
+  static getDerivedStateFromError() { return { error: true }; }
+  render() {
+    if (this.state.error) return null; // silently hide broken sections
+    return this.props.children;
+  }
+}
+
+// ── Scroll-triggered fade-in (single IntersectionObserver per section) ────
+function Visible({ children }: { children: ReactNode }) {
   const ref = useRef(null);
   const ok = useInView(ref, { once: true, margin: "-60px" });
   return (
-    <motion.div ref={ref} initial={{ opacity: 0, y: 24 }} animate={ok ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={ok ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
       {children}
     </motion.div>
   );
@@ -34,7 +56,11 @@ function More({ text, limit = 130, className }: { text: string; limit?: number; 
     <div>
       <p className={className}>{long && !open ? text.slice(0, limit) + "…" : text}</p>
       {long && (
-        <button onClick={() => setOpen(!open)} className="mt-2 text-[11px] font-bold flex items-center gap-1 cursor-pointer" style={{ color: `${P}99` }}>
+        <button
+          onClick={() => setOpen(!open)}
+          className="mt-2 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+          style={{ color: `${P}99` }}
+        >
           {open ? "أقل ▲" : "عرض المزيد ▼"}
         </button>
       )}
@@ -67,30 +93,34 @@ function Dots({ count, active, onChange }: { count: number; active: number; onCh
   return (
     <div className="flex gap-2">
       {Array.from({ length: count }).map((_, i) => (
-        <button key={i} onClick={() => onChange(i)} className="rounded-full transition-all duration-300 cursor-pointer"
-          style={{ width: active === i ? 20 : 7, height: 7, backgroundColor: active === i ? P : "rgba(255,255,255,0.3)" }} />
+        <button
+          key={i}
+          onClick={() => onChange(i)}
+          className="rounded-full transition-all duration-300 cursor-pointer"
+          style={{ width: active === i ? 20 : 7, height: 7, backgroundColor: active === i ? P : "rgba(255,255,255,0.3)" }}
+        />
       ))}
     </div>
   );
 }
 
-/* full-bleed card */
-function Card({ image, height = "clamp(380px, 58vw, 580px)", children }: { image: string; height?: string; children: React.ReactNode }) {
+/* full-bleed card — images are below the fold, so loading="lazy" */
+function Card({ image, height = "clamp(380px, 58vw, 580px)", children }: { image: string; height?: string; children: ReactNode }) {
   return (
     <div className="relative w-full rounded-2xl overflow-hidden" style={{ height }}>
-      <Image src={image} alt="" fill className="object-cover" sizes="100vw" />
+      <Image src={image} alt="" fill loading="lazy" className="object-cover" sizes="(max-width: 768px) 100vw, 80vw" />
       <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 55%, transparent 100%)" }} />
       <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8">{children}</div>
     </div>
   );
 }
 
-/* half card */
-function Half({ image, children, flip }: { image: string; children: React.ReactNode; flip?: boolean }) {
+/* half card — images are below the fold, so loading="lazy" */
+function Half({ image, children, flip }: { image: string; children: ReactNode; flip?: boolean }) {
   return (
     <div className="rounded-2xl overflow-hidden grid sm:grid-cols-2" style={{ minHeight: "clamp(300px, 46vw, 480px)" }}>
       <div className={`relative ${flip ? "sm:order-2" : ""}`}>
-        <Image src={image} alt="" fill className="object-cover" sizes="50vw" />
+        <Image src={image} alt="" fill loading="lazy" className="object-cover" sizes="50vw" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)" }} />
       </div>
       <div className={`bg-black flex flex-col justify-center p-5 sm:p-8 ${flip ? "sm:order-1" : ""}`}>{children}</div>
@@ -98,7 +128,7 @@ function Half({ image, children, flip }: { image: string; children: React.ReactN
   );
 }
 
-function SLabel({ children }: { children: React.ReactNode }) {
+function SLabel({ children }: { children: ReactNode }) {
   return <p className="text-[10px] font-black tracking-[0.18em] uppercase mb-2" style={{ color: `${P}bb` }}>{children}</p>;
 }
 
@@ -157,14 +187,14 @@ function CameraSection({ section }: { section: ProductSection }) {
         {hero?.image && (
           <Card image={hero.image}>
             <div className="flex gap-6 sm:gap-14 mb-4">
-              {hero.stats.map((s, i) => (
+              {(hero.stats ?? []).map((s, i) => (
                 <div key={i}>
                   <p className="text-3xl sm:text-5xl font-black text-white leading-none">{s.value}</p>
                   <p className="text-[10px] sm:text-xs mt-1 max-w-[80px] leading-snug" style={{ color: "rgba(255,255,255,0.45)" }}>{s.label}</p>
                 </div>
               ))}
             </div>
-            <More text={hero.description} className="text-xs sm:text-sm text-white/55 leading-relaxed max-w-2xl" />
+            <More text={hero.description ?? ""} className="text-xs sm:text-sm text-white/55 leading-relaxed max-w-2xl" />
           </Card>
         )}
       </div>
@@ -176,7 +206,7 @@ function CameraSection({ section }: { section: ProductSection }) {
 function PerformanceSection({ section }: { section: ProductSection }) {
   const c = section.content as Record<string, unknown>;
   const description = c?.description as string | undefined;
-  const chips = c?.chips as { name: string; description: string }[] ?? [];
+  const chips = (c?.chips as { name: string; description: string }[]) ?? [];
   const [active, setActive] = useState(0);
 
   return (
@@ -212,7 +242,7 @@ function PerformanceSection({ section }: { section: ProductSection }) {
 function BatterySection({ section }: { section: ProductSection }) {
   const c = section.content as Record<string, unknown>;
   const description = c?.description as string | undefined;
-  const stats = c?.stats as { value: string; unit: string; label: string }[] ?? [];
+  const stats = (c?.stats as { value: string; unit: string; label: string }[]) ?? [];
 
   return (
     <Visible>
@@ -248,14 +278,17 @@ function BatterySection({ section }: { section: ProductSection }) {
 /* ── EXPORT ── */
 export default function ProductSections({ sections }: { sections?: ProductSection[] }) {
   if (!sections?.length) return null;
-  const active = sections.filter((s) => s.isActive).sort((a, b) => a.sortOrder - b.sortOrder);
+  const active = sections
+    .filter((s) => s.isActive)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
   return (
     <div className="mt-8 pb-16">
       {active.map((s) => {
-        if (s.type === "design")      return <DesignSection      key={s._id ?? s.type} section={s} />;
-        if (s.type === "camera")      return <CameraSection      key={s._id ?? s.type} section={s} />;
-        if (s.type === "performance") return <PerformanceSection key={s._id ?? s.type} section={s} />;
-        if (s.type === "battery")     return <BatterySection     key={s._id ?? s.type} section={s} />;
+        const key = s._id ?? s.type;
+        if (s.type === "design")      return <SectionErrorBoundary key={key}><DesignSection      section={s} /></SectionErrorBoundary>;
+        if (s.type === "camera")      return <SectionErrorBoundary key={key}><CameraSection      section={s} /></SectionErrorBoundary>;
+        if (s.type === "performance") return <SectionErrorBoundary key={key}><PerformanceSection section={s} /></SectionErrorBoundary>;
+        if (s.type === "battery")     return <SectionErrorBoundary key={key}><BatterySection     section={s} /></SectionErrorBoundary>;
         return null;
       })}
     </div>

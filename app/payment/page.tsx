@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
 import PaymentClient from "./PaymentClient";
 
-export const metadata: Metadata = { title: "طرق الدفع" };
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const SITE_URL = "https://burjjstorre.com";
 
-// Use BACKEND_URL (server-to-server) not NEXT_PUBLIC_API_URL (client-side).
-// Server components should always use the internal/backend URL so the
-// Next.js Data Cache activates correctly and requests don't traverse the
-// public internet unnecessarily.
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
+export const revalidate = 3600;
 
 async function getCompany() {
   try {
@@ -18,6 +15,32 @@ async function getCompany() {
   } catch {
     return {};
   }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const company = await getCompany();
+  const siteName = company.nameAr || "برج المبدع للتقنية";
+  const title = `وسائل الدفع | ${siteName}`;
+  const description = `طرق الدفع المتاحة لدى ${siteName} - بطاقات مدى، البطاقات الائتمانية والأقساط الميسرة.`;
+  const ogImageUrl = company.logo
+    ? (company.logo.startsWith("http") ? company.logo : `${SITE_URL}${company.logo}`)
+    : `${SITE_URL}/web-app-manifest-512x512.png`;
+  return {
+    title,
+    description,
+    keywords: ["طرق الدفع", "مدى", "فيزا", "ماستركارد", "أقساط", siteName, "السعودية"],
+    openGraph: {
+      type: "website",
+      url: `${SITE_URL}/payment`,
+      title,
+      description,
+      locale: "ar_SA",
+      siteName,
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [ogImageUrl] },
+    alternates: { canonical: `${SITE_URL}/payment` },
+  };
 }
 
 export default async function PaymentPage() {

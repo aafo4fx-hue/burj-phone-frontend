@@ -41,6 +41,21 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function AudioPage() {
-  return <AudioClient />;
+async function getAudioProducts() {
+  try {
+    const r = await fetch(
+      `${BACKEND}/api/products?category=${encodeURIComponent("سماعات ابل,speaker,earbuds")}`,
+      { next: { revalidate: 3600, tags: ["products"] } }
+    );
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data)) return data;
+    }
+  } catch {}
+  return [];
+}
+
+export default async function AudioPage() {
+  const products = await getAudioProducts();
+  return <AudioClient initialProducts={products} />;
 }

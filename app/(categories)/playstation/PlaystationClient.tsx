@@ -9,36 +9,20 @@ import type { Product } from "../../components/products/types";
 // products returned. Eliminates full-catalog download.
 const PS_CATEGORIES = ["ps5", "ps4", "xbox", "controller", "gaming-accessories", "بلاي ستيشن"];
 
-export default function PlaystationClient() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function PlaystationClient({ initialProducts = [] }: { initialProducts?: Product[] }) {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [loading, setLoading] = useState(initialProducts.length === 0);
 
   useEffect(() => {
-    Promise.all(
-      PS_CATEGORIES.map((cat) =>
-        fetch(`/api/products?category=${encodeURIComponent(cat)}`)
-          .then((r) => r.json())
-          .catch(() => [] as Product[])
-      )
-    )
-      .then((results) => {
-        const seen = new Set<string>();
-        const merged: Product[] = [];
-        for (const arr of results) {
-          if (Array.isArray(arr)) {
-            for (const p of arr) {
-              if (!seen.has(p._id)) {
-                seen.add(p._id);
-                merged.push(p);
-              }
-            }
-          }
-        }
-        setProducts(merged);
+    if (initialProducts.length > 0) return;
+    fetch(`/api/products?category=${encodeURIComponent(PS_CATEGORIES.join(","))}`)
+      .then((r) => r.json())
+      .then((data: Product[]) => {
+        if (Array.isArray(data)) setProducts(data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialProducts]);
 
   return (
     <CategoryLayout

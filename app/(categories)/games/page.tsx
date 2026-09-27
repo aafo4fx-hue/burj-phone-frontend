@@ -41,6 +41,21 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function GamesPage() {
-  return <GamesClient />;
+async function getGamesProducts() {
+  try {
+    const r = await fetch(
+      `${BACKEND}/api/products?category=${encodeURIComponent("اكسسورات,gaming,mice-keyboards,microphone,figures,rgb")}`,
+      { next: { revalidate: 3600, tags: ["products"] } }
+    );
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data)) return data;
+    }
+  } catch {}
+  return [];
+}
+
+export default async function GamesPage() {
+  const products = await getGamesProducts();
+  return <GamesClient initialProducts={products} />;
 }

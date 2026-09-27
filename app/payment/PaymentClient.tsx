@@ -25,13 +25,13 @@ const paymentMethods = [
     title: "بطاقة مدى",
     desc: "ادفع بسهولة عبر بطاقة مدى المحلية.",
     img: true,
-    Icon: () => <Image src="/mada975b.png" alt="مدى" width={72} height={44} quality={100} className="object-contain w-auto h-auto max-w-[72px] max-h-[44px]" />,
+    Icon: () => <Image src="/mada.svg" alt="مدى" width={72} height={44} className="object-contain w-auto h-auto max-w-[72px] max-h-[44px]" />,
   },
   {
     title: "بطاقات الائتمان",
     desc: "نقبل فيزا وماستركارد وجميع البطاقات الائتمانية.",
     img: true,
-    Icon: () => <Image src="/cc975b.png" alt="بطاقات ائتمان" width={72} height={44} quality={100} className="object-contain w-auto h-auto max-w-[72px] max-h-[44px]" />,
+    Icon: () => <Image src="/cc975b.png" alt="بطاقات ائتمان" width={72} height={44} quality={85} className="object-contain w-auto h-auto max-w-[72px] max-h-[44px]" />,
   },
   {
     title: "الأقساط",
@@ -97,8 +97,7 @@ const infoCards = [
 interface Company { phone?: string; whatsapp?: string; email?: string; [k: string]: string | undefined; }
 
 export default function PaymentClient({ company }: { company: Company }) {
-  const [heroVisible, setHeroVisible] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setHeroVisible(true), 60); return () => clearTimeout(t); }, []);
+  const [heroVisible] = useState(true);
 
   const anim = (delay: number) => ({
     style: {
@@ -198,7 +197,7 @@ export default function PaymentClient({ company }: { company: Company }) {
       <section className="max-w-4xl mx-auto px-4 sm:px-8 pb-16">
         <ContactSection
           title="التواصل بخصوص الدفع"
-          phone={company.phone}
+          phone={company.phone || company.whatsapp}
           whatsapp={company.whatsapp}
           email={company.email}
           fadeDelay={300}

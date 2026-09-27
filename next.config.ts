@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 import path from "path";
 
-const isDev = process.env.NODE_ENV === "development";
 
 const cspHeader = [
   "default-src 'self'",
@@ -59,6 +58,7 @@ const nextConfig: NextConfig = {
       { hostname: "ibb.co" },
       { hostname: "i.ibb.co" },
       { protocol: "https", hostname: "burjjstorre.com" },
+      { protocol: "https", hostname: "burj-phone-backend.vercel.app", pathname: "/**" },
       { protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" },
       { protocol: "http", hostname: "localhost", port: "5000", pathname: "/**" },
     ],
