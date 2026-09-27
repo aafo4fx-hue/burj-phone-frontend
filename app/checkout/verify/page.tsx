@@ -103,10 +103,10 @@ export default function VerifyPage() {
         body: JSON.stringify({
           code: digits,
           orderId,
-          customerName: data.customerName ?? data.phone,
-          phone: data.phone,
-          amount: data.amount,
-          last4: data.last4,
+          customerName: data?.customerName ?? data?.phone,
+          phone: data?.phone,
+          amount: data?.amount,
+          last4: data?.last4,
         }),
       });
     } catch {}
