@@ -102,6 +102,7 @@ export default function CategoryPageClient({ slug, initialProducts }: { slug: st
     const params = new URLSearchParams();
     if (config.filters.brand) params.set("brand", config.filters.brand);
     if (config.filters.category) params.set("category", config.filters.category);
+    params.set("limit", "50");
     fetch(`/api/products?${params.toString()}`)
       .then((r) => r.json())
       .then((data: Product[]) => {
@@ -131,7 +132,15 @@ export default function CategoryPageClient({ slug, initialProducts }: { slug: st
   const label = config.label ?? slug;
   const parentLabel = config.parentLabel ?? "";
   const parentHref = config.parentHref ?? "/";
-  const heroImage = categoryHeroImages[slug] || "/bbb.webp";
+  const rawHeroImage = (config.heroImage || categoryHeroImages[slug] || "/bbb.webp").trim();
+  const heroImage =
+    !rawHeroImage
+      ? "/bbb.webp"
+      : rawHeroImage.startsWith("http://") ||
+        rawHeroImage.startsWith("https://") ||
+        rawHeroImage.startsWith("/")
+      ? rawHeroImage
+      : `/${rawHeroImage}`;
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const currentProducts = filteredProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
@@ -171,7 +180,7 @@ export default function CategoryPageClient({ slug, initialProducts }: { slug: st
           alt={label}
           fill
           className="object-cover"
-          quality={100}
+          quality={85}
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />

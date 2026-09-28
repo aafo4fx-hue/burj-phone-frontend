@@ -20,9 +20,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, { next: { revalidate: 86400 } });
     const data = await res.json();
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=86400",
+      },
+    });
   } catch {
     return NextResponse.json({ error: "upstream error" }, { status: 502 });
   }

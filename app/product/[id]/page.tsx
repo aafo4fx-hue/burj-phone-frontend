@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import ProductPageClient from "./ProductPageClient";
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 const SITE_URL = "https://burjjstorre.com";
 
 // Wrap both fetchers with React cache so generateMetadata and ProductPage

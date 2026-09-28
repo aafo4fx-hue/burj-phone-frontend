@@ -36,7 +36,7 @@ const formatStorage = (storage: string): string => {
     .trim();
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app";
 const resolveImg = (src: string) => {
   const clean = src.replace(/&amp;/g, "&");
   return clean.startsWith("http") ? clean : `${API}${clean.startsWith("/") ? clean : "/" + clean}`;
@@ -174,7 +174,7 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
             {hasDiscount && (
               <span className="inline-flex items-center gap-0.5 text-[9px] sm:text-[11px] text-gray-400 line-through font-medium">
                 {fmt(originalPrice)}
-                <Image src="/money-icon.webp" alt="ر.س" width={14} height={14} quality={100} className="opacity-60 shrink-0" style={{ width: "auto", height: "auto" }} loading="lazy" />
+                <Image src="/money-icon.webp" alt="ر.س" width={14} height={14} className="opacity-60 shrink-0" style={{ width: "auto", height: "auto" }} loading="lazy" />
               </span>
             )}
           </div>

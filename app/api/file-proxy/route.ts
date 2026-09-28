@@ -32,7 +32,6 @@ export async function GET(req: NextRequest) {
   const res = await fetch(fetchUrl);
   if (!res.ok) return new NextResponse("failed", { status: res.status });
 
-  const body = await res.arrayBuffer();
   let contentType = res.headers.get("content-type") || "";
   
   if (!contentType || contentType === "application/octet-stream") {
@@ -43,11 +42,12 @@ export async function GET(req: NextRequest) {
     else contentType = "application/pdf";
   }
 
-  return new NextResponse(body, {
+  return new Response(res.body, {
+    status: 200,
     headers: {
       "Content-Type": contentType,
       "Content-Disposition": "inline",
-      "Cache-Control": "public, max-age=86400",
+      "Cache-Control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=86400",
     },
   });
 }

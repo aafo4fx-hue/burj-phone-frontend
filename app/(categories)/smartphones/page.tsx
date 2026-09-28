@@ -5,7 +5,7 @@ import SmartphonesClient from "./SmartphonesClient";
 // revalidate:3600 — metadata rebuilt hourly, served from cache otherwise.
 export const revalidate = 3600;
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 const SITE_URL = "https://burjjstorre.com";
 
 async function getCompany() {
@@ -46,8 +46,8 @@ export async function generateMetadata(): Promise<Metadata> {
 async function getSmartphonesProducts() {
   try {
     const [appleRes, samsungRes] = await Promise.all([
-      fetch(`${BACKEND}/api/products?brand=Apple`, { next: { revalidate: 3600, tags: ["products"] } }),
-      fetch(`${BACKEND}/api/products?brand=Samsung`, { next: { revalidate: 3600, tags: ["products"] } }),
+      fetch(`${BACKEND}/api/products?brand=Apple&limit=50`, { next: { revalidate: 3600, tags: ["products"] } }),
+      fetch(`${BACKEND}/api/products?brand=Samsung&limit=50`, { next: { revalidate: 3600, tags: ["products"] } }),
     ]);
     const [appleProds, samsungProds] = await Promise.all([
       appleRes.ok ? appleRes.json() : [],

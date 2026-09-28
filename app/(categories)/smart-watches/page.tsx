@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const revalidate = 3600;
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 const SITE_URL = "https://burjjstorre.com";
 
 async function getCompany() {

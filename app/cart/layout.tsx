@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
-const SITE_URL = "https://www.pasmthatfee.com";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const SITE_URL = "https://burjjstorre.com";
 
 async function getCompany() {
   try {

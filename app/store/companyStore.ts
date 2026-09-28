@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app";
 
 // Cache TTL: 1 hour — company data rarely changes.
 let companyRequest: Promise<void> | null = null;

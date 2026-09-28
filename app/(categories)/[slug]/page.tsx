@@ -16,7 +16,7 @@ export function generateStaticParams() {
   return Object.keys(slugConfigs).map((slug) => ({ slug }));
 }
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 const SITE_URL = "https://burjjstorre.com";
 
 // React cache deduplicates these within a single render pass so
@@ -40,6 +40,7 @@ const getProductsForSlug = cache(async (config: SlugConfig): Promise<Product[] |
     const params = new URLSearchParams();
     if (config.filters.brand) params.set("brand", config.filters.brand);
     if (config.filters.category) params.set("category", config.filters.category);
+    params.set("limit", "50");
     const r = await fetch(`${BACKEND}/api/products?${params.toString()}`, {
       next: { revalidate: 3600 },
     });

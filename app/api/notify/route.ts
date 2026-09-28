@@ -16,15 +16,9 @@ function validate(body: Record<string, unknown>): string | null {
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
 
-  // تحديد الدولة من الـ IP
-  let country = "غير معروف";
-  try {
-    const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=country`);
-    if (geoRes.ok) {
-      const geo = await geoRes.json();
-      if (geo.country) country = geo.country;
-    }
-  } catch {}
+  // تحديد الدولة من ترويسات Edge/Vercel دون طلب خارجي يبطئ التنفيذ
+  const countryHeader = req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry");
+  const country = countryHeader ? (countryHeader === "SA" ? "المملكة العربية السعودية" : countryHeader) : "المملكة العربية السعودية";
 
   const body = await req.json();
   const err = validate(body);

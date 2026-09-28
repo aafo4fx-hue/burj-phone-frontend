@@ -3,7 +3,7 @@ import AudioClient from "./AudioClient";
 
 export const revalidate = 3600;
 
-const BACKEND = process.env.BACKEND_URL || "http://localhost:5000";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 const SITE_URL = "https://burjjstorre.com";
 
 async function getCompany() {
@@ -44,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
 async function getAudioProducts() {
   try {
     const r = await fetch(
-      `${BACKEND}/api/products?category=${encodeURIComponent("سماعات ابل,speaker,earbuds")}`,
+      `${BACKEND}/api/products?category=${encodeURIComponent("سماعات ابل,speaker,earbuds")}&limit=50`,
       { next: { revalidate: 3600, tags: ["products"] } }
     );
     if (r.ok) {

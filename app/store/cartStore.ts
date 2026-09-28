@@ -78,8 +78,30 @@ export const useCartStore = create<CartState>()(
             return { items: updated };
           }
 
+          const cleanProduct: Product = {
+            _id: product._id,
+            name: product.name,
+            originalPrice: product.originalPrice,
+            salePrice: product.salePrice,
+            price: product.price,
+            image: product.image,
+            images: Array.isArray(product.images) ? product.images.slice(0, 3) : [],
+            category: product.category,
+            subCategory: product.subCategory,
+            brand: product.brand,
+            color: product.color,
+            storage: product.storage,
+            inStock: product.inStock,
+            freeDelivery: product.freeDelivery,
+            deliveryTime: product.deliveryTime,
+            warrantyYears: product.warrantyYears,
+            installment: product.installment,
+            discountPercent: product.discountPercent,
+            taxIncluded: product.taxIncluded,
+          };
+
           return {
-            items: [...s.items, { id: itemId, product, qty, color, storage, price, image }],
+            items: [...s.items, { id: itemId, product: cleanProduct, qty, color, storage, price, image }],
           };
         }),
       removeItem: (id) =>
