@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getBackend } from "../../_lib";
+import { NextRequest } from "next/server";
+import { getBackend, forwardCookies, handleAdminResponse } from "../../_lib";
 
 async function safeJson(res: Response) {
   const text = await res.text();
@@ -8,22 +8,24 @@ async function safeJson(res: Response) {
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const res = await fetch(`${getBackend()}/api/checkout/${id}`, {
-    headers: { cookie: req.headers.get("cookie") || "" },
-  });
-  return NextResponse.json(await safeJson(res), { status: res.status });
+  const res = await fetch(`${getBackend()}/api/checkout/${id}`, forwardCookies(req, {}));
+  const data = await safeJson(res);
+  return handleAdminResponse(res, data);
 }
 
 function buildHeaders(req: NextRequest): Record<string, string> {
   const csrf = req.headers.get("x-csrf-token") || "";
-  let cookie = req.headers.get("cookie") || "";
+  const forwarded = forwardCookies(req, {}).headers as Record<string, string>;
+  let cookie = forwarded.cookie || "";
   // Ensure csrf_token cookie is present for double-submit pattern
   if (csrf && !cookie.includes("csrf_token=")) {
     cookie = cookie ? `${cookie}; csrf_token=${csrf}` : `csrf_token=${csrf}`;
   }
-  const headers: Record<string, string> = { cookie };
-  if (csrf) headers["x-csrf-token"] = csrf;
-  return headers;
+  return {
+    ...forwarded,
+    cookie,
+    ...(csrf ? { "x-csrf-token": csrf } : {}),
+  };
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -36,7 +38,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     headers,
     body: JSON.stringify(body),
   });
-  return NextResponse.json(await safeJson(res), { status: res.status });
+  const data = await safeJson(res);
+  return handleAdminResponse(res, data);
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -45,5 +48,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     method: "DELETE",
     headers: buildHeaders(req),
   });
-  return NextResponse.json(await safeJson(res), { status: res.status });
+  const data = await safeJson(res);
+  return handleAdminResponse(res, data);
 }

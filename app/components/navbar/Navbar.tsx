@@ -59,7 +59,8 @@ export default function Navbar() {
   }, []);
 
   const fetchResults = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); return; }
+    const trimmed = q.trim();
+    if (!trimmed || trimmed.length < 2) { setResults([]); return; }
     setSearching(true);
     try {
       const res = await fetch(`/api/products?q=${encodeURIComponent(q.trim())}`);

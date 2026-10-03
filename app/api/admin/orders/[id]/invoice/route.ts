@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getBackend, forwardCookies } from "../../../_lib";
+import { NextRequest } from "next/server";
+import { getBackend, forwardCookies, handleAdminResponse } from "../../../_lib";
 
 // ---------------------------------------------------------------------------
 // GET /api/admin/orders/[id]/invoice
@@ -19,6 +19,6 @@ export async function GET(
   const cookies = forwardCookies(req, { cache: "no-store" });
 
   const res = await fetch(`${backend}/api/checkout/${id}/invoice`, cookies);
-  const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
+  const data = await res.json().catch(() => ({}));
+  return handleAdminResponse(res, data);
 }
