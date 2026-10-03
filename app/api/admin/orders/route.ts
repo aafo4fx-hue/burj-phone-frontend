@@ -7,7 +7,15 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const qs = searchParams.toString();
   const url = `${getBackend()}/api/checkout${qs ? `?${qs}` : ""}`;
-  const res = await fetch(url, forwardCookies(req, {}));
-  const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
+  try {
+    const res = await fetch(url, forwardCookies(req, {}));
+    const data = await res.json();
+    // Pass the status through so the client knows when auth has lapsed.
+    // The middleware now redirects unauthenticated browsers before they reach
+    // this route, so a 401 here only happens in edge cases (token expired
+    // mid-session). Return the status faithfully so the client can react.
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json({ orders: [], total: 0, pages: 1 }, { status: 500 });
+  }
 }

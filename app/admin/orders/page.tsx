@@ -141,9 +141,13 @@ export default function OrdersPage() {
       ...(q ? { search: q } : {}),
     });
     fetch(`/api/admin/orders?${params}`, { signal: ctrl.signal })
-      .then((r) => r.json())
+      .then((r) => {
+        // Session expired mid-page — redirect to login
+        if (r.status === 401) { router.replace("/admin/login"); return null; }
+        return r.json();
+      })
       .then((d) => {
-        if (ctrl.signal.aborted) return;
+        if (!d || ctrl.signal.aborted) return;
         setOrders(Array.isArray(d.orders) ? d.orders : []);
         setTotal(d.total ?? 0);
         setPages(d.pages ?? 1);
