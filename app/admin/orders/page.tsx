@@ -142,8 +142,18 @@ export default function OrdersPage() {
     });
     fetch(`/api/admin/orders?${params}`, { signal: ctrl.signal })
       .then((r) => {
-        // Session expired mid-page — redirect to login
-        if (r.status === 401) { router.replace("/admin/login"); return null; }
+        // Session expired mid-page — notify and cleanly redirect to login
+        if (r.status === 401) {
+          toast.error("انتهت جلسة تسجيل الدخول، يرجى تسجيل الدخول مجدداً");
+          setTimeout(() => {
+            window.location.href = "/admin/login";
+          }, 800);
+          return null;
+        }
+        if (!r.ok) {
+          toast.error("فشل في تحميل الطلبات");
+          return null;
+        }
         return r.json();
       })
       .then((d) => {

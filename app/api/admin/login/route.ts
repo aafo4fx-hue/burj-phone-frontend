@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "تعذر الاتصال بالخادم" }, { status: 502 });
   }
 
-  let data: unknown;
+  let data: Record<string, unknown> = {};
   try {
     data = await res.json();
   } catch {
@@ -31,17 +31,20 @@ export async function POST(req: NextRequest) {
 
   const response = NextResponse.json(data, { status: res.status });
 
-  const setCookie = res.headers.get("set-cookie");
-  if (setCookie) {
-    // Extract token value from the set-cookie header
+  if (res.ok) {
+    const setCookie = res.headers.get("set-cookie") || "";
     const tokenMatch = setCookie.match(/admin_token=([^;]+)/);
-    if (tokenMatch) {
+    const token =
+      (typeof data?.token === "string" ? data.token : null) ||
+      (tokenMatch ? tokenMatch[1] : null);
+
+    if (token) {
       const isProd = process.env.NODE_ENV === "production";
-      response.cookies.set("admin_token", tokenMatch[1], {
+      response.cookies.set("admin_token", token, {
         httpOnly: true,
         secure: isProd,
-        sameSite: isProd ? "none" : "lax",
-        maxAge: 8 * 60 * 60,
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60,
         path: "/",
       });
     }

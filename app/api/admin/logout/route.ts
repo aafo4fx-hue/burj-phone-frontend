@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     path: "/",
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? "none" : "lax",
+    sameSite: "lax",
   });
   return response;
 }

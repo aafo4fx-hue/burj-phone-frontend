@@ -30,9 +30,18 @@ export default function OrderDetailPage() {
 
     // Order data fetch
     fetch(`/api/admin/orders/${id}`, { signal })
-      .then((r) => r.json())
+      .then((r) => {
+        if (r.status === 401) {
+          toast.error("انتهت جلسة تسجيل الدخول، يرجى تسجيل الدخول مجدداً");
+          setTimeout(() => {
+            window.location.href = "/admin/login";
+          }, 800);
+          return null;
+        }
+        return r.json();
+      })
       .then((d) => {
-        if (signal.aborted) return;
+        if (!d || signal.aborted) return;
         setOrder(d);
         setFin({ total: d.total ?? 0, downPayment: d.downPayment ?? 0, months: d.months ?? 0, monthlyPayment: d.monthlyPayment ?? 0 });
         setLoading(false);

@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
+function isJwtExpired(token: string): boolean {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return true;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const jsonStr = atob(base64);
+    const payload = JSON.parse(jsonStr);
+    if (!payload.exp) return false;
+    return Math.floor(Date.now() / 1000) >= payload.exp - 10;
+  } catch {
+    return true;
+  }
+}
+
 export default function middleware(req: NextRequest) {
   const host = req.headers.get("host") || "";
   if (host.includes("burj-almubdia.com")) {
@@ -11,13 +25,29 @@ export default function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
   const token = req.cookies.get("admin_token")?.value;
+  const isAuthValid = !!token && !isJwtExpired(token);
 
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login" && !token) {
-    return NextResponse.redirect(new URL("/admin/login", req.url));
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    if (!isAuthValid) {
+      const res = NextResponse.redirect(new URL("/admin/login", req.url));
+      if (token) {
+        res.cookies.set("admin_token", "", { maxAge: 0, path: "/" });
+      }
+      return res;
+    }
   }
 
-  if (pathname === "/admin/login" && token) {
-    return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+  if (pathname === "/admin/login") {
+    if (isAuthValid) {
+      return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+    }
+    // If token exists but is expired, clear it so login page is clean
+    if (token && !isAuthValid) {
+      const res = NextResponse.next();
+      res.cookies.set("admin_token", "", { maxAge: 0, path: "/" });
+      res.headers.set("x-pathname", pathname);
+      return res;
+    }
   }
 
   const res = NextResponse.next();
@@ -26,7 +56,6 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Edge middleware now runs exclusively on /admin routes.
-  // Static assets, public store pages, and APIs run with zero middleware CPU overhead.
+  // Edge middleware runs exclusively on /admin routes.
   matcher: ["/admin/:path*"],
 };
