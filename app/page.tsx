@@ -3,9 +3,9 @@ import ProductGridServer from "./components/products/ProductGridServer";
 import CustomerReviewsServer from "./components/CustomerReviewsServer";
 import ShopByCategory from "./components/ShopByCategory";
 
-// Revalidate every 5 minutes — company data + banners + categories change infrequently.
-// Individual child fetches (banners: 60s, company: 3600s) still apply their own TTLs.
-export const revalidate = 300;
+// Revalidate every 1 hour (3600s) — on-demand revalidation handles instant updates when admin edits data.
+// Eliminates tens of thousands of unnecessary ISR writes per month.
+export const revalidate = 3600;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://burjjstorre.com";
 const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";

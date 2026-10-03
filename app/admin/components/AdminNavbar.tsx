@@ -27,8 +27,12 @@ export default function AdminNavbar({ onMenuClick }: { onMenuClick: () => void }
       // Don't poll if document is hidden to save client & server resources
       if (typeof document !== "undefined" && document.hidden) return;
       fetch("/api/admin/orders/count")
-        .then((r) => r.json())
-        .then((d) => setOrderCount(typeof d.count === "number" ? d.count : 0))
+        .then((r) => {
+          // 401 means the session expired — stop polling silently
+          if (r.status === 401) { stopPolling(); return null; }
+          return r.json();
+        })
+        .then((d) => d && setOrderCount(typeof d.count === "number" ? d.count : 0))
         .catch(() => {});
     };
 

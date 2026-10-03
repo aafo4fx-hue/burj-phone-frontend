@@ -72,8 +72,8 @@ export default function BannerSlider({ images }: { images: string[] }) {
                   fill
                   className="object-contain"
                   priority={current === 0}
-                  sizes="100vw"
-                  quality={85}
+                  sizes="(max-width: 1280px) 100vw, 1280px"
+                  quality={75}
                 />
               </motion.div>
             </AnimatePresence>

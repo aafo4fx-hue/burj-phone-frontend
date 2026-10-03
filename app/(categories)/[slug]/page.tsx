@@ -12,6 +12,9 @@ import type { Product } from "../../components/products/types";
 export const revalidate = 3600;
 
 // Statically generate all slug paths known at build time.
+// Disallow unknown dynamic params so bot requests (e.g. /wp-login.php) immediately 404 at CDN Edge without running a Serverless Function.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return Object.keys(slugConfigs).map((slug) => ({ slug }));
 }

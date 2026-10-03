@@ -11,6 +11,24 @@ const SITE_URL = "https://burjjstorre.com";
 // React cache handles within-request deduplication so the network call
 // fires exactly once per render regardless of how many callers exist.
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+// Pre-render products at build time so /product/[id] is SSG instead of Dynamic SSR
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(`${BACKEND}/api/products?limit=200`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const products = await res.json();
+    if (!Array.isArray(products)) return [];
+    return products.map((p: any) => ({
+      id: String(p._id),
+    }));
+  } catch {
+    return [];
+  }
+}
 
 const getProduct = cache(async (id: string) => {
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(id)) return null;

@@ -21,13 +21,13 @@ export default async function ProductGridServer() {
     const [prodsRes, settingsRes, maxRes] = await Promise.all([
       fetch(
         `${BACKEND}/api/products/home`,
-        { next: { revalidate: 300, tags: ["products"] } }
+        { next: { revalidate: 3600, tags: ["products"] } }
       ),
       fetch(`${BACKEND}/api/admin/sub-categories/home-settings`, {
-        next: { revalidate: 300, tags: ["categories"] },
+        next: { revalidate: 3600, tags: ["categories"] },
       }),
       fetch(`${BACKEND}/api/admin/sub-categories/max`, {
-        next: { revalidate: 300, tags: ["categories"] },
+        next: { revalidate: 3600, tags: ["categories"] },
       }),
     ]);
 
@@ -77,7 +77,7 @@ export default async function ProductGridServer() {
         `${BACKEND}/api/admin/category-banners-bulk?categories=${encodeURIComponent(
           cats.join(",")
         )}`,
-        { next: { revalidate: 300, tags: ["banners"] } }
+        { next: { revalidate: 3600, tags: ["banners"] } }
       );
       if (bannersRes.ok) {
         const data = await bannersRes.json();

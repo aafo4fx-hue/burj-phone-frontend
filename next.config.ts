@@ -50,9 +50,37 @@ const nextConfig: NextConfig = {
       fallback: [],
     };
   },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "burj-almubdia.com",
+          },
+        ],
+        destination: "https://burjjstorre.com/:path*",
+        permanent: true,
+      },
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "www.burj-almubdia.com",
+          },
+        ],
+        destination: "https://burjjstorre.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     minimumCacheTTL: 86400,
-    qualities: [75, 80, 85, 100],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    qualities: [75, 85],
     formats: ["image/webp"],
     remotePatterns: [
       { hostname: "ibb.co" },
