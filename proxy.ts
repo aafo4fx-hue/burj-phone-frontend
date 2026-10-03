@@ -8,7 +8,9 @@ function isJwtExpired(token: string): boolean {
     const jsonStr = atob(base64);
     const payload = JSON.parse(jsonStr);
     if (!payload.exp) return false;
-    return Math.floor(Date.now() / 1000) >= payload.exp - 10;
+    // Use a 30-second buffer so minor clock drift between the frontend edge
+    // and the backend doesn't cause premature "session expired" redirects.
+    return Math.floor(Date.now() / 1000) >= payload.exp - 30;
   } catch {
     return true;
   }
