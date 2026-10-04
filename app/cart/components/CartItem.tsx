@@ -20,7 +20,7 @@ function RiyalIcon({ size = 14 }: { size?: number }) {
       height={size}
       unoptimized
       className="opacity-80 shrink-0"
-      style={{ width: "auto", height: "auto" }}
+      style={{ width: size, height: size }}
     />
   );
 }
