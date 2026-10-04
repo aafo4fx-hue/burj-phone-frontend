@@ -199,12 +199,12 @@ export default function CheckoutPage() {
       {/* ORDER SUMMARY CARD */}
       <div className="relative w-full max-w-4xl bg-white border border-gray-100" dir="rtl">
         <div className="flex flex-row items-center px-4 py-3 gap-3">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden shrink-0 border border-gray-100">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0 border border-gray-100">
             <Image
               src="/logo.webp"
               alt="logo"
-              width={64}
-              height={64}
+              width={40}
+              height={40}
               className="object-contain w-full h-full"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
