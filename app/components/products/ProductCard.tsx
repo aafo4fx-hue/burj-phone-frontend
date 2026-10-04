@@ -169,12 +169,12 @@ export default function ProductCard({ product, priority = false, zoomOnHover = f
               <span className="text-[15px] sm:text-[21px] font-black text-gray-900 leading-none tracking-tight">
                 {fmt(displayPrice)}
               </span>
-              <Image src="/money-icon.webp" alt="ر.س" width={26} height={26} unoptimized className="opacity-80 shrink-0 sm:w-[30px] sm:h-[30px]" style={{ width: "auto", height: "auto" }} loading="lazy" />
+              <Image src="/money-icon.webp" alt="ر.س" width={20} height={20} unoptimized className="opacity-80 shrink-0 w-[18px] h-[18px] sm:w-[22px] sm:h-[22px]" loading="lazy" />
             </div>
             {hasDiscount && (
               <span className="inline-flex items-center gap-0.5 text-[9px] sm:text-[11px] text-gray-400 line-through font-medium">
                 {fmt(originalPrice)}
-                <Image src="/money-icon.webp" alt="ر.س" width={14} height={14} unoptimized className="opacity-60 shrink-0" style={{ width: "auto", height: "auto" }} loading="lazy" />
+                <Image src="/money-icon.webp" alt="ر.س" width={12} height={12} unoptimized className="opacity-60 shrink-0 w-[11px] h-[11px] sm:w-[13px] sm:h-[13px]" loading="lazy" />
               </span>
             )}
           </div>
