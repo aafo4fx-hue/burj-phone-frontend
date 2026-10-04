@@ -9,10 +9,14 @@ import { getBackend } from "../_lib";
 export const revalidate = 3600;
 
 export async function GET() {
-  const res = await fetch(`${getBackend()}/api/admin/banners`, {
-    next: { revalidate: 3600, tags: ["banners"] },
-  });
-  if (!res.ok) return NextResponse.json([], { status: res.status });
-  const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
+  try {
+    const res = await fetch(`${getBackend()}/api/admin/banners`, {
+      next: { revalidate: 3600, tags: ["banners"] },
+    });
+    if (!res.ok) return NextResponse.json([], { status: 200 });
+    const data = await res.json();
+    return NextResponse.json(data, { status: 200 });
+  } catch {
+    return NextResponse.json([], { status: 200 });
+  }
 }

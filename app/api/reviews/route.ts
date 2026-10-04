@@ -9,14 +9,21 @@ import { getBackend } from "../admin/_lib";
 export const revalidate = 300;
 
 export async function GET() {
-  const res = await fetch(`${getBackend()}/api/admin/reviews`, {
-    cache: "force-cache",
-    next: { revalidate: 300, tags: ["reviews"] }, // ✅ FIX #4: tag added
-  });
-  return new Response(res.body, {
-    status: res.status,
-    headers: { "Content-Type": "application/json" },
-  });
+  try {
+    const res = await fetch(`${getBackend()}/api/admin/reviews`, {
+      cache: "force-cache",
+      next: { revalidate: 300, tags: ["reviews"] }, // ✅ FIX #4: tag added
+    });
+    return new Response(res.body, {
+      status: res.status,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch {
+    return new Response(JSON.stringify([]), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 }
 
 export async function POST(req: NextRequest) {

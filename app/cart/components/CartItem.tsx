@@ -18,7 +18,7 @@ function RiyalIcon({ size = 22 }: { size?: number }) {
       alt="ر.س"
       width={size}
       height={size}
-      quality={100}
+      unoptimized
       className="opacity-80 shrink-0"
       style={{ width: "auto", height: "auto" }}
     />

@@ -14,15 +14,19 @@ import { getBackend } from "../admin/_lib";
 export const revalidate = 300;
 
 export async function GET() {
-  const [settingsRes, maxRes] = await Promise.all([
-    fetch(`${getBackend()}/api/admin/sub-categories/home-settings`, {
-      next: { revalidate: 300, tags: ["categories"] },
-    }),
-    fetch(`${getBackend()}/api/admin/sub-categories/max`, {
-      next: { revalidate: 300, tags: ["categories"] },
-    }),
-  ]);
-  const settings = settingsRes.ok ? await settingsRes.json() : [];
-  const maxData = maxRes.ok ? await maxRes.json() : { max: 4 };
-  return NextResponse.json({ settings, max: maxData.max ?? 4 });
+  try {
+    const [settingsRes, maxRes] = await Promise.all([
+      fetch(`${getBackend()}/api/admin/sub-categories/home-settings`, {
+        next: { revalidate: 300, tags: ["categories"] },
+      }),
+      fetch(`${getBackend()}/api/admin/sub-categories/max`, {
+        next: { revalidate: 300, tags: ["categories"] },
+      }),
+    ]);
+    const settings = settingsRes.ok ? await settingsRes.json() : [];
+    const maxData = maxRes.ok ? await maxRes.json() : { max: 4 };
+    return NextResponse.json({ settings, max: maxData.max ?? 4 });
+  } catch {
+    return NextResponse.json({ settings: [], max: 4 });
+  }
 }

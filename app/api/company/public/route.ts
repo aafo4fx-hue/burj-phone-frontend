@@ -14,10 +14,8 @@ export async function GET() {
     const res = await fetch(`${getBackend()}/api/admin/company`, {
       next: { revalidate: 3600, tags: ["company"] },
     });
-    if (!res.ok) return NextResponse.json({}, { status: res.status });
+    if (!res.ok) return NextResponse.json({}, { status: 200 });
     const data = await res.json();
-    // Return only the fields client components actually use.
-    // Smaller payload → less JSON parse work on the Function and in the browser.
     return NextResponse.json(
       {
         logo: data.logo ?? "",
@@ -32,6 +30,6 @@ export async function GET() {
       { status: 200 }
     );
   } catch {
-    return NextResponse.json({}, { status: 500 });
+    return NextResponse.json({}, { status: 200 });
   }
 }
