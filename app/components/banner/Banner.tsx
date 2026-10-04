@@ -6,7 +6,7 @@ export default async function Banner() {
   let images: string[] = [];
 
   try {
-    // revalidate:3600 — banners change infrequently (few times per week at most).
+    // revalidate: 18000 — banners change infrequently (few times per week at most).
     // tag:"banners" — admin mutation routes call revalidateTag("banners") so the
     // cache is flushed immediately on any change without waiting the full hour.
     //
@@ -14,7 +14,7 @@ export default async function Banner() {
     // OUT of ISR/Full Route Cache, forcing server-side execution on every request
     // and accounting for a large fraction of the 528ms Active CPU P75.
     const res = await fetch(`${API}/api/admin/banners`, {
-      next: { revalidate: 3600, tags: ["banners"] },
+      next: { revalidate: 18000, tags: ["banners"] },
     });
     if (!res.ok) throw new Error("banners fetch failed");
     const data: { url: string; active: boolean }[] = await res.json();

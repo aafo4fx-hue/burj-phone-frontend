@@ -12,7 +12,7 @@ async function getCompany() {
       // causing server-side execution on every request. Changed to 3600 to match
       // layout.tsx and page.tsx so all three calls share the same Next.js Data Cache
       // entry and are deduplicated within the same render cycle.
-      next: { revalidate: 3600, tags: ["company"] },
+      next: { revalidate: 18000, tags: ["company"] },
     });
     return r.ok ? r.json() : {};
   } catch {

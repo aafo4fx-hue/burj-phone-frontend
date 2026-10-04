@@ -7,17 +7,17 @@ const SITE_URL = "https://burjjstorre.com";
 
 // Wrap both fetchers with React cache so generateMetadata and ProductPage
 // share the same in-flight promise within a single render pass.
-// Next.js Data Cache (revalidate:3600) handles cross-request deduplication;
+// Next.js Data Cache (revalidate: 18000) handles cross-request deduplication;
 // React cache handles within-request deduplication so the network call
 // fires exactly once per render regardless of how many callers exist.
-export const revalidate = 3600;
+export const revalidate = 18000;
 export const dynamicParams = true;
 
 // Pre-render products at build time so /product/[id] is SSG instead of Dynamic SSR
 export async function generateStaticParams() {
   try {
     const res = await fetch(`${BACKEND}/api/products?limit=200`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 18000 },
     });
     if (!res.ok) return [];
     const products = await res.json();
@@ -34,7 +34,7 @@ const getProduct = cache(async (id: string) => {
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(id)) return null;
   try {
     const r = await fetch(`${BACKEND}/api/products/${id}`, {
-      next: { revalidate: 3600, tags: [`product-${id}`] },
+      next: { revalidate: 18000, tags: [`product-${id}`] },
     });
     return r.ok ? r.json() : null;
   } catch {
@@ -45,7 +45,7 @@ const getProduct = cache(async (id: string) => {
 const getCompany = cache(async () => {
   try {
     const r = await fetch(`${BACKEND}/api/admin/company`, {
-      next: { revalidate: 3600, tags: ["company"] },
+      next: { revalidate: 18000, tags: ["company"] },
     });
     return r.ok ? r.json() : {};
   } catch {

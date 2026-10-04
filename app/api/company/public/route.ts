@@ -7,12 +7,12 @@ import { getBackend } from "../../admin/_lib";
 // does not prevent Data Cache from activating here.
 // Route Handler-level cache: 3600s — company data changes at most a few times/year.
 // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
-export const revalidate = 3600;
+export const revalidate = 18000;
 
 export async function GET() {
   try {
     const res = await fetch(`${getBackend()}/api/admin/company`, {
-      next: { revalidate: 3600, tags: ["company"] },
+      next: { revalidate: 18000, tags: ["company"] },
     });
     if (!res.ok) return NextResponse.json({}, { status: 200 });
     const data = await res.json();

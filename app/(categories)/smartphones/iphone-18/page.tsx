@@ -5,7 +5,7 @@ import CategoryPageClient from "../../[slug]/CategoryPageClient";
 // Increased from 60s to 3600s: this is a pre-launch/coming-soon page.
 // The content changes at most once when the product launches.
 // 60s was causing ~1,440 ISR rebuilds/day with no benefit.
-export const revalidate = 3600;
+export const revalidate = 18000;
 
 // ── Meta ──────────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {

@@ -150,7 +150,7 @@ async function getCategories(homeSettings?: Setting[]): Promise<(Category & { hr
     if (homeSettings !== undefined) {
       // Settings injected — only need the categories list
       const catRes = await fetch(`${BACKEND}/api/admin/sub-categories/public`, {
-        next: { revalidate: 3600, tags: ["categories"] },
+        next: { revalidate: 18000, tags: ["categories"] },
       });
       allCats = catRes.ok ? await catRes.json() : [];
       settings = homeSettings;
@@ -158,10 +158,10 @@ async function getCategories(homeSettings?: Setting[]): Promise<(Category & { hr
       // Standalone: fetch both in parallel
       const [catRes, settingsRes] = await Promise.all([
         fetch(`${BACKEND}/api/admin/sub-categories/public`, {
-          next: { revalidate: 3600, tags: ["categories"] },
+          next: { revalidate: 18000, tags: ["categories"] },
         }),
         fetch(`${BACKEND}/api/admin/sub-categories/home-settings`, {
-          next: { revalidate: 3600, tags: ["categories"] },
+          next: { revalidate: 18000, tags: ["categories"] },
         }),
       ]);
       allCats = catRes.ok ? await catRes.json() : [];

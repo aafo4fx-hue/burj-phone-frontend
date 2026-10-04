@@ -16,7 +16,7 @@ const SITE_URL = "https://burjjstorre.com";
 
 async function getCompany() {
   try {
-    const r = await fetch(`${BACKEND}/api/admin/company`, { next: { revalidate: 3600, tags: ["company"] } });
+    const r = await fetch(`${BACKEND}/api/admin/company`, { next: { revalidate: 18000, tags: ["company"] } });
     return r.ok ? r.json() : {};
   } catch {
     return {};

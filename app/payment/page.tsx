@@ -4,12 +4,12 @@ import PaymentClient from "./PaymentClient";
 const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
 const SITE_URL = "https://burjjstorre.com";
 
-export const revalidate = 3600;
+export const revalidate = 18000;
 
 async function getCompany() {
   try {
     const r = await fetch(`${BACKEND}/api/admin/company`, {
-      next: { revalidate: 3600, tags: ["company"] },
+      next: { revalidate: 18000, tags: ["company"] },
     });
     return r.ok ? r.json() : {};
   } catch {

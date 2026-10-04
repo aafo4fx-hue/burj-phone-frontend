@@ -5,7 +5,7 @@ import ShopByCategory from "./components/ShopByCategory";
 
 // Revalidate every 1 hour (3600s) — on-demand revalidation handles instant updates when admin edits data.
 // Eliminates tens of thousands of unnecessary ISR writes per month.
-export const revalidate = 3600;
+export const revalidate = 18000;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://burjjstorre.com";
 const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
@@ -15,7 +15,7 @@ const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.ap
 async function getCompany() {
   try {
     const r = await fetch(`${BACKEND}/api/admin/company`, {
-      next: { revalidate: 3600, tags: ["company"] },
+      next: { revalidate: 18000, tags: ["company"] },
     });
     return r.ok ? r.json() : {};
   } catch {

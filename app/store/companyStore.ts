@@ -45,7 +45,7 @@ export const useCompanyStore = create<CompanyStore>()(
         companyRequest = (async () => {
           try {
             // Uses /api/company/public — a cookie-free endpoint with route-level
-            // revalidate:3600 so the Vercel Function is NOT invoked on cache hits.
+            // revalidate: 18000 so the Vercel Function is NOT invoked on cache hits.
             const res = await fetch(`/api/company/public`);
             if (!res.ok) return;
             const text = await res.text();

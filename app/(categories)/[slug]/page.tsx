@@ -9,7 +9,7 @@ import type { Product } from "../../components/products/types";
 // Products are now pre-fetched server-side and passed as initialProducts,
 // eliminating the client-side /api/products fetch on every category page visit.
 // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
-export const revalidate = 3600;
+export const revalidate = 18000;
 
 // Statically generate all slug paths known at build time.
 // Disallow unknown dynamic params so bot requests (e.g. /wp-login.php) immediately 404 at CDN Edge without running a Serverless Function.
@@ -27,7 +27,7 @@ const SITE_URL = "https://burjjstorre.com";
 const getCompany = cache(async () => {
   try {
     const r = await fetch(`${BACKEND}/api/admin/company`, {
-      next: { revalidate: 3600, tags: ["company"] },
+      next: { revalidate: 18000, tags: ["company"] },
     });
     return r.ok ? r.json() : {};
   } catch {
@@ -45,7 +45,7 @@ const getProductsForSlug = cache(async (config: SlugConfig): Promise<Product[] |
     if (config.filters.category) params.set("category", config.filters.category);
     params.set("limit", "50");
     const r = await fetch(`${BACKEND}/api/products?${params.toString()}`, {
-      next: { revalidate: 3600 },
+      next: { revalidate: 18000 },
     });
     if (!r.ok) return undefined;
     const data = await r.json();
