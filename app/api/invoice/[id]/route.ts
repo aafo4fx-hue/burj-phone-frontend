@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const BACKEND = (process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app").replace(/\/$/, "");
+const BACKEND = (process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com").replace(/\/$/, "");
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

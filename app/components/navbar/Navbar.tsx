@@ -11,7 +11,7 @@ import { useCartStore } from "../../store/cartStore";
 import { useCompanyStore } from "../../store/companyStore";
 
 // Computed once at module load — stable for the lifetime of the app.
-const API_IMG = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app";
+const API_IMG = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.onrender.com";
 
 // Defined at module level so it is never re-created on render.
 // Navbar renders on every navigation change (sticky header); keeping

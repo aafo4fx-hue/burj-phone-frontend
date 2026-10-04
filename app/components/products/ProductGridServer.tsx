@@ -2,7 +2,7 @@ import { ProductGrid } from "./index";
 import type { Product } from "./types";
 
 // Homepage data is cached for five minutes and invalidated by product edits.
-const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 
 type HomeSettings = {
   category: string;

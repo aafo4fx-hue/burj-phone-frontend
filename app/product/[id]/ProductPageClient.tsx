@@ -12,7 +12,7 @@ import ProductInfo from "./components/ProductInfo";
 import ProductDetails from "./components/ProductDetails";
 import ProductSections from "./components/ProductSections";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.onrender.com";
 
 const resolveImg = (src: string) =>
   src.startsWith("http") ? src : `${API}${src.startsWith("/") ? src : "/" + src}`;

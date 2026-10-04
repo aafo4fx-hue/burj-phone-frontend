@@ -1,7 +1,7 @@
 import ShopByCategoryClient from "./ShopByCategoryClient";
 import { slugConfigs } from "../lib/categoryConfig";
 
-const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 
 const IPHONE_18_CARDS = [
   { name: "آيفون 18 برو ماكس", count: 0, image: "https://res.cloudinary.com/dllmx2yf3/image/upload/v1789347092/34ab662e-de1b-4359-9d99-43e2ba54678f_1_p18grc.webp", href: "/smartphones/iphone-18-pro-max", featured: true },

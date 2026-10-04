@@ -36,7 +36,7 @@ const formatStorage = (storage: string): string => {
     .trim();
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.onrender.com";
 const resolveImg = (src: string) => {
   const clean = src.replace(/&amp;/g, "&");
   return clean.startsWith("http") ? clean : `${API}${clean.startsWith("/") ? clean : "/" + clean}`;

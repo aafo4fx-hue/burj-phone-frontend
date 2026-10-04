@@ -19,7 +19,7 @@ export function generateStaticParams() {
   return Object.keys(slugConfigs).map((slug) => ({ slug }));
 }
 
-const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 const SITE_URL = "https://burjjstorre.com";
 
 // React cache deduplicates these within a single render pass so

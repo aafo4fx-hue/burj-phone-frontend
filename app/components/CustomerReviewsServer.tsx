@@ -10,7 +10,7 @@ import CustomerReviews from "./CustomerReviews";
 //
 // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
 
-const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 
 interface Review {
   _id: string;

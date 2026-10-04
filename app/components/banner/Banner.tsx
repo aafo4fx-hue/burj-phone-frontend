@@ -1,6 +1,6 @@
 import BannerSlider from "./BannerSlider";
 
-const API = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const API = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 
 export default async function Banner() {
   let images: string[] = [];

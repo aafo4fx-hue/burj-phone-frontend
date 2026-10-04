@@ -8,7 +8,7 @@ import ShopByCategory from "./components/ShopByCategory";
 export const revalidate = 18000;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://burjjstorre.com";
-const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 
 // Shared cached fetch — deduplicated with layout.tsx's generateMetadata call
 // because both use the same URL + revalidate value within the same render.

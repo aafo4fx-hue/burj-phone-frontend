@@ -3,7 +3,7 @@ import Image from "next/image";
 import { FaWhatsapp, FaMobileAlt, FaEnvelope } from "react-icons/fa";
 
 
-const API = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const API = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 
 async function getCompany() {
   try {

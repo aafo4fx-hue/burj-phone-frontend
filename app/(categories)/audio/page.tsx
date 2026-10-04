@@ -3,7 +3,7 @@ import AudioClient from "./AudioClient";
 
 export const revalidate = 18000;
 
-const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 const SITE_URL = "https://burjjstorre.com";
 
 async function getCompany() {

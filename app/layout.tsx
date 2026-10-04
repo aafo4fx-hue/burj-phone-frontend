@@ -11,7 +11,7 @@ const notoKufiArabic = Noto_Kufi_Arabic({
   display: "swap",
 });
 
-const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.vercel.app";
+const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 const SITE_URL = "https://burjjstorre.com";
 
 async function getCompany() {

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Plus, Minus, Trash2, Package } from "lucide-react";
 import type { CartItem as CartItemType } from "../../store/cartStore";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.onrender.com";
 
 interface Props {
   item: CartItemType;

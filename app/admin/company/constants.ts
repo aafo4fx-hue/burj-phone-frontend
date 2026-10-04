@@ -1,4 +1,4 @@
-export const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app";
+export const API = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.onrender.com";
 
 export const fields = [
   { key: "nameAr", label: "الاسم بالعربية" },

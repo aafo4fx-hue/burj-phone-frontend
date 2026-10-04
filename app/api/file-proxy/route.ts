@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
       "res.cloudinary.com",
       "cloudinary.com",
       "burjjstorre.com",
-      "burj-phone-backend.vercel.app",
+      "burj-phone-backend.onrender.com",
     ];
     const isAllowed = allowedHosts.some(
       (h) => parsed.hostname === h || parsed.hostname.endsWith(`.${h}`)

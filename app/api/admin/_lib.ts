@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function getBackend(): string {
-  const url = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app";
+  const url = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.onrender.com";
   return url.replace(/\/$/, "");
 }
 

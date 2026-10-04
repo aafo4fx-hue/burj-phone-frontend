@@ -2,7 +2,7 @@ import { MetadataRoute } from "next";
 import { slugConfigs } from "./lib/categoryConfig";
 
 const BASE_URL = "https://burjjstorre.com";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.vercel.app";
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "https://burj-phone-backend.onrender.com";
 
 const staticRoutes: { path: string; priority: number; changeFreq: MetadataRoute.Sitemap[number]["changeFrequency"] }[] = [
   { path: "", priority: 1.0, changeFreq: "daily" },
@@ -32,12 +32,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
   }));
 
-  const slug_urls: MetadataRoute.Sitemap = Object.keys(slugConfigs).map((slug) => ({
-    url: `${BASE_URL}/categories/${slug}`,
-    changeFrequency: "weekly",
-    priority: 0.7,
-    lastModified: now,
-  }));
+  const slug_urls: MetadataRoute.Sitemap = Object.entries(slugConfigs).map(([slug, config]) => {
+    const parentHref = config?.parentHref && config.parentHref !== "/" ? config.parentHref : "";
+    return {
+      url: `${BASE_URL}${parentHref}/${slug}`,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+      lastModified: now,
+    };
+  });
 
   let product_urls: MetadataRoute.Sitemap = [];
   try {
