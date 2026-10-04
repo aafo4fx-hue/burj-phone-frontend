@@ -11,7 +11,7 @@ interface Props {
   onRemove: (id: string) => void;
 }
 
-function RiyalIcon({ size = 22 }: { size?: number }) {
+function RiyalIcon({ size = 14 }: { size?: number }) {
   return (
     <Image
       src="/money-icon.webp"
@@ -63,7 +63,7 @@ export default function CartItem({ item, onUpdateQty, onRemove }: Props) {
         <div className="basket-item-bottom">
           <strong className="flex items-center gap-1">
             {(itemPrice * qty).toLocaleString("en-US")}
-            <RiyalIcon size={22} />
+            <RiyalIcon size={14} />
           </strong>
           <div className="basket-qty">
             <button
