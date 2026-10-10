@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import AudioClient from "./AudioClient";
 
-export const revalidate = 18000;
+// 24-hour revalidate: category content changes infrequently.
+// On-demand revalidation via revalidateTag() handles immediate updates from admin.
+export const revalidate = 86400;
 
 const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 const SITE_URL = "https://burjjstorre.com";

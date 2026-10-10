@@ -3,9 +3,10 @@ import ProductGridServer from "./components/products/ProductGridServer";
 import CustomerReviewsServer from "./components/CustomerReviewsServer";
 import ShopByCategory from "./components/ShopByCategory";
 
-// Revalidate every 1 hour (3600s) — on-demand revalidation handles instant updates when admin edits data.
-// Eliminates tens of thousands of unnecessary ISR writes per month.
-export const revalidate = 18000;
+// Revalidate every 12 hours (43200s) — on-demand revalidation handles instant
+// updates when admin edits data (products, banners, categories).
+// Doubled from 5h → 12h to cut ISR writes in half without affecting freshness.
+export const revalidate = 43200;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://burjjstorre.com";
 const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";

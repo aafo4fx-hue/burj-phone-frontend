@@ -9,7 +9,9 @@ import type { Product } from "../../components/products/types";
 // Products are now pre-fetched server-side and passed as initialProducts,
 // eliminating the client-side /api/products fetch on every category page visit.
 // Cache behavior: Expected from configuration, not verified by Vercel telemetry.
-export const revalidate = 18000;
+// 24-hour revalidate: category content changes infrequently.
+// On-demand revalidation via revalidateTag() handles immediate updates from admin.
+export const revalidate = 86400;
 
 // Statically generate all slug paths known at build time.
 // Disallow unknown dynamic params so bot requests (e.g. /wp-login.php) immediately 404 at CDN Edge without running a Serverless Function.

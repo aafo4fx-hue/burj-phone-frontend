@@ -24,7 +24,9 @@ export default async function Banner() {
         .map((b) => {
           const full = b.url.startsWith("http") ? b.url : `${API}${b.url}`;
           if (full.includes("cloudinary.com") && !full.includes("/f_auto,q_auto/")) {
-            return full.replace("/image/upload/", "/image/upload/f_auto,q_auto/");
+            // w_2048: fix banner to one canonical width so Vercel never
+            // generates extra size variants for these images.
+            return full.replace("/image/upload/", "/image/upload/f_auto,q_auto,w_2048/");
           }
           return full;
         });

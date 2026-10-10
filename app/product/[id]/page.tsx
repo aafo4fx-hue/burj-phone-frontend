@@ -16,7 +16,11 @@ export const dynamicParams = true;
 // Pre-render products at build time so /product/[id] is SSG instead of Dynamic SSR
 export async function generateStaticParams() {
   try {
-    const res = await fetch(`${BACKEND}/api/products?limit=200`, {
+    // Pre-render only the top 50 products at build time.
+    // dynamicParams = true (below) ensures remaining products are still served
+    // on-demand and cached — no 404s. This cuts build-time CPU and ISR writes
+    // significantly vs. fetching all 200.
+    const res = await fetch(`${BACKEND}/api/products?limit=50`, {
       next: { revalidate: 18000 },
     });
     if (!res.ok) return [];

@@ -4,7 +4,10 @@ import AboutClient from "./AboutClient";
 const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 const SITE_URL = "https://burjjstorre.com";
 
-export const revalidate = 18000;
+// Static page — content only changes when admin updates company data.
+// On-demand revalidation via revalidateTag("company") handles instant updates.
+// No need for time-based ISR writes every 5 hours.
+export const revalidate = false;
 
 async function getCompany() {
   try {

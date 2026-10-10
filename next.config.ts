@@ -78,8 +78,10 @@ const nextConfig: NextConfig = {
   },
   images: {
     minimumCacheTTL: 31536000,
-    deviceSizes: [640, 750, 1080, 1200],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    // Reduced breakpoints to cut Vercel Image Transformation quota usage.
+    // Fewer size variants → fewer transformations when new images appear.
+    deviceSizes: [640, 1080],
+    imageSizes: [64, 256],
     qualities: [75],
     formats: ["image/webp"],
     remotePatterns: [
