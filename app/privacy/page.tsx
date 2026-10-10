@@ -4,7 +4,7 @@ import PrivacyClient from "./PrivacyClient";
 const BACKEND = process.env.BACKEND_URL || "https://burj-phone-backend.onrender.com";
 const SITE_URL = "https://burjjstorre.com";
 
-// Static page — on-demand revalidation via revalidateTag("company") handles updates.
+// Static page - on-demand revalidation via revalidateTag("company") handles updates.
 export const revalidate = false;
 
 async function getCompany() {
