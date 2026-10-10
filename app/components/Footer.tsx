@@ -205,7 +205,7 @@ export default async function Footer() {
             </span>
             <div className="flex items-center gap-3">
               <span className="text-xs text-gray-500">وسائل الدفع</span>
-              <Image src="/payment-methods.webp" alt="Visa Mastercard Mada" width={120} height={35} quality={85} loading="lazy" className="object-contain" style={{ width: "auto" }} />
+              <Image src="/payment-methods.webp" alt="Visa Mastercard Mada" width={80} height={22} quality={85} loading="lazy" className="object-contain h-[22px] w-auto" style={{ width: "auto" }} />
             </div>
           </div>
         </div>
